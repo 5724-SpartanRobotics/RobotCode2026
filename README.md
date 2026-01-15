@@ -1,6 +1,9 @@
 # Spartan Robotics 2026 Robot Code Changelog
 We'll (try to) add our newest changes at the *top* of this file.
 
+## Build Status
+![CI](https://github.com/5724-SpartanRobotics/RobotCode2026/workflows/CI/badge.svg)
+
 *Internals*: Please try to keep code nice and adhere to the style: **indent using tabs**,
 **keep lines 100 characters or shorter**, **do not push code that will not build**,
 **do not push code (that will build) with warnings**, try to
