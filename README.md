@@ -20,5 +20,10 @@ found in this repository.
 - Editorconfig: Indent using tabs (not spaces) and set max line length at 100 characters
 - Initial commit
 ### Checklist for next few commits
-[ ] Implement Swerve code (perhaps not custom code this year :/)
-[ ] Implement robot-side vision consumer (vision processing done on coprocessor)
+- [ ] Implement Swerve code (perhaps not custom code this year :/)
+- [ ] Implement robot-side vision consumer (vision processing done on coprocessor)
+
+## 15 Jan 2026
+- Add Robot & Drive constants
+- Rename constants in ALL_CAPS, following a better style
+- Units for constants use the built-in WPILib Units of Measure  

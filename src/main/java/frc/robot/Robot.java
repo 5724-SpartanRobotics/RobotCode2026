@@ -30,7 +30,7 @@ public class Robot extends TimedRobot {
 		if (isSimulation() || DebugLevel.isOrAll(DebugLevel.Autonomous)) {
 			DriverStation.silenceJoystickConnectionWarning(true);
 		}
-		SmartDashboard.putString("Debug Mode", Constants.DebugTraceLevel.toString());
+		SmartDashboard.putString("Debug Mode", Constants.DEBUG_TRACE_LEVEL.toString());
 	}
 
 	@Override

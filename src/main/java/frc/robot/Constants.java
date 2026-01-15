@@ -1,28 +1,55 @@
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearAcceleration;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Mass;
+import edu.wpi.first.units.measure.MomentOfInertia;
+
 public final class Constants {
-	public static final double TwoPI = Math.PI * 2.0;
-	public static final double HalfPI = Math.PI / 2.0;
-	public static final DebugLevel DebugTraceLevel = null;
+	public static final double TWO_PI = Math.PI * 2.0;
+	public static final double HALF_PI = Math.PI / 2.0;
+	public static final DebugLevel DEBUG_TRACE_LEVEL = null;
 
 	public static final class CanId {}
 
-	public static final class Robot {}
+	public static final class Robot {
+		public static final Mass MASS = Units.Pounds.of(110);
+		public static final MomentOfInertia MOMENT_OF_INERTIA = Units.KilogramSquareMeters.of(16.5);
+		public static final LinearVelocity MAX_LINEAR_VELOCITY = Units.FeetPerSecond.of(14.5); // about 4.42m/s
+		public static final LinearAcceleration MAX_LINEAR_ACCELERATION = Units.FeetPerSecondPerSecond.of(13.12); // about 4m/s^2
+	}
 
-	public static final class Drive {}
+	public static final class Drive {
+		public static final class Wheel {
+			public static final Distance RADIUS = Units.Inches.of(2.0);
+			public static final double COF = 1.2;
+			public static final Distance BASE = Units.Inches.of(20.75); // this might need updated?
+			public static final Distance TRACK_WIDTH = Units.Inches.of(23.0); // this might need updated?
+		}
+		public static final class SwerveModuleOffsets {
+			public static final Translation2d LF = new Translation2d(Wheel.BASE.in(Units.Meters) / 2.0, Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
+			public static final Translation2d RF = new Translation2d(Wheel.BASE.in(Units.Meters) / 2.0, -Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
+			public static final Translation2d LR = new Translation2d(-Wheel.BASE.in(Units.Meters) / 2.0, Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
+			public static final Translation2d RR = new Translation2d(-Wheel.BASE.in(Units.Meters) / 2.0, -Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
+		}
+	}
 
-	public static final class Controller {}
+	public static final class Controller {
+		public static final double DEFAULT_DEADBAND = 0.5;
+
+		public static final class DriverMap {}
+		
+		public static final class OperatorMap {}
+	}
 
 	public static enum DebugLevel {
 		Off,
 		All,
 		Autonomous,
-		Swerve,
-		ArmRotate,
-		Elevator,
-		Algae,
-		Claw,
-		Wrist,
+		Drive,
 		Vision;
 
         /**
@@ -30,7 +57,7 @@ public final class Constants {
 		 * @return Whether the DebugTraceLevel satisfies the level All
 		 */
 		public static boolean isAll() {
-			return DebugTraceLevel == All;
+			return DEBUG_TRACE_LEVEL == All;
 		}
 
         /**
@@ -38,7 +65,7 @@ public final class Constants {
 		 * @return Whether the DebugTraceLevel satisfies the level that is not Off
 		 */
 		public static boolean isAny() {
-			return DebugTraceLevel != Off;
+			return DEBUG_TRACE_LEVEL != Off;
 		}
 
 		/**
@@ -47,7 +74,7 @@ public final class Constants {
 		 * @return Whether the DebugTraceLevel satisfies the given level
 		 */
 		public static boolean is(DebugLevel level) {
-			return DebugTraceLevel == level;
+			return DEBUG_TRACE_LEVEL == level;
 		}
 		
 		/**
@@ -68,7 +95,7 @@ public final class Constants {
 		 * @return Whether the DebugTraceLevel satisfies the given level or All
 		 */
 		public static boolean isOrAll(DebugLevel level) {
-			return is(level) || DebugTraceLevel == All;
+			return is(level) || DEBUG_TRACE_LEVEL == All;
 		}
 	}
 
