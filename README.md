@@ -30,3 +30,7 @@ found in this repository.
 - Add Robot & Drive constants
 - Rename constants in ALL_CAPS, following a better style
 - Units for constants use the built-in WPILib Units of Measure  
+
+# 16 Jan 2026
+- Add Phoenix libraries, Rev & YAGSL
+- Add Elastic
