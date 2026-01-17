@@ -32,5 +32,5 @@ found in this repository.
 - Units for constants use the built-in WPILib Units of Measure  
 
 # 16 Jan 2026
-- Add Phoenix libraries, Rev & YAGSL
+- Add Phoenix libraries, Rev & YAGSL (add back required libraries)
 - Add Elastic
