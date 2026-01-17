@@ -41,3 +41,4 @@ found in this repository.
 - Add drive subsystem and implement drive command (copied from yagsl)
 	- have not yet fixed the constants/json and the file names are probably wrong (runtime error)
 - Use Joystick for frame and Xbox for operator
+- Add AI-generated vision code based on my Python library... hopefully it will work

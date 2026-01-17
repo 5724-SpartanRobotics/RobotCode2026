@@ -46,7 +46,7 @@ public class DriveSubsystem extends SubsystemBase
 	 *
 	 * @param directory Directory of swerve drive config files.
 	 */
-	 public DriveSubsystem(File directory)
+	public DriveSubsystem(File directory)
 	{ 
 		boolean blueAlliance = false;
 		Pose2d startingPose = blueAlliance ?
@@ -101,6 +101,11 @@ public class DriveSubsystem extends SubsystemBase
 
 	@Override
 	public void simulationPeriodic() {}
+
+	public void addVisionMeasurement(Pose2d pose, double timestamp)
+	{
+		_SwerveDrive.addVisionMeasurement(pose, timestamp);
+	}
 
 	/**
 	 * Command to characterize the robot drive motors using SysId

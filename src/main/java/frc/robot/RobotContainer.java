@@ -8,11 +8,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.AutoAlignToTagCommand;
 import frc.robot.commands.DriveCommand;
+import frc.robot.lib.VisionPoseEstimator;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
 	private DriveSubsystem _DriveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
+	private VisionSubsystem _VisionSubsystem = new VisionSubsystem();
+	private VisionPoseEstimator _VisionPoseEstimator = new VisionPoseEstimator(
+		Constants.Vision.FIELD_LAYOUT,
+		Constants.Vision.CAMERA_TO_ROBOT
+	);
+
 	private CommandJoystick _DriverController = new CommandJoystick(0);
 	private CommandXboxController _OperatorController = new CommandXboxController(1);
 
@@ -24,6 +33,10 @@ public class RobotContainer {
 
 	private void configureControllerBindings() {
 		_DriveSubsystem.setDefaultCommand(_DriveSubsystem.driveFieldOriented(DriveCommand.command));
+
+		_DriverController.button(1).whileTrue(
+			new AutoAlignToTagCommand(_DriveSubsystem, _VisionSubsystem, 0)
+		);
 	}
 
 	public void robotFinishedBooting() {
@@ -37,6 +50,10 @@ public class RobotContainer {
 				"The \"Debug Mode\" is available in SmartDashboard."
 			);
 		}
+	}
+
+	public void visionPeriodic() {
+		_VisionPoseEstimator.addBestVisionPosesToSwerve(_DriveSubsystem, _VisionSubsystem);
 	}
 
 	public void setMotorBrake(boolean brake) {

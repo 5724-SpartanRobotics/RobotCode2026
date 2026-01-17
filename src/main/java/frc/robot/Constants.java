@@ -2,6 +2,9 @@ package frc.robot;
 
 import java.io.File;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Distance;
@@ -49,6 +52,11 @@ public final class Constants {
 		public static final class DriverMap {}
 		
 		public static final class OperatorMap {}
+	}
+
+	public static final class Vision {
+		public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+		public static final Transform3d CAMERA_TO_ROBOT = new Transform3d();
 	}
 
 	public static enum DebugLevel {
