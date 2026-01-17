@@ -17,9 +17,9 @@ public class Robot extends TimedRobot {
 	public Robot() {
 		if (!Constants.isBeanDebug()) {
 			// Trying to start a DataLogManager on a debug session crashes for some reason
-            DataLogManager.start();
-            DriverStation.startDataLog(DataLogManager.getLog());
-        }
+			DataLogManager.start();
+			DriverStation.startDataLog(DataLogManager.getLog());
+		}
 
 		_RobotContainer = new RobotContainer();
 

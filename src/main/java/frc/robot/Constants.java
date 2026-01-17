@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.io.File;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Distance;
@@ -7,6 +9,7 @@ import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
+import edu.wpi.first.wpilibj.Filesystem;
 
 public final class Constants {
 	public static final double TWO_PI = Math.PI * 2.0;
@@ -23,12 +26,15 @@ public final class Constants {
 	}
 
 	public static final class Drive {
+		public static final File SWERVE_CONFIG = new File(Filesystem.getDeployDirectory(), "swerve");
+
 		public static final class Wheel {
 			public static final Distance RADIUS = Units.Inches.of(2.0);
 			public static final double COF = 1.2;
 			public static final Distance BASE = Units.Inches.of(20.75); // this might need updated?
 			public static final Distance TRACK_WIDTH = Units.Inches.of(23.0); // this might need updated?
 		}
+
 		public static final class SwerveModuleOffsets {
 			public static final Translation2d LF = new Translation2d(Wheel.BASE.in(Units.Meters) / 2.0, Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
 			public static final Translation2d RF = new Translation2d(Wheel.BASE.in(Units.Meters) / 2.0, -Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
@@ -52,7 +58,7 @@ public final class Constants {
 		Drive,
 		Vision;
 
-        /**
+		/**
 		 * Check to see if {@link DebugTraceLevel} is set to All.
 		 * @return Whether the DebugTraceLevel satisfies the level All
 		 */
@@ -60,7 +66,7 @@ public final class Constants {
 			return DEBUG_TRACE_LEVEL == All;
 		}
 
-        /**
+		/**
 		 * Check to see if {@link DebugTraceLevel} is set to any non-Off value.
 		 * @return Whether the DebugTraceLevel satisfies the level that is not Off
 		 */
@@ -99,10 +105,10 @@ public final class Constants {
 		}
 	}
 
-    public static boolean isBeanDebug() {
-        // Code from ChatGPT. It sees if a debugger is attached by looking
-        // at the arguements passed to the JVM when it was started.
-        return java.lang.management.ManagementFactory.getRuntimeMXBean()
-            .getInputArguments().toString().contains("-agentlib:jdwp");
-    }
+	public static boolean isBeanDebug() {
+		// Code from ChatGPT. It sees if a debugger is attached by looking
+		// at the arguements passed to the JVM when it was started.
+		return java.lang.management.ManagementFactory.getRuntimeMXBean()
+			.getInputArguments().toString().contains("-agentlib:jdwp");
+	}
 }
