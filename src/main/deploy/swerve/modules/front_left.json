@@ -1,0 +1,27 @@
+{
+	"location": [0.273, 0.273],
+
+	"drive": {
+		"type": "sparkflex",
+		"id": 1,
+		"inverted": false,
+		"gearRatio": 8.14,
+		"currentLimit": 60
+	},
+
+	"steer": {
+		"type": "sparkflex",
+		"id": 2,
+		"inverted": false,
+		"gearRatio": 21.43,
+		"currentLimit": 30
+	},
+
+	"encoder": {
+		"type": "cancoder",
+		"id": 11,
+		"canbus": "rio",
+		"offset": -1.234,
+		"inverted": false
+	}
+}

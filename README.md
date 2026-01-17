@@ -34,3 +34,4 @@ found in this repository.
 # 16 Jan 2026
 - Add Phoenix libraries, Rev & YAGSL (add back required libraries)
 - Add Elastic
+- Add example swerve drive subsystem directly from yagsl (https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_only_2026/src/main/java/frc/robot/subsystems/swervedrive/SwerveSubsystem.java)
