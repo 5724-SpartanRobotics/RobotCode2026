@@ -17,32 +17,61 @@ import edu.wpi.first.wpilibj.Filesystem;
 public final class Constants {
 	public static final double TWO_PI = Math.PI * 2.0;
 	public static final double HALF_PI = Math.PI / 2.0;
-	public static final DebugLevel DEBUG_TRACE_LEVEL = null;
+	public static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
 
-	public static final class CanId {}
+	public static final class CanId {
+		// https://docs.google.com/spreadsheets/d/1t8Ids1RzCOn0vlFqbZAr0mgEd12h2sJ_fCfxJkntMR0/edit?gid=0#gid=0
+		public static final int ROBORIO = 0;
+		public static final int PDH = 1;
+		public static final int PIGEON2 = 2;
+		public static final int FL_DRIVE = 3;
+		public static final int FL_ENCODER = 4;
+		public static final int FL_TURN = 5;
+		public static final int BL_DRIVE = 6;
+		public static final int BL_ENCODER = 7;
+		public static final int BL_TURN = 8;
+		public static final int BR_DRIVE = 9;
+		public static final int BR_ENCODER = 10;
+		public static final int BR_TURN = 11;
+		public static final int FR_DRIVE = 12;
+		public static final int FR_ENCODER = 13;
+		public static final int FR_TURN = 14;
+	}
 
 	public static final class Robot {
 		public static final Mass MASS = Units.Pounds.of(110);
-		public static final MomentOfInertia MOMENT_OF_INERTIA = Units.KilogramSquareMeters.of(16.5);
-		public static final LinearVelocity MAX_LINEAR_VELOCITY = Units.FeetPerSecond.of(14.5); // about 4.42m/s
-		public static final LinearAcceleration MAX_LINEAR_ACCELERATION = Units.FeetPerSecondPerSecond.of(13.12); // about 4m/s^2
+		public static final MomentOfInertia MOMENT_OF_INERTIA =
+			Units.KilogramSquareMeters.of(16.5);
+		public static final LinearVelocity MAX_LINEAR_VELOCITY =
+			Units.FeetPerSecond.of(14.5); // about 4.42m/s
+		public static final LinearAcceleration MAX_LINEAR_ACCELERATION =
+			Units.FeetPerSecondPerSecond.of(13.12); // about 4m/s^2
 	}
 
 	public static final class Drive {
-		public static final File SWERVE_CONFIG = new File(Filesystem.getDeployDirectory(), "swerve");
+		public static final File SWERVE_CONFIG =
+			new File(Filesystem.getDeployDirectory(), "swerve");
 
 		public static final class Wheel {
 			public static final Distance RADIUS = Units.Inches.of(2.0);
 			public static final double COF = 1.2;
-			public static final Distance BASE = Units.Inches.of(20.75); // this might need updated?
-			public static final Distance TRACK_WIDTH = Units.Inches.of(23.0); // this might need updated?
+			public static final Distance X_FROM_CENTER = Units.Inches.of(11.96);
+			public static final Distance Y_FROM_CENTER = Units.Inches.of(11.016);
 		}
 
 		public static final class SwerveModuleOffsets {
-			public static final Translation2d LF = new Translation2d(Wheel.BASE.in(Units.Meters) / 2.0, Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
-			public static final Translation2d RF = new Translation2d(Wheel.BASE.in(Units.Meters) / 2.0, -Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
-			public static final Translation2d LR = new Translation2d(-Wheel.BASE.in(Units.Meters) / 2.0, Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
-			public static final Translation2d RR = new Translation2d(-Wheel.BASE.in(Units.Meters) / 2.0, -Wheel.TRACK_WIDTH.in(Units.Meters) / 2.0);
+			public static final Translation2d FL = new Translation2d(
+				Wheel.X_FROM_CENTER.in(Units.Meters), Wheel.Y_FROM_CENTER.in(Units.Meters)
+			);
+			public static final Translation2d BL = new Translation2d(
+				-1.0 * Wheel.X_FROM_CENTER.in(Units.Meters), Wheel.Y_FROM_CENTER.in(Units.Meters)
+			);
+			public static final Translation2d BR = new Translation2d(
+				-1.0 * Wheel.X_FROM_CENTER.in(Units.Meters), -1.0 * Wheel.Y_FROM_CENTER.in(Units.Meters)
+			);
+			public static final Translation2d FR = new Translation2d(
+				Wheel.X_FROM_CENTER.in(Units.Meters), -1.0 * Wheel.Y_FROM_CENTER.in(Units.Meters)
+			);
 		}
 	}
 
@@ -55,7 +84,8 @@ public final class Constants {
 	}
 
 	public static final class Vision {
-		public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+		public static final AprilTagFieldLayout FIELD_LAYOUT =
+			AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
 		public static final Transform3d CAMERA_TO_ROBOT = new Transform3d();
 	}
 
