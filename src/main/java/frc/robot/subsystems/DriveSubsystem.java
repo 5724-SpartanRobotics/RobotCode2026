@@ -57,24 +57,32 @@ public class DriveSubsystem extends SubsystemBase
 				new Translation2d(Meter.of(16), Meter.of(4)),
 				Rotation2d.fromDegrees(180)
 			);
-		// Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
-		SwerveDriveTelemetry.verbosity = Constants.DebugLevel.isOrAll(Constants.DebugLevel.Drive) ? TelemetryVerbosity.HIGH : TelemetryVerbosity.LOW;
+		// Configure the Telemetry before creating the SwerveDrive to avoid
+		// unnecessary objectsbeing created.
+		SwerveDriveTelemetry.verbosity = Constants.DebugLevel.isOrAll(Constants.DebugLevel.Drive) ?
+			TelemetryVerbosity.HIGH : TelemetryVerbosity.LOW;
 		
 		try
 		{
-			_SwerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.Robot.MAX_LINEAR_VELOCITY.in(Units.MetersPerSecond), startingPose);
+			_SwerveDrive = new SwerveParser(directory)
+				.createSwerveDrive(
+					Constants.Robot.MAX_LINEAR_VELOCITY.in(Units.MetersPerSecond),
+					startingPose
+			);
 			// Alternative method if you don't want to supply the conversion factor via JSON files.
-			// swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed, angleConversionFactor, driveConversionFactor);
 		}
 		catch (Exception e)
 		{
 			throw new RuntimeException(e);
 		}
-		_SwerveDrive.setHeadingCorrection(false); // Heading correction should only be used while controlling the robot via angle.
-		_SwerveDrive.setCosineCompensator(false);//!SwerveDriveTelemetry.isSimulation); // Disables cosine compensation for simulations since it causes discrepancies not seen in real life.
-		_SwerveDrive.setAngularVelocityCompensation(true, true, 0.1); //Correct for skew that gets worse as angular velocity increases. Start with a coefficient of 0.1.
-		_SwerveDrive.setModuleEncoderAutoSynchronize(false, 1); // Enable if you want to resynchronize your absolute encoders and motor encoders periodically when they are not moving.
-		// swerveDrive.pushOffsetsToEncoders(); // Set the absolute encoder to be used over the internal encoder and push the offsets onto it. Throws warning if not possible
+		// Heading correction should only be used while controlling the robot via angle.
+		_SwerveDrive.setHeadingCorrection(false);
+		_SwerveDrive.setCosineCompensator(false);
+		//Correct for skew that gets worse as angular velocity increases. Start with a coefficient of 0.1.
+		_SwerveDrive.setAngularVelocityCompensation(true, true, 0.1);
+		// Enable if you want to resynchronize your absolute encoders and motor
+		// encoders periodically when they are not moving.
+		_SwerveDrive.setModuleEncoderAutoSynchronize(false, 1);
 	}
 
 	/**
@@ -83,8 +91,10 @@ public class DriveSubsystem extends SubsystemBase
 	 * @param driveCfg			SwerveDriveConfiguration for the swerve.
 	 * @param controllerCfg Swerve Controller.
 	 */
-	public DriveSubsystem(SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg)
-	{
+	public DriveSubsystem(
+		SwerveDriveConfiguration driveCfg,
+		SwerveControllerConfiguration controllerCfg
+	) {
 		_SwerveDrive = new SwerveDrive(
 			driveCfg,
 			controllerCfg,
@@ -208,7 +218,8 @@ public class DriveSubsystem extends SubsystemBase
 					),
 					0.8
 				),
-				Math.pow(angularRotationX.getAsDouble(), 3) * _SwerveDrive.getMaximumChassisAngularVelocity(),
+				Math.pow(angularRotationX.getAsDouble(), 3) *
+					_SwerveDrive.getMaximumChassisAngularVelocity(),
 				true,
 				false
 			);
@@ -231,7 +242,6 @@ public class DriveSubsystem extends SubsystemBase
 		DoubleSupplier headingY
 	)
 	{
-		// swerveDrive.setHeadingCorrection(true); // Normally you would want heading correction for this kind of control.
 		return run(() -> {
 			Translation2d scaledInputs = SwerveMath.scaleTranslation(
 				new Translation2d(
@@ -254,17 +264,20 @@ public class DriveSubsystem extends SubsystemBase
 	}
 
 	/**
-	 * The primary method for controlling the drivebase.	Takes a {@link Translation2d} and a rotation rate, and
-	 * calculates and commands module states accordingly.	Can use either open-loop or closed-loop velocity control for
-	 * the wheel velocities.	Also has field- and robot-relative modes, which affect how the translation vector is used.
+	 * The primary method for controlling the drivebase.
+	 * Takes a {@link Translation2d} and a rotation rate, and
+	 * calculates and commands module states accordingly.
+	 * Can use either open-loop or closed-loop velocity control for the wheel velocities.
+	 * Also has field- and robot-relative modes, which affect how the translation vector is used.
 	 *
-	 * @param translation	 {@link Translation2d} that is the commanded linear velocity of the robot, in meters per
-	 *						second. In robot-relative mode, positive x is torwards the bow (front) and positive y is
-	 *						torwards port (left).	In field-relative mode, positive x is away from the alliance wall
-	 *						(field North) and positive y is torwards the left wall when looking through the driver station
-	 *						glass (field West).
-	 * @param rotation		Robot angular rate, in radians per second. CCW positive.	Unaffected by field/robot
-	 *						relativity.
+	 * @param translation {@link Translation2d} that is the commanded linear 
+	 * elocity of the robot, in meters per second. In robot-relative mode, positive
+	 * x is torwards the bow (front) and positive y is torwards port (left).
+	 * In field-relative mode, positive x is away from the alliance wall
+	 * (field North) and positive y is torwards the left wall when
+	 * looking through the driver station glass (field West).
+	 * @param rotation Robot angular rate, in radians per second.
+	 * CCW positive. Unaffected by field/robot relativity.
 	 * @param fieldRelative Drive mode.	True for field-relative, false for robot-relative.
 	 */
 	public void drive(Translation2d translation, double rotation, boolean fieldRelative)
@@ -320,9 +333,10 @@ public class DriveSubsystem extends SubsystemBase
 	}
 
 	/**
-	 * Resets odometry to the given pose. Gyro angle and module positions do not need to be reset when calling this
-	 * method.	However, if either gyro angle or module position is reset, this must be called in order for odometry to
-	 * keep working.
+	 * Resets odometry to the given pose. Gyro angle and module positions
+	 * do not need to be reset when calling this method. However, if either gyro
+	 * angle or module position is reset, this must be called in
+	 * order for odometry to keep working.
 	 *
 	 * @param initialHolonomicPose The pose to set the odometry to
 	 */
@@ -409,8 +423,10 @@ public class DriveSubsystem extends SubsystemBase
 	}
 
 	/**
-	 * Gets the current yaw angle of the robot, as reported by the swerve pose estimator in the underlying drivebase.
-	 * Note, this is not the raw gyro reading, this may be corrected from calls to resetOdometry().
+	 * Gets the current yaw angle of the robot, as reported by the swerve
+	 * pose estimator in the underlying drivebase.
+	 * Note, this is not the raw gyro reading,
+	 * this may be corrected from calls to resetOdometry().
 	 *
 	 * @return The yaw angle
 	 */
@@ -420,17 +436,20 @@ public class DriveSubsystem extends SubsystemBase
 	}
 
 	/**
-	 * Get the chassis speeds based on controller input of 2 joysticks. One for speeds in which direction. The other for
+	 * Get the chassis speeds based on controller input of 2 joysticks.
+	 * One for speeds in which direction. The other for
 	 * the angle of the robot.
 	 *
-	 * @param xInput	 X joystick input for the robot to move in the X direction.
-	 * @param yInput	 Y joystick input for the robot to move in the Y direction.
+	 * @param xInput X joystick input for the robot to move in the X direction.
+	 * @param yInput Y joystick input for the robot to move in the Y direction.
 	 * @param headingX X joystick which controls the angle of the robot.
 	 * @param headingY Y joystick which controls the angle of the robot.
 	 * @return {@link ChassisSpeeds} which can be sent to the Swerve Drive.
 	 */
-	public ChassisSpeeds getTargetSpeeds(double xInput, double yInput, double headingX, double headingY)
-	{
+	public ChassisSpeeds getTargetSpeeds(
+		double xInput, double yInput,
+		double headingX, double headingY
+	) {
 		Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(xInput, yInput));
 		return _SwerveDrive.swerveController.getTargetSpeeds(
 			scaledInputs.getX(),
@@ -443,8 +462,8 @@ public class DriveSubsystem extends SubsystemBase
 	}
 
 	/**
-	 * Get the chassis speeds based on controller input of 1 joystick and one angle. Control the robot at an offset of
-	 * 90deg.
+	 * Get the chassis speeds based on controller input of 1 joystick and one angle.
+	 * Control the robot at an offset of 90deg.
 	 *
 	 * @param xInput X joystick input for the robot to move in the X direction.
 	 * @param yInput Y joystick input for the robot to move in the Y direction.

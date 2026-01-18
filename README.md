@@ -42,3 +42,10 @@ found in this repository.
 	- have not yet fixed the constants/json and the file names are probably wrong (runtime error)
 - Use Joystick for frame and Xbox for operator
 - Add AI-generated vision code based on my Python library... hopefully it will work
+
+## 18 Jan 2026
+- Add swerve offsets from YAGSL configuration website
+- Refactor code (split lines over 100 chars)
+- Add some preliminary CAN IDs. I don't expect these to change, just add more.
+### Checklist
+- [ ] Implement Photon and remove custom code (YAGSL examples have Photon examples)

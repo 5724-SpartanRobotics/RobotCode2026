@@ -32,7 +32,7 @@ public class RobotContainer {
 	}
 
 	private void configureControllerBindings() {
-		_DriveSubsystem.setDefaultCommand(_DriveSubsystem.driveFieldOriented(DriveCommand.command));
+		_DriveSubsystem.setDefaultCommand(DriveCommand.getCommand());
 
 		_DriverController.button(1).whileTrue(
 			new AutoAlignToTagCommand(_DriveSubsystem, _VisionSubsystem, 0)

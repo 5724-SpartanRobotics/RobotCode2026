@@ -15,7 +15,13 @@ public class VisionSubsystem extends SubsystemBase {
 		public final int cameraId;
 		public final boolean valid;
 
-		public TagMeasurement(int tagId, double distanceFeet, double angleDegrees, int cameraId, boolean valid) {
+		public TagMeasurement(
+            int tagId,
+            double distanceFeet,
+            double angleDegrees,
+            int cameraId,
+            boolean valid
+        ) {
 			this.tagId = tagId;
 			this.distanceFeet = distanceFeet;
 			this.angleDegrees = angleDegrees;
