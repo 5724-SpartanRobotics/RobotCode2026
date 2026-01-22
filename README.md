@@ -49,3 +49,8 @@ found in this repository.
 - Add some preliminary CAN IDs. I don't expect these to change, just add more.
 ### Checklist
 - [ ] Implement Photon and remove custom code (YAGSL examples have Photon examples)
+
+## 22 Jan 2026
+- Add necessary libraries (photon and pathplanner)
+- Start implementing Photon code from YAGSL examples
+- Remove old custom vision implementation

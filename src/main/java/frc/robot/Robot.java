@@ -4,15 +4,19 @@
 
 package frc.robot;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.DebugLevel;
+import frc.robot.lib.Elastic;
 
 public class Robot extends TimedRobot {
 	private final RobotContainer _RobotContainer;
+	private AtomicBoolean _IsFirstConnection = new AtomicBoolean(true);
 
 	public Robot() {
 		if (!Constants.isBeanDebug()) {
@@ -26,6 +30,10 @@ public class Robot extends TimedRobot {
 		// Implement other things here (shouldn't be many)
 
 		_RobotContainer.robotFinishedBooting();
+
+		if (DriverStation.isDSAttached() && _IsFirstConnection.compareAndSet(true, false)) {
+			Elastic.selectTab("Auto");
+		}
 
 		if (isSimulation() || DebugLevel.isOrAll(DebugLevel.Autonomous)) {
 			DriverStation.silenceJoystickConnectionWarning(true);

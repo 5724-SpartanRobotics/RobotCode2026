@@ -8,8 +8,19 @@ import static edu.wpi.first.units.Units.Meter;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
+import org.photonvision.targeting.PhotonPipelineResult;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.commands.PathfindingCommand;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -24,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
+import frc.robot.subsystems.VisionSubsystem.Cameras;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
@@ -34,12 +46,20 @@ import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
+/**
+ * {@link https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_with_PhotonVision/src/main/java/frc/robot/subsystems/swervedrive/SwerveSubsystem.java}
+ */
 public class DriveSubsystem extends SubsystemBase
 {
 	/**
 	 * Swerve drive object.
 	 */
 	private final SwerveDrive _SwerveDrive;
+
+	private final boolean _IsVisionDriveTest =
+		Constants.DebugLevel.isOrAll(Constants.DebugLevel.Vision);
+
+	private VisionSubsystem _VisionSubsystem;
 
 	/**
 	 * Initialize {@link SwerveDrive} with the directory provided.
@@ -62,19 +82,17 @@ public class DriveSubsystem extends SubsystemBase
 		SwerveDriveTelemetry.verbosity = Constants.DebugLevel.isOrAll(Constants.DebugLevel.Drive) ?
 			TelemetryVerbosity.HIGH : TelemetryVerbosity.LOW;
 		
-		try
-		{
+		try {
 			_SwerveDrive = new SwerveParser(directory)
 				.createSwerveDrive(
 					Constants.Robot.MAX_LINEAR_VELOCITY.in(Units.MetersPerSecond),
 					startingPose
 			);
 			// Alternative method if you don't want to supply the conversion factor via JSON files.
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+
 		// Heading correction should only be used while controlling the robot via angle.
 		_SwerveDrive.setHeadingCorrection(false);
 		_SwerveDrive.setCosineCompensator(false);
@@ -83,6 +101,11 @@ public class DriveSubsystem extends SubsystemBase
 		// Enable if you want to resynchronize your absolute encoders and motor
 		// encoders periodically when they are not moving.
 		_SwerveDrive.setModuleEncoderAutoSynchronize(false, 1);
+
+		if (_IsVisionDriveTest) {
+			setupPhotonVision();
+			_SwerveDrive.stopOdometryThread();
+		}
 	}
 
 	/**
@@ -106,8 +129,90 @@ public class DriveSubsystem extends SubsystemBase
 		);
 	}
 
+	public void setupPhotonVision() {
+		_VisionSubsystem = new VisionSubsystem(_SwerveDrive::getPose, _SwerveDrive.field);
+	}
+
+	public void setupPathPlanner() {
+		RobotConfig config;
+		try {
+			config = RobotConfig.fromGUISettings();
+			final boolean enableFeedForward = true;
+
+			AutoBuilder.configure(
+				this::getPose,
+				this::resetOdometry,
+				this::getRobotVelocity,
+				(speedsRobotRelative, moduleFeedForwards) -> {
+					if (enableFeedForward) {
+						_SwerveDrive.drive(
+							speedsRobotRelative,
+							_SwerveDrive.kinematics.toSwerveModuleStates(speedsRobotRelative),
+							moduleFeedForwards.linearForces()
+						);
+					} else {
+						_SwerveDrive.setChassisSpeeds(speedsRobotRelative);
+					}
+				},
+				new PPHolonomicDriveController(
+					new PIDConstants(5.0, 0.0, 0.0),
+					new PIDConstants(5.0, 0.0, 0.0)
+				),
+				config,
+				() -> {
+					var alliance = DriverStation.getAlliance();
+					if (alliance.isPresent()) {
+						return alliance.get() == DriverStation.Alliance.Red;
+					}
+					return false;
+				},
+				this
+			);
+		} catch (Exception e) {
+			DriverStation.reportError(getName(), e.getStackTrace());
+		}
+
+		PathfindingCommand.warmupCommand().schedule();
+	}
+
+	public Command aimAtTarget(Cameras camera) {
+		return run(() -> {
+			Optional<PhotonPipelineResult> resultO = camera.getBestResult();
+			if (resultO.isPresent()) {
+				var result = resultO.get();
+				if (result.hasTargets()) {
+					this.drive(
+						this.getTargetSpeeds(
+							0, 0,
+							Rotation2d.fromDegrees(result.getBestTarget().getYaw())
+						)
+					);
+				}
+			}
+		});
+	}
+
+	public Command getAutonomousCommand(String pathName) {
+		return new PathPlannerAuto(pathName);
+	}
+
+	public Command driveToPose(Pose2d pose) {
+		PathConstraints constraints = new PathConstraints(
+			_SwerveDrive.getMaximumChassisVelocity(),
+			4.0,
+			_SwerveDrive.getMaximumChassisAngularVelocity(),
+			Units.Degrees.of(720).in(Units.Radians)
+		);
+		return AutoBuilder.pathfindToPose(pose, constraints, Units.MetersPerSecond.of(0));
+	}
+
 	@Override
-	public void periodic() {}
+	public void periodic() {
+		if (_IsVisionDriveTest) {
+			_SwerveDrive.updateOdometry();
+			_VisionSubsystem.updatePoseEstimation(_SwerveDrive);
+		}
+	}
 
 	@Override
 	public void simulationPeriodic() {}

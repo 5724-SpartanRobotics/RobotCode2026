@@ -86,6 +86,7 @@ public final class Constants {
 	public static final class Vision {
 		public static final AprilTagFieldLayout FIELD_LAYOUT =
 			AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+		public static final double MAX_AMBIGUITY = 0.25;
 		public static final Transform3d CAMERA_TO_ROBOT = new Transform3d();
 	}
 
