@@ -501,6 +501,10 @@ public class DriveSubsystem extends SubsystemBase
 		_SwerveDrive.resetOdometry(initialHolonomicPose);
 	}
 
+	public Command resetOdometryCommand() {
+		return Commands.runOnce(() -> this.resetOdometry(new Pose2d(3, 3, new Rotation2d())));
+	}
+
 	/**
 	 * Gets the current pose (position and rotation) of the robot, as reported by odometry.
 	 *

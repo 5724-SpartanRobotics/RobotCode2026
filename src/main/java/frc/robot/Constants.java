@@ -13,6 +13,7 @@ import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Filesystem;
 import swervelib.math.Matter;
 
@@ -54,12 +55,13 @@ public final class Constants {
 	public static final class Drive {
 		public static final File SWERVE_CONFIG =
 			new File(Filesystem.getDeployDirectory(), "swerve");
-		public static final double SWERVE_LOOP_TIME = 0;
+		public static final Time SWERVE_LOOP_TIME = Units.Milliseconds.of(20).plus(Units.Milliseconds.of(110));
+		public static final Time WHEEL_LOCK_TIME = Units.Seconds.of(10);
 		// TODO: Calculate the CoM of the robot once it's finished
 		public static final Matter CHASSIS = new Matter(new Translation3d(
-			Units.Inches.of(0).in(Units.Meters),
-			Units.Inches.of(0).in(Units.Meters),
-			Units.Inches.of(8).in(Units.Meters)
+			Units.Millimeters.of(0).in(Units.Meters),
+			Units.Millimeters.of(0).in(Units.Meters),
+			Units.Millimeters.of(8).in(Units.Meters)
 		), Robot.MASS.in(Units.Kilograms));
 
 		public static final class Wheel {
@@ -89,7 +91,11 @@ public final class Constants {
 		public static final double DRIVER_DEADBAND = 0.5;
 		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
-		public static final class DriverMap {}
+		public static final class DriverMap {
+			public static final int ZERO_GYRO = 7;
+			public static final int DRIVE_TO_POSE = 1;
+			public static final int CENTER_SWERVES = 8;
+		}
 		
 		public static final class OperatorMap {}
 	}

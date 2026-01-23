@@ -4,12 +4,19 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants.Drive;
 import frc.robot.commands.DriveCommand;
+import frc.robot.lib.Elastic;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
@@ -31,11 +38,32 @@ public class RobotContainer {
 			DriveCommand.getCommand(DriveCommand.DriveType.FO_DirectAngle, Robot.isSimulation())
 		);
 
-		// TODO: Finish implementations starting a L151
-		// https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_with_PhotonVision/src/main/java/frc/robot/RobotContainer.java#L151
-		// but i'm tired so I'll do it later.
+		configureSimAndTestBindings();
 
-		// _DriverController.button(1).whileTrue();
+		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
+			Commands.runOnce(_DriveSubsystem::lock, _DriveSubsystem).repeatedly()
+		);
+		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
+			_DriveSubsystem.resetOdometryCommand(),
+			Commands.runOnce(_DriveSubsystem::zeroGyro)
+		));
+		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
+			_DriveSubsystem.centerModulesCommand()
+		);
+	}
+
+	private void configureSimAndTestBindings() {
+		if (Robot.isSimulation()) {
+			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
+			DriveCommand.DriveDirectAngle_Keyboard.driveToPose(
+				() -> target,
+				new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
+				new ProfiledPIDController(5, 0, 0, new Constraints(
+					Units.Radians.of(Constants.TWO_PI).baseUnitMagnitude(),
+					Units.Radians.of(Math.PI).baseUnitMagnitude()
+				))
+			);
+		}
 	}
 
 	public void robotFinishedBooting() {
@@ -48,6 +76,10 @@ public class RobotContainer {
 				"[via DebugLevel] Robot Code Debugging is ON. " +
 				"The \"Debug Mode\" is available in SmartDashboard."
 			);
+		}
+
+		if (DriverStation.isDSAttached() && Robot.isFirstConnection.compareAndSet(true, false)) {
+			Elastic.selectTab("Auto");
 		}
 	}
 

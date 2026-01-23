@@ -54,3 +54,10 @@ found in this repository.
 - Add necessary libraries (photon and pathplanner)
 - Start implementing Photon code from YAGSL examples
 - Remove old custom vision implementation
+
+## 23 Jan 2026
+- Finish implementation of photon
+- Add new necessary constants
+### Checklist
+- [ ] Remove & replace deprecated calls
+- [ ] Wait for robot to be finished to find center of mass, etc.

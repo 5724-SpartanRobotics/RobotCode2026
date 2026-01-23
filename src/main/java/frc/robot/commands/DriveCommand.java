@@ -20,15 +20,15 @@ import swervelib.math.SwerveMath;
 
 public class DriveCommand {
 	private static DriveSubsystem _DriveSubsystem;
-	private static SwerveInputStream _DriveAngularVelocity;
-	private static SwerveInputStream _DriveDirectAngle;
-	private static SwerveInputStream _DriveRobotOriented;
-	private static SwerveInputStream _DriveAngularVelocity_Keyboard;
-	private static SwerveInputStream _DriveDirectAngle_Keyboard;
+	public static SwerveInputStream DriveAngularVelocity;
+	public static SwerveInputStream DriveDirectAngle;
+	public static SwerveInputStream DriveRobotOriented;
+	public static SwerveInputStream DriveAngularVelocity_Keyboard;
+	public static SwerveInputStream DriveDirectAngle_Keyboard;
 
 	public static void initialize(DriveSubsystem drive, CommandJoystick joystick) {
 		_DriveSubsystem = drive;
-		_DriveAngularVelocity = SwerveInputStream.of(
+		DriveAngularVelocity = SwerveInputStream.of(
 			drive.getSwerveDrive(),
 			() -> joystick.getRawAxis(1) * -1.0, // Y axis (forward/back)
 			() -> joystick.getRawAxis(0) // X axis (strafe)
@@ -37,17 +37,17 @@ public class DriveCommand {
 			.deadband(Constants.Controller.DRIVER_DEADBAND)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
-		_DriveDirectAngle = _DriveAngularVelocity.copy()
+		DriveDirectAngle = DriveAngularVelocity.copy()
 			.withControllerHeadingAxis(
 				() -> Math.sin(joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
 				() -> Math.cos(joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI
 			)
 			.headingWhile(true);
-		_DriveRobotOriented = _DriveAngularVelocity.copy()
+		DriveRobotOriented = DriveAngularVelocity.copy()
 			.robotRelative(false)
 			.allianceRelativeControl(false);
 		
-		_DriveAngularVelocity_Keyboard = SwerveInputStream.of(
+		DriveAngularVelocity_Keyboard = SwerveInputStream.of(
 			drive.getSwerveDrive(),
 			() -> joystick.getRawAxis(1) * -1.0,
 			() -> joystick.getRawAxis(0) * -1.0
@@ -56,7 +56,7 @@ public class DriveCommand {
 			.deadband(Constants.Controller.DRIVER_DEADBAND)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
-		_DriveDirectAngle_Keyboard = _DriveAngularVelocity_Keyboard.copy()
+		DriveDirectAngle_Keyboard = DriveAngularVelocity_Keyboard.copy()
 			.withControllerHeadingAxis(
 				() -> Math.sin(joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
 				() -> Math.cos(joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI
@@ -79,12 +79,12 @@ public class DriveCommand {
 		}
 		return switch (t) {
 			case FO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(!isKeyboard ?
-				_DriveAngularVelocity : _DriveAngularVelocity_Keyboard);
+				DriveAngularVelocity : DriveAngularVelocity_Keyboard);
 			case FO_DirectAngle -> _DriveSubsystem.driveFieldOriented(!isKeyboard ?
-				_DriveDirectAngle : _DriveDirectAngle_Keyboard);
-			case RO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(_DriveRobotOriented);
+				DriveDirectAngle : DriveDirectAngle_Keyboard);
+			case RO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(DriveRobotOriented);
 			case SetpointGenerator -> _DriveSubsystem.driveWithSetpointGeneratorFieldRelative(
-				!isKeyboard ? _DriveDirectAngle : _DriveDirectAngle_Keyboard);
+				!isKeyboard ? DriveDirectAngle : DriveDirectAngle_Keyboard);
 		};
 	}
 
@@ -137,7 +137,7 @@ public class DriveCommand {
 				tx,
 				_DriveSubsystem.getFieldVelocity(),
 				_DriveSubsystem.getPose(),
-				Constants.Drive.SWERVE_LOOP_TIME,
+				Constants.Drive.SWERVE_LOOP_TIME.in(Units.Seconds),
 				Constants.Robot.MASS.in(Units.Kilograms),
 				List.of(Constants.Drive.CHASSIS),
 				_DriveSubsystem.getSwerveDriveConfiguration()
@@ -227,7 +227,7 @@ public class DriveCommand {
 				tx,
 				_DriveSubsystem.getFieldVelocity(),
 				_DriveSubsystem.getPose(),
-				Constants.Drive.SWERVE_LOOP_TIME,
+				Constants.Drive.SWERVE_LOOP_TIME.in(Units.Seconds),
 				Constants.Robot.MASS.in(Units.Kilograms),
 				List.of(Constants.Drive.CHASSIS),
 				_DriveSubsystem.getSwerveDriveConfiguration()
@@ -288,7 +288,7 @@ public class DriveCommand {
 				tx,
 				_DriveSubsystem.getFieldVelocity(),
 				_DriveSubsystem.getPose(),
-				Constants.Drive.SWERVE_LOOP_TIME,
+				Constants.Drive.SWERVE_LOOP_TIME.in(Units.Seconds),
 				Constants.Robot.MASS.in(Units.Kilograms),
 				List.of(Constants.Drive.CHASSIS),
 				_DriveSubsystem.getSwerveDriveConfiguration()
