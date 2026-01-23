@@ -7,8 +7,10 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Meter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -21,6 +23,9 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -31,7 +36,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
@@ -159,13 +166,7 @@ public class DriveSubsystem extends SubsystemBase
 					new PIDConstants(5.0, 0.0, 0.0)
 				),
 				config,
-				() -> {
-					var alliance = DriverStation.getAlliance();
-					if (alliance.isPresent()) {
-						return alliance.get() == DriverStation.Alliance.Red;
-					}
-					return false;
-				},
+				() -> isRedAlliance(),
 				this
 			);
 		} catch (Exception e) {
@@ -204,6 +205,57 @@ public class DriveSubsystem extends SubsystemBase
 			Units.Degrees.of(720).in(Units.Radians)
 		);
 		return AutoBuilder.pathfindToPose(pose, constraints, Units.MetersPerSecond.of(0));
+	}
+
+	private Command driveWithSetpointGenerator(Supplier<ChassisSpeeds> robotRelativeChassisSpeeds)
+	throws IOException, org.json.simple.parser.ParseException {
+		SwerveSetpointGenerator setpointGenerator = new SwerveSetpointGenerator(
+			RobotConfig.fromGUISettings(),
+			_SwerveDrive.getMaximumChassisAngularVelocity()
+		);
+		AtomicReference<SwerveSetpoint> prevSetpoint = new AtomicReference<>(
+			new SwerveSetpoint(
+				_SwerveDrive.getRobotVelocity(),
+				_SwerveDrive.getStates(),
+				DriveFeedforwards.zeros(_SwerveDrive.getModules().length)
+			)
+		);
+		AtomicReference<Double> previousTime = new AtomicReference<>();
+
+		return startRun(
+			() -> previousTime.set(Timer.getFPGATimestamp()),
+			() -> {
+				double newTime = Timer.getFPGATimestamp();
+				SwerveSetpoint newSetpoint = setpointGenerator.generateSetpoint(
+					prevSetpoint.get(),
+					robotRelativeChassisSpeeds.get(),
+					newTime - previousTime.get()
+				);
+
+				_SwerveDrive.drive(
+					newSetpoint.robotRelativeSpeeds(),
+					newSetpoint.moduleStates(),
+					newSetpoint.feedforwards().linearForces()
+				);
+				prevSetpoint.getAndSet(newSetpoint);
+				previousTime.set(newTime);
+			}
+		);
+	}
+
+	public Command driveWithSetpointGeneratorFieldRelative(
+		Supplier<ChassisSpeeds> fieldRelativeSpeeds
+	) {
+		try {
+			return driveWithSetpointGenerator(() -> {
+				return ChassisSpeeds.fromFieldRelativeSpeeds(
+					fieldRelativeSpeeds.get(), getHeading()
+				);
+			});
+		} catch (Exception e) {
+			DriverStation.reportError(e.toString(), true);
+		}
+		return Commands.none();
 	}
 
 	@Override
@@ -270,8 +322,7 @@ public class DriveSubsystem extends SubsystemBase
 	public Command centerModulesCommand()
 	{
 		return run(
-			() -> Arrays.asList(_SwerveDrive.getModules())
-				.forEach(it -> it.setAngle(0.0))
+			() -> Arrays.asList(_SwerveDrive.getModules()).forEach(it -> it.setAngle(0.0))
 		);
 	}
 

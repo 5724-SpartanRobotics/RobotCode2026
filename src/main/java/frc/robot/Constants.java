@@ -6,6 +6,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearAcceleration;
@@ -13,6 +14,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.Filesystem;
+import swervelib.math.Matter;
 
 public final class Constants {
 	public static final double TWO_PI = Math.PI * 2.0;
@@ -39,6 +41,7 @@ public final class Constants {
 	}
 
 	public static final class Robot {
+		// TODO: These values will all need updated once the robot is finished.
 		public static final Mass MASS = Units.Pounds.of(110);
 		public static final MomentOfInertia MOMENT_OF_INERTIA =
 			Units.KilogramSquareMeters.of(16.5);
@@ -51,6 +54,13 @@ public final class Constants {
 	public static final class Drive {
 		public static final File SWERVE_CONFIG =
 			new File(Filesystem.getDeployDirectory(), "swerve");
+		public static final double SWERVE_LOOP_TIME = 0;
+		// TODO: Calculate the CoM of the robot once it's finished
+		public static final Matter CHASSIS = new Matter(new Translation3d(
+			Units.Inches.of(0).in(Units.Meters),
+			Units.Inches.of(0).in(Units.Meters),
+			Units.Inches.of(8).in(Units.Meters)
+		), Robot.MASS.in(Units.Kilograms));
 
 		public static final class Wheel {
 			public static final Distance RADIUS = Units.Inches.of(2.0);
@@ -76,7 +86,8 @@ public final class Constants {
 	}
 
 	public static final class Controller {
-		public static final double DEFAULT_DEADBAND = 0.5;
+		public static final double DRIVER_DEADBAND = 0.5;
+		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
 		public static final class DriverMap {}
 		
