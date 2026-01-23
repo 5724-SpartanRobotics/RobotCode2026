@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.Drive;
 import frc.robot.commands.DriveCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
@@ -26,7 +27,13 @@ public class RobotContainer {
 	}
 
 	private void configureControllerBindings() {
-		_DriveSubsystem.setDefaultCommand(DriveCommand.getCommand());
+		_DriveSubsystem.setDefaultCommand(
+			DriveCommand.getCommand(DriveCommand.DriveType.FO_DirectAngle, Robot.isSimulation())
+		);
+
+		// TODO: Finish implementations starting a L151
+		// https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_with_PhotonVision/src/main/java/frc/robot/RobotContainer.java#L151
+		// but i'm tired so I'll do it later.
 
 		// _DriverController.button(1).whileTrue();
 	}

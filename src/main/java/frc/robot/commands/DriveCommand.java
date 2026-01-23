@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.Constants;
 import frc.robot.subsystems.DriveSubsystem;
@@ -65,8 +66,26 @@ public class DriveCommand {
 			.translationHeadingOffset(Rotation2d.fromDegrees(0));
 	}
 
-	public static Command getCommand() {
-		return _DriveSubsystem.driveFieldOriented(_DriveAngularVelocity);
+	public enum DriveType {
+		FO_AngularVelocity,
+		FO_DirectAngle,
+		RO_AngularVelocity,
+		SetpointGenerator
+	}
+
+	public static Command getCommand(DriveType t, boolean isKeyboard) {
+		if (t == DriveType.RO_AngularVelocity && isKeyboard) {
+			return Commands.none();
+		}
+		return switch (t) {
+			case FO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(!isKeyboard ?
+				_DriveAngularVelocity : _DriveAngularVelocity_Keyboard);
+			case FO_DirectAngle -> _DriveSubsystem.driveFieldOriented(!isKeyboard ?
+				_DriveDirectAngle : _DriveDirectAngle_Keyboard);
+			case RO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(_DriveRobotOriented);
+			case SetpointGenerator -> _DriveSubsystem.driveWithSetpointGeneratorFieldRelative(
+				!isKeyboard ? _DriveDirectAngle : _DriveDirectAngle_Keyboard);
+		};
 	}
 
 	public class AbsoluteDrive extends Command {

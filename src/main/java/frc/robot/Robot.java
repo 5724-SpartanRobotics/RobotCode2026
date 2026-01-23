@@ -39,6 +39,9 @@ public class Robot extends TimedRobot {
 			DriverStation.silenceJoystickConnectionWarning(true);
 		}
 		SmartDashboard.putString("Debug Mode", Constants.DEBUG_TRACE_LEVEL.toString());
+
+		// TODO: Will we end up needing a disabled timer?
+		// https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_with_PhotonVision/src/main/java/frc/robot/Robot.java
 	}
 
 	@Override
