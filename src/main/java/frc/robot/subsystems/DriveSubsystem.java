@@ -37,6 +37,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -68,6 +69,10 @@ public class DriveSubsystem extends SubsystemBase
 
 	private VisionSubsystem _VisionSubsystem;
 
+	private static void configureTelemetry() {
+		SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+	}
+
 	/**
 	 * Initialize {@link SwerveDrive} with the directory provided.
 	 *
@@ -75,7 +80,7 @@ public class DriveSubsystem extends SubsystemBase
 	 */
 	public DriveSubsystem(File directory)
 	{ 
-		boolean blueAlliance = false;
+		boolean blueAlliance = !Constants.isRedAlliance();
 		Pose2d startingPose = blueAlliance ?
 			new Pose2d(
 				new Translation2d(Meter.of(1), Meter.of(4)),
@@ -86,9 +91,8 @@ public class DriveSubsystem extends SubsystemBase
 			);
 		// Configure the Telemetry before creating the SwerveDrive to avoid
 		// unnecessary objectsbeing created.
-		SwerveDriveTelemetry.verbosity = Constants.DebugLevel.isOrAll(Constants.DebugLevel.Drive) ?
-			TelemetryVerbosity.HIGH : TelemetryVerbosity.LOW;
-		
+		configureTelemetry();
+
 		try {
 			_SwerveDrive = new SwerveParser(directory)
 				.createSwerveDrive(
@@ -109,22 +113,24 @@ public class DriveSubsystem extends SubsystemBase
 		// encoders periodically when they are not moving.
 		_SwerveDrive.setModuleEncoderAutoSynchronize(false, 1);
 
+		setupPhotonVision();
 		if (_IsVisionDriveTest) {
-			setupPhotonVision();
 			_SwerveDrive.stopOdometryThread();
 		}
+		setupPathPlanner();
 	}
 
 	/**
 	 * Construct the swerve drive.
 	 *
-	 * @param driveCfg			SwerveDriveConfiguration for the swerve.
+	 * @param driveCfg SwerveDriveConfiguration for the swerve.
 	 * @param controllerCfg Swerve Controller.
 	 */
 	public DriveSubsystem(
 		SwerveDriveConfiguration driveCfg,
 		SwerveControllerConfiguration controllerCfg
 	) {
+		configureTelemetry();
 		_SwerveDrive = new SwerveDrive(
 			driveCfg,
 			controllerCfg,
@@ -166,7 +172,7 @@ public class DriveSubsystem extends SubsystemBase
 					new PIDConstants(5.0, 0.0, 0.0)
 				),
 				config,
-				() -> isRedAlliance(),
+				() -> Constants.isRedAlliance(),
 				this
 			);
 		} catch (Exception e) {
@@ -262,8 +268,8 @@ public class DriveSubsystem extends SubsystemBase
 	public void periodic() {
 		if (_IsVisionDriveTest) {
 			_SwerveDrive.updateOdometry();
-			_VisionSubsystem.updatePoseEstimation(_SwerveDrive);
 		}
+		_VisionSubsystem.updatePoseEstimation(_SwerveDrive);
 	}
 
 	@Override
@@ -464,7 +470,11 @@ public class DriveSubsystem extends SubsystemBase
 	public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity)
 	{
 		return run(() -> {
-			_SwerveDrive.driveFieldOriented(velocity.get());
+			ChassisSpeeds v = velocity.get();
+			System.out.println("!!! This should make the robot go\n\t" + v.toString());
+			SmartDashboard.putString("DRIVE VELOCITIES", v.toString());
+
+			_SwerveDrive.driveFieldOriented(v);
 		});
 	}
 
@@ -544,24 +554,13 @@ public class DriveSubsystem extends SubsystemBase
 	}
 
 	/**
-	 * Checks if the alliance is red, defaults to false if alliance isn't available.
-	 *
-	 * @return true if the red alliance, false if blue. Defaults to false if none is available.
-	 */
-	private boolean isRedAlliance()
-	{
-		var alliance = DriverStation.getAlliance();
-		return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
-	}
-
-	/**
 	 * This will zero (calibrate) the robot to assume the current position is facing forward
 	 * <p>
 	 * If red alliance rotate the robot 180 after the drviebase zero command
 	 */
 	public void zeroGyroWithAlliance()
 	{
-		if (isRedAlliance())
+		if (Constants.isRedAlliance())
 		{
 			zeroGyro();
 			//Set the pose 180 degrees

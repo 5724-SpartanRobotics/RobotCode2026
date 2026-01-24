@@ -16,13 +16,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommand;
+import frc.robot.commands.autos.DriveAuto;
 import frc.robot.lib.Elastic;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
 	private DriveSubsystem _DriveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
-	private VisionSubsystem _VisionSubsystem;
 
 	private CommandJoystick _DriverController = new CommandJoystick(0);
 	private CommandXboxController _OperatorController = new CommandXboxController(1);
@@ -55,7 +54,7 @@ public class RobotContainer {
 	private void configureSimAndTestBindings() {
 		if (Robot.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
-			DriveCommand.DriveDirectAngle_Keyboard.driveToPose(
+			DriveCommand.DriveDirectAngle_Keyboard().driveToPose(
 				() -> target,
 				new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
 				new ProfiledPIDController(5, 0, 0, new Constraints(
@@ -90,6 +89,6 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
-		return Commands.print("No autonomous command configured");
+		return new DriveAuto(_DriveSubsystem);
 	}
 }

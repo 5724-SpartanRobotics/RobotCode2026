@@ -14,6 +14,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import swervelib.math.Matter;
 
@@ -22,28 +23,46 @@ public final class Constants {
 	public static final double HALF_PI = Math.PI / 2.0;
 	public static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
 
+	/**
+	 * Checks if the alliance is red, defaults to false if alliance isn't available.
+	 *
+	 * @return true if the red alliance, false if blue. Defaults to false if none is available.
+	 */
+	public static boolean isRedAlliance() {
+		var alliance = DriverStation.getAlliance();
+		return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+	}
+
 	public static final class CanId {
 		// https://docs.google.com/spreadsheets/d/1t8Ids1RzCOn0vlFqbZAr0mgEd12h2sJ_fCfxJkntMR0/edit?gid=0#gid=0
 		public static final int ROBORIO = 0;
-		public static final int PDH = 1;
-		public static final int PIGEON2 = 2;
+		public static final int PDH = 0;
+		public static final int PIGEON2 = 14;
+
 		public static final int FL_DRIVE = 3;
-		public static final int FL_ENCODER = 4;
-		public static final int FL_TURN = 5;
-		public static final int BL_DRIVE = 6;
-		public static final int BL_ENCODER = 7;
-		public static final int BL_TURN = 8;
-		public static final int BR_DRIVE = 9;
-		public static final int BR_ENCODER = 10;
-		public static final int BR_TURN = 11;
-		public static final int FR_DRIVE = 12;
-		public static final int FR_ENCODER = 13;
-		public static final int FR_TURN = 14;
+		public static final int FL_ENCODER = 10; // 0.546143
+		public static final double FL_ENCODER_OFFSET = 0.546143;
+		public static final int FL_TURN = 2;
+
+		public static final int BL_DRIVE = 5;
+		public static final int BL_ENCODER = 11; // 0.726562
+		public static final double BL_ENCODER_OFFSET = 0.726562;
+		public static final int BL_TURN = 4;
+
+		public static final int BR_DRIVE = 7;
+		public static final int BR_ENCODER = 13; // 0.754883
+		public static final double BR_ENCODER_OFFSET = 0.754883;
+		public static final int BR_TURN = 6;
+
+		public static final int FR_DRIVE = 9;
+		public static final int FR_ENCODER = 12; // 0.192383
+		public static final double FR_ENCODER_OFFSET = 0.192383;
+		public static final int FR_TURN = 8;
 	}
 
 	public static final class Robot {
 		// TODO: These values will all need updated once the robot is finished.
-		public static final Mass MASS = Units.Pounds.of(110);
+		public static final Mass MASS = Units.Pounds.of(54.6);
 		public static final MomentOfInertia MOMENT_OF_INERTIA =
 			Units.KilogramSquareMeters.of(16.5);
 		public static final LinearVelocity MAX_LINEAR_VELOCITY =
@@ -67,8 +86,8 @@ public final class Constants {
 		public static final class Wheel {
 			public static final Distance RADIUS = Units.Inches.of(2.0);
 			public static final double COF = 1.2;
-			public static final Distance X_FROM_CENTER = Units.Inches.of(11.96);
-			public static final Distance Y_FROM_CENTER = Units.Inches.of(11.016);
+			public static final Distance X_FROM_CENTER = Units.Inches.of(11.875);
+			public static final Distance Y_FROM_CENTER = Units.Inches.of( 12.34375);
 		}
 
 		public static final class SwerveModuleOffsets {

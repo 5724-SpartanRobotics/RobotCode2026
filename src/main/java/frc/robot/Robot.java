@@ -7,12 +7,15 @@ package frc.robot;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.DebugLevel;
 
@@ -21,6 +24,7 @@ public class Robot extends TimedRobot {
 
 	private static final AtomicReference<Timer> _DisabledTimer = new AtomicReference<>(new Timer());
 	private final RobotContainer _RobotContainer;
+	private Command _AutoCommand;
 
 	public Robot() {
 		if (!Constants.isBeanDebug()) {
@@ -30,6 +34,7 @@ public class Robot extends TimedRobot {
 		}
 
 		_RobotContainer = new RobotContainer();
+		_AutoCommand = _RobotContainer.getAutonomousCommand();
 
 		// Implement other things here (shouldn't be many)
 
@@ -45,6 +50,9 @@ public class Robot extends TimedRobot {
 	public void robotPeriodic() {
 		CommandScheduler.getInstance().run();
 		_RobotContainer.visionPeriodic();
+
+		NetworkTableInstance.getDefault().getEntry("/Match Time").setDouble(DriverStation.getMatchTime());
+		NetworkTableInstance.getDefault().getEntry("/Voltage").setDouble(RobotController.getBatteryVoltage());
 	}
 
 	@Override
@@ -68,6 +76,8 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		_RobotContainer.setMotorBrake(true);
+		_AutoCommand = _RobotContainer.getAutonomousCommand();
+		if (_AutoCommand != null) CommandScheduler.getInstance().schedule(_AutoCommand);
 	}
 
 	@Override
@@ -77,7 +87,10 @@ public class Robot extends TimedRobot {
 	public void autonomousExit() {}
 
 	@Override
-	public void teleopInit() {}
+	public void teleopInit() {
+		if (_AutoCommand != null) _AutoCommand.cancel();
+		else CommandScheduler.getInstance().cancelAll();
+	}
 
 	@Override
 	public void teleopPeriodic() {}
