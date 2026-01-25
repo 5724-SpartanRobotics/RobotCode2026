@@ -40,7 +40,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.subsystems.VisionSubsystem.Cameras;
@@ -57,7 +56,7 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 /**
  * {@link https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_with_PhotonVision/src/main/java/frc/robot/subsystems/swervedrive/SwerveSubsystem.java}
  */
-public class DriveSubsystem extends SubsystemBase
+public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 {
 	/**
 	 * Swerve drive object.
@@ -78,7 +77,7 @@ public class DriveSubsystem extends SubsystemBase
 	 *
 	 * @param directory Directory of swerve drive config files.
 	 */
-	public DriveSubsystem(File directory)
+	public YagslDriveSubsystem(File directory)
 	{ 
 		boolean blueAlliance = !Constants.isRedAlliance();
 		Pose2d startingPose = blueAlliance ?
@@ -126,7 +125,7 @@ public class DriveSubsystem extends SubsystemBase
 	 * @param driveCfg SwerveDriveConfiguration for the swerve.
 	 * @param controllerCfg Swerve Controller.
 	 */
-	public DriveSubsystem(
+	public YagslDriveSubsystem(
 		SwerveDriveConfiguration driveCfg,
 		SwerveControllerConfiguration controllerCfg
 	) {
@@ -337,6 +336,7 @@ public class DriveSubsystem extends SubsystemBase
 	 *
 	 * @return a Command that tells the robot to drive forward until the command ends
 	 */
+	@Override
 	public Command driveForward()
 	{
 		return run(() -> {

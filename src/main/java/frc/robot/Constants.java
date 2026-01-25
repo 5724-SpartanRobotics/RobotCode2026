@@ -4,10 +4,12 @@ import java.io.File;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -16,6 +18,8 @@ import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.lib.SwerveModuleConstantsRecord;
+import frc.robot.lib.SwerveModule.MotorType;
 import swervelib.math.Matter;
 
 public final class Constants {
@@ -39,25 +43,22 @@ public final class Constants {
 		public static final int PDH = 0;
 		public static final int PIGEON2 = 14;
 
-		public static final int FL_DRIVE = 3;
-		public static final int FL_ENCODER = 10; // 0.546143
-		public static final double FL_ENCODER_OFFSET = 0.546143;
-		public static final int FL_TURN = 2;
-
-		public static final int BL_DRIVE = 5;
-		public static final int BL_ENCODER = 11; // 0.726562
-		public static final double BL_ENCODER_OFFSET = 0.726562;
-		public static final int BL_TURN = 4;
-
-		public static final int BR_DRIVE = 7;
-		public static final int BR_ENCODER = 13; // 0.754883
-		public static final double BR_ENCODER_OFFSET = 0.754883;
-		public static final int BR_TURN = 6;
-
-		public static final int FR_DRIVE = 9;
-		public static final int FR_ENCODER = 12; // 0.192383
-		public static final double FR_ENCODER_OFFSET = 0.192383;
-		public static final int FR_TURN = 8;
+		public static final SwerveModuleConstantsRecord FL = new SwerveModuleConstantsRecord(
+			3, 2, 10, 0.546143, true,
+			new PIDController(0.1, 0, 0)
+		);
+		public static final SwerveModuleConstantsRecord BL = new SwerveModuleConstantsRecord(
+			5, 4, 11, 0.726562, true,
+			new PIDController(0.1, 0, 0)
+		);
+		public static final SwerveModuleConstantsRecord BR = new SwerveModuleConstantsRecord(
+			7, 6, 13, 0.754883, true,
+			new PIDController(0.1, 0, 0)
+		);
+		public static final SwerveModuleConstantsRecord FR = new SwerveModuleConstantsRecord(
+			9, 8, 12, 0.192383, true,
+			new PIDController(0.1, 0, 0)
+		);
 	}
 
 	public static final class Robot {
@@ -69,6 +70,9 @@ public final class Constants {
 			Units.FeetPerSecond.of(14.5); // about 4.42m/s
 		public static final LinearAcceleration MAX_LINEAR_ACCELERATION =
 			Units.FeetPerSecondPerSecond.of(13.12); // about 4m/s^2
+		public static final AngularVelocity MAX_ANGULAR_VELOCITY =
+			Units.RadiansPerSecond.of(TWO_PI);
+		public static final double DEFAULT_SPEED_MOD = 0.3;
 	}
 
 	public static final class Drive {
@@ -82,6 +86,10 @@ public final class Constants {
 			Units.Millimeters.of(0).in(Units.Meters),
 			Units.Millimeters.of(8).in(Units.Meters)
 		), Robot.MASS.in(Units.Kilograms));
+
+		public static final MotorType SWERVE_MOTOR = MotorType.Falcon500;
+		public static final double SWERVE_DRIVE_GEAR_RATIO = 6.75;
+		public static final double SWERVE_TURN_GEAR_RATIO = 150.0 / 7.0;
 
 		public static final class Wheel {
 			public static final Distance RADIUS = Units.Inches.of(2.0);
@@ -107,10 +115,13 @@ public final class Constants {
 	}
 
 	public static final class Controller {
-		public static final double DRIVER_DEADBAND = 0.5;
+		public static final double DRIVER_DEADBAND_XY = 0.1;
+		public static final double DRIVER_DEADBAND_Z = 0.35;
 		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
 		public static final class DriverMap {
+			public static final int SPEEDMOD_MID = 1; // trigger
+			public static final int SPEEDMOD_MAX = 2; // thumb button
 			public static final int ZERO_GYRO = 7;
 			public static final int DRIVE_TO_POSE = 1;
 			public static final int CENTER_SWERVES = 8;

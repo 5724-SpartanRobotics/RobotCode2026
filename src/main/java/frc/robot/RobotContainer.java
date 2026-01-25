@@ -15,46 +15,68 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.DriveCommand;
+import frc.robot.commands.YagslDriveCommand;
 import frc.robot.commands.autos.DriveAuto;
 import frc.robot.lib.Elastic;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.CustomDriveSubsystem;
+import frc.robot.subsystems.YagslDriveSubsystem;
 
 public class RobotContainer {
-	private DriveSubsystem _DriveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
+	// private DriveSubsystem _DriveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
+	private CustomDriveSubsystem _DriveSubsystem = CustomDriveSubsystem.initialize(true);
 
 	private CommandJoystick _DriverController = new CommandJoystick(0);
 	private CommandXboxController _OperatorController = new CommandXboxController(1);
 
 	public RobotContainer() {
-		DriveCommand.initialize(_DriveSubsystem, _DriverController);
+		// YagslDriveCommand.initialize(_DriveSubsystem, _DriverController);
 
 		configureControllerBindings();
 	}
 
 	private void configureControllerBindings() {
 		_DriveSubsystem.setDefaultCommand(
-			DriveCommand.getCommand(DriveCommand.DriveType.FO_DirectAngle, Robot.isSimulation())
+			YagslDriveCommand.getCommand(YagslDriveCommand.DriveType.FO_DirectAngle, Robot.isSimulation())
 		);
 
 		configureSimAndTestBindings();
 
-		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
-			Commands.runOnce(_DriveSubsystem::lock, _DriveSubsystem).repeatedly()
-		);
+		/* USING YAGSL */
+		// _DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
+		// 	Commands.runOnce(_DriveSubsystem::lock, _DriveSubsystem).repeatedly()
+		// );
+		// _DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
+		// 	_DriveSubsystem.resetOdometryCommand(),
+		// 	Commands.runOnce(_DriveSubsystem::zeroGyro)
+		// ));
+		// _DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
+		// 	_DriveSubsystem.centerModulesCommand()
+		// );
+
+		/* USING CUSTOM IMPLEMENTATION */
 		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
-			_DriveSubsystem.resetOdometryCommand(),
-			Commands.runOnce(_DriveSubsystem::zeroGyro)
+			Commands.runOnce(() -> _DriveSubsystem.resetOdometry(), _DriveSubsystem),
+			Commands.runOnce(() -> _DriveSubsystem.zeroGyro(), _DriveSubsystem)
 		));
 		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
-			_DriveSubsystem.centerModulesCommand()
+			Commands.run(() -> _DriveSubsystem.centerModules(), _DriveSubsystem)
+		);
+		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
+			Commands.runOnce(() -> _DriveSubsystem.setSpeedMod(1.0), _DriveSubsystem)
+		).onFalse(
+			Commands.runOnce(() -> _DriveSubsystem.resetSpeedMod(), _DriveSubsystem)
+		);
+		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MID).whileTrue(
+			Commands.runOnce(() -> _DriveSubsystem.setSpeedMod(0.65), _DriveSubsystem)
+		).onFalse(
+			Commands.runOnce(() -> _DriveSubsystem.resetSpeedMod(), _DriveSubsystem)
 		);
 	}
 
 	private void configureSimAndTestBindings() {
 		if (Robot.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
-			DriveCommand.DriveDirectAngle_Keyboard().driveToPose(
+			YagslDriveCommand.DriveDirectAngle_Keyboard().driveToPose(
 				() -> target,
 				new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
 				new ProfiledPIDController(5, 0, 0, new Constraints(
@@ -85,7 +107,7 @@ public class RobotContainer {
 	public void visionPeriodic() {}
 
 	public void setMotorBrake(boolean brake) {
-		_DriveSubsystem.setMotorBrake(brake);
+		// _DriveSubsystem.setMotorBrake(brake);
 	}
 
 	public Command getAutonomousCommand() {

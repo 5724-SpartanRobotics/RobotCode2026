@@ -13,13 +13,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.Constants;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.YagslDriveSubsystem;
 import swervelib.SwerveController;
 import swervelib.SwerveInputStream;
 import swervelib.math.SwerveMath;
 
-public class DriveCommand {
-	private static DriveSubsystem _DriveSubsystem;
+public class YagslDriveCommand {
+	private static YagslDriveSubsystem _DriveSubsystem;
 	private static CommandJoystick _Joystick;
 	// public static SwerveInputStream DriveAngularVelocity;
 	// public static SwerveInputStream DriveDirectAngle;
@@ -27,7 +27,7 @@ public class DriveCommand {
 	// public static SwerveInputStream DriveAngularVelocity_Keyboard;
 	// public static SwerveInputStream DriveDirectAngle_Keyboard;
 
-	public static void initialize(DriveSubsystem drive, CommandJoystick joystick) {
+	public static void initialize(YagslDriveSubsystem drive, CommandJoystick joystick) {
 		_DriveSubsystem = drive;
 		_Joystick = joystick;
 		System.out.println("===== The <<DriveCommand>>s have been initialized. =====");
@@ -41,7 +41,7 @@ public class DriveCommand {
 			() -> _Joystick.getX() // X axis (strafe)
 		)
 			.withControllerRotationAxis(() -> _Joystick.getZ()) // twist / rotation
-			.deadband(Constants.Controller.DRIVER_DEADBAND)
+			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
 	}
@@ -69,7 +69,7 @@ public class DriveCommand {
 			() -> _Joystick.getRawAxis(0) * -1.0
 		)
 			.withControllerRotationAxis(() -> _Joystick.getRawAxis(2))
-			.deadband(Constants.Controller.DRIVER_DEADBAND)
+			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
 	}
@@ -109,18 +109,18 @@ public class DriveCommand {
 	}
 
 	public class AbsoluteDrive extends Command {
-		private final DriveSubsystem _DriveSubsystem;
+		private final YagslDriveSubsystem _DriveSubsystem;
 		private final DoubleSupplier _VX, _VY, _HdgHorizontal, _HdgVertical;
 		private boolean _initRotation = false;
 
 		public AbsoluteDrive(
-			DriveSubsystem driveSubsystem,
+			YagslDriveSubsystem YagslDriveSubsystem,
 			DoubleSupplier vX,
 			DoubleSupplier vY,
 			DoubleSupplier hdgHorizontal,
 			DoubleSupplier hdgVertical
 		) {
-			this._DriveSubsystem = driveSubsystem;
+			this._DriveSubsystem = YagslDriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
 			this._HdgHorizontal = hdgHorizontal;
@@ -180,14 +180,14 @@ public class DriveCommand {
 	}
 
 	public class AbsoluteDriveAdvanced extends Command {
-		private final DriveSubsystem _DriveSubsystem;
+		private final YagslDriveSubsystem _DriveSubsystem;
 		private final DoubleSupplier _VX, _VY, _HdgAdjust;
 		private final BooleanSupplier _LookAway, _LookTowards, _LookLeft, _LookRight;
 
 		private boolean _resetHeading = false;
 
 		public AbsoluteDriveAdvanced(
-			DriveSubsystem driveSubsystem,
+			YagslDriveSubsystem YagslDriveSubsystem,
 			DoubleSupplier vX,
 			DoubleSupplier vY,
 			DoubleSupplier hdgAdjust,
@@ -196,7 +196,7 @@ public class DriveCommand {
 			BooleanSupplier lookLeft,
 			BooleanSupplier lookRight
 		) {
-			this._DriveSubsystem = driveSubsystem;
+			this._DriveSubsystem = YagslDriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
 			this._HdgAdjust = hdgAdjust;
@@ -280,16 +280,16 @@ public class DriveCommand {
 	}
 
 	public class AbsoluteFieldDrive extends Command {
-		private final DriveSubsystem _DriveSubsystem;
+		private final YagslDriveSubsystem _DriveSubsystem;
 		private final DoubleSupplier _VX, _VY, _Hdg;
 
 		public AbsoluteFieldDrive(
-			DriveSubsystem driveSubsystem,
+			YagslDriveSubsystem YagslDriveSubsystem,
 			DoubleSupplier vX,
 			DoubleSupplier vY,
 			DoubleSupplier hdg
 		) {
-			this._DriveSubsystem = driveSubsystem;
+			this._DriveSubsystem = YagslDriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
 			this._Hdg = hdg;
