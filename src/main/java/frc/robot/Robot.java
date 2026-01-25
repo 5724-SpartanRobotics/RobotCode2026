@@ -4,22 +4,30 @@
 
 package frc.robot;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.DebugLevel;
 
 public class Robot extends TimedRobot {
+	public static AtomicBoolean isFirstConnection = new AtomicBoolean(true);
+
+	private static final AtomicReference<Timer> _DisabledTimer = new AtomicReference<>(new Timer());
 	private final RobotContainer _RobotContainer;
 
 	public Robot() {
 		if (!Constants.isBeanDebug()) {
 			// Trying to start a DataLogManager on a debug session crashes for some reason
-            DataLogManager.start();
-            DriverStation.startDataLog(DataLogManager.getLog());
-        }
+			DataLogManager.start();
+			DriverStation.startDataLog(DataLogManager.getLog());
+		}
 
 		_RobotContainer = new RobotContainer();
 
@@ -36,19 +44,31 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotPeriodic() {
 		CommandScheduler.getInstance().run();
+		_RobotContainer.visionPeriodic();
 	}
 
 	@Override
-	public void disabledInit() {}
+	public void disabledInit() {
+		_DisabledTimer.get().reset();
+		_DisabledTimer.get().start();
+	}
 
 	@Override
-	public void disabledPeriodic() {}
+	public void disabledPeriodic() {
+		if (_DisabledTimer.get().hasElapsed(Constants.Drive.WHEEL_LOCK_TIME.in(Units.Seconds))) {
+			_RobotContainer.setMotorBrake(false);
+			_DisabledTimer.get().stop();
+			_DisabledTimer.get().reset();
+		}
+	}
 
 	@Override
 	public void disabledExit() {}
 
 	@Override
-	public void autonomousInit() {}
+	public void autonomousInit() {
+		_RobotContainer.setMotorBrake(true);
+	}
 
 	@Override
 	public void autonomousPeriodic() {}

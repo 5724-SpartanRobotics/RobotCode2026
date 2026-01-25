@@ -4,15 +4,67 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.DriveCommand;
+import frc.robot.lib.Elastic;
+import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
+	private DriveSubsystem _DriveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
+	private VisionSubsystem _VisionSubsystem;
+
+	private CommandJoystick _DriverController = new CommandJoystick(0);
+	private CommandXboxController _OperatorController = new CommandXboxController(1);
+
 	public RobotContainer() {
-		configureBindings();
+		DriveCommand.initialize(_DriveSubsystem, _DriverController);
+
+		configureControllerBindings();
 	}
 
-	private void configureBindings() {}
+	private void configureControllerBindings() {
+		_DriveSubsystem.setDefaultCommand(
+			DriveCommand.getCommand(DriveCommand.DriveType.FO_DirectAngle, Robot.isSimulation())
+		);
+
+		configureSimAndTestBindings();
+
+		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
+			Commands.runOnce(_DriveSubsystem::lock, _DriveSubsystem).repeatedly()
+		);
+		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
+			_DriveSubsystem.resetOdometryCommand(),
+			Commands.runOnce(_DriveSubsystem::zeroGyro)
+		));
+		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
+			_DriveSubsystem.centerModulesCommand()
+		);
+	}
+
+	private void configureSimAndTestBindings() {
+		if (Robot.isSimulation()) {
+			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
+			DriveCommand.DriveDirectAngle_Keyboard.driveToPose(
+				() -> target,
+				new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
+				new ProfiledPIDController(5, 0, 0, new Constraints(
+					Units.Radians.of(Constants.TWO_PI).baseUnitMagnitude(),
+					Units.Radians.of(Math.PI).baseUnitMagnitude()
+				))
+			);
+		}
+	}
 
 	public void robotFinishedBooting() {
 		// Last year, we:
@@ -25,6 +77,16 @@ public class RobotContainer {
 				"The \"Debug Mode\" is available in SmartDashboard."
 			);
 		}
+
+		if (DriverStation.isDSAttached() && Robot.isFirstConnection.compareAndSet(true, false)) {
+			Elastic.selectTab("Auto");
+		}
+	}
+
+	public void visionPeriodic() {}
+
+	public void setMotorBrake(boolean brake) {
+		_DriveSubsystem.setMotorBrake(brake);
 	}
 
 	public Command getAutonomousCommand() {

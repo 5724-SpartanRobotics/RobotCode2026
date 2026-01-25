@@ -18,7 +18,7 @@ found in this repository.
 ## 14 Jan 2026
 - Create new project based on the Command Robot (Advanced) template
 - Install vendor dependencies / libraries that I think we'll need
-    - I don't know which CTRE version to get so I'm skipping that for now.
+	- I don't know which CTRE version to get so I'm skipping that for now.
 - Implement a few basic things (constants)
 - Editorconfig: Indent using tabs (not spaces) and set max line length at 100 characters
 - Initial commit
@@ -30,3 +30,34 @@ found in this repository.
 - Add Robot & Drive constants
 - Rename constants in ALL_CAPS, following a better style
 - Units for constants use the built-in WPILib Units of Measure  
+
+## 16 Jan 2026
+- Add Phoenix libraries, Rev & YAGSL (add back required libraries)
+- Add Elastic
+- Add example swerve drive subsystem directly from yagsl (https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_only_2026/src/main/java/frc/robot/subsystems/swervedrive/SwerveSubsystem.java)
+
+## 17 Jan 2026
+- Fix some style (spaces indent to tabs)
+- Add drive subsystem and implement drive command (copied from yagsl)
+	- have not yet fixed the constants/json and the file names are probably wrong (runtime error)
+- Use Joystick for frame and Xbox for operator
+- Add AI-generated vision code based on my Python library... hopefully it will work
+
+## 18 Jan 2026
+- Add swerve offsets from YAGSL configuration website
+- Refactor code (split lines over 100 chars)
+- Add some preliminary CAN IDs. I don't expect these to change, just add more.
+### Checklist
+- [ ] Implement Photon and remove custom code (YAGSL examples have Photon examples)
+
+## 22 Jan 2026
+- Add necessary libraries (photon and pathplanner)
+- Start implementing Photon code from YAGSL examples
+- Remove old custom vision implementation
+
+## 23 Jan 2026
+- Finish implementation of photon
+- Add new necessary constants
+### Checklist
+- [ ] Remove & replace deprecated calls
+- [ ] Wait for robot to be finished to find center of mass, etc.
