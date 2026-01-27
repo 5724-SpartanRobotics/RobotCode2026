@@ -3,6 +3,7 @@ package frc.robot.lib;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -34,6 +35,8 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -57,6 +60,8 @@ public class SwerveModule {
 		Report(int v) { this.value = v; }
 	}
 
+	private static int moduleIndex = 0;
+
 	private String _moduleName;
 	private MotorType _motorType;
 	private SwerveModuleConstantsRecord _constants;
@@ -64,6 +69,7 @@ public class SwerveModule {
 	private double _inverted = 0;
 	private double _driveSpeed = 0.0;
 	private double _driveAngle = 0.0;
+	private int _moduleNumber;
 
 	private ReentrantLock _debugLock = new ReentrantLock();
 	private AtomicBoolean _debug = new AtomicBoolean(true);
@@ -82,6 +88,35 @@ public class SwerveModule {
 	private SparkClosedLoopController m_sparkTurnPID;
 
 	/**
+	 * NT4 Raw Absolute Angle publisher for the absolute encoder. Radians.
+	 */
+	private final DoublePublisher m_rawAbsoluteAnglePublisher;
+	/**
+	 * NT4 Adjusted Absolute angle publisher for the absolute encoder. Radians.
+	 */
+	private final DoublePublisher m_adjAbsoluteAnglePublisher;
+	/**
+	 * NT4 raw angle motor. Degrees.
+	 */
+	private final DoublePublisher m_rawAnglePublisher;
+	/**
+	 * NT4 Raw drive motor. Degrees.
+	 */
+	private final DoublePublisher m_rawDriveEncoderPublisher;
+	/**
+	 * NT4 Raw drive motor. RPM.
+	 */
+	private final DoublePublisher m_rawDriveVelocityPublisher;
+	/**
+	 * Speed setpoint publisher for the module motor-controller PID.
+	 */
+	private final DoublePublisher m_speedSetpointPublisher;
+	/**
+	 * Angle setpoint publisher for the module motor-controller PID.
+	 */
+	private final DoublePublisher m_angleSetpointPublisher;
+
+	/**
 	 * Create a new SwerveModule. Debugging is enabled by default; use <code>setDebug(false)</code> to disable.
 	 * @param name Name of the module, eg., FL.
 	 * @param motorType {@link MotorType} that will be used for <b>both</b> turn and drive.
@@ -93,11 +128,13 @@ public class SwerveModule {
 	)
 	throws Exception
 	{
+		this._createdTimestamp = Timer.getFPGATimestamp();
 		this._moduleName = name;
 		this._motorType = motorType;
 		this._constants = constants;
 		this._inverted = this._constants.invert() ? -1.0 : 1.0;
-		this._createdTimestamp = Timer.getFPGATimestamp();
+		this._moduleNumber = moduleIndex;
+		moduleIndex++;
 
 		this.m_encoder = new CANcoder(this._constants.encoderId());
 
@@ -117,6 +154,21 @@ public class SwerveModule {
 
 		this.resetEncoders();
 		this.resetTurnToAbsolute();
+
+		m_rawAbsoluteAnglePublisher = NetworkTableInstance.getDefault().getTable("SmartDashboard").getDoubleTopic(
+			"swerve/modules/" + this._moduleName + "/Raw Absolute Encoder").publish();
+		m_adjAbsoluteAnglePublisher = NetworkTableInstance.getDefault().getTable("SmartDashboard").getDoubleTopic(
+			"swerve/modules/" + this._moduleName + "/Adjusted Absolute Encoder").publish();
+		m_rawAnglePublisher = NetworkTableInstance.getDefault().getTable("SmartDashboard").getDoubleTopic(
+			"swerve/modules/" + this._moduleName + "/Raw Angle Encoder").publish();
+		m_rawDriveEncoderPublisher = NetworkTableInstance.getDefault().getTable("SmartDashboard").getDoubleTopic(
+			"swerve/modules/" + this._moduleName + "/Raw Drive Encoder").publish();
+		m_rawDriveVelocityPublisher = NetworkTableInstance.getDefault().getTable("SmartDashboard").getDoubleTopic(
+			"swerve/modules/" + this._moduleName + "/Raw Drive Velocity").publish();
+		m_speedSetpointPublisher = NetworkTableInstance.getDefault().getTable("SmartDashboard").getDoubleTopic(
+			"swerve/modules/" + this._moduleName + "/Speed Setpoint").publish();
+		m_angleSetpointPublisher = NetworkTableInstance.getDefault().getTable("SmartDashboard").getDoubleTopic(
+			"swerve/modules/" + this._moduleName + "/Angle Setpoint").publish();
 	}
 
 	private boolean isVortex() {
@@ -149,6 +201,7 @@ public class SwerveModule {
 			.idleMode(IdleMode.kBrake);
 		this.m_driveSparkFlex.configure(this.m_sparkConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
+
 	private void setupFalcon() {
 		this.m_turnFalcon = new TalonFX(_constants.turnId());
 		this.m_falconTurnPositionVoltage = new PositionVoltage(0);
@@ -169,7 +222,7 @@ public class SwerveModule {
 			)
 			.withSlot0(new Slot0Configs()
 				.withKV(0.0)
-				.withKP(0.9).withKI(0.0).withKD(0.0)
+				.withKP(_constants.pid().getP()).withKI(_constants.pid().getI()).withKD(_constants.pid().getD())
 			)
 			.withVoltage(new VoltageConfigs()
 				.withPeakForwardVoltage(Units.Volts.of(10.0))
@@ -325,7 +378,11 @@ public class SwerveModule {
 		else m_turnFalcon.setPosition(1.0 * absolutePosition_MotorUnits);
 	}
 
-	public void setDesiredState(SwerveModuleState desiredState) {
+	/**
+	 * @param desiredState
+	 * @param telemetryCallback - <b><i>BE SURE TO END THE CONTROL CYCLE IN THIS CALLBACK<i></b>
+	 */
+	public void setDesiredState(SwerveModuleState desiredState, BiConsumer<Integer, SwerveModuleState> telemetryCallback) {
 		final double maxRobotSpeedmps = Robot.MAX_LINEAR_VELOCITY.in(Units.MetersPerSecond);
 		desiredState = CTREModuleState.optimize(desiredState, getState().angle);
 		double angle = (Math.abs(desiredState.speedMetersPerSecond) <= (maxRobotSpeedmps * 0.01)) ?
@@ -347,10 +404,28 @@ public class SwerveModule {
 				-1.0 * ConversionLib.radiansToFalcon(angle)
 			));
 		}
+
+		m_speedSetpointPublisher.set(desiredState.speedMetersPerSecond);
+		m_angleSetpointPublisher.set(desiredState.angle.getDegrees());
+		telemetryCallback.accept(this._moduleNumber, desiredState);
 	}
 
 	public double getCreatedTimestamp() {
 		return this._createdTimestamp;
+	}
+
+	public SwerveModuleConstantsRecord getModuleConstants() {
+		return this._constants;
+	}
+
+	/**
+	 * Gets the module's number. Module 0 should correspond to FL, and 3 to FR (move counterclockwise).
+	 * If it would help, see <a href="https://web.archive.org/web/20260127232043/https://docs.yagsl.com/~gitbook/image?url=https%3A%2F%2F567506766-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252F754c0Fpq8fBi6k4ByS1k%252Fuploads%252FP8kIHNspDzTMqBiHw1U1%252Fimage.png%3Falt%3Dmedia%26token%3D9923865e-47c7-4b1e-90a5-9da9610c0764&width=400&dpr=3&quality=100&sign=6a519e95&sv=2">
+	 * this diagram from YAGSL</a>.
+	 * @return The module number, 0 index.
+	 */
+	public int getModuleNumber() {
+		return this._moduleNumber;
 	}
 
 	public SwerveModuleState getState() {
@@ -378,6 +453,30 @@ public class SwerveModule {
 				ConversionLib.falconToDegrees(-1.0 * turnPosition)
 		);
 		return new SwerveModulePosition(drivePosition, angle);
+	}
+
+	public void updateTelemetry() {
+		m_rawAbsoluteAnglePublisher.set(
+			this.m_encoder.getAbsolutePosition().getValue().in(Units.Radians)
+		);
+		m_rawAnglePublisher.set(
+			isVortex() ?
+				m_turnSparkFlex.getEncoder().getPosition() * 360.0 :
+				m_turnFalcon.getPosition().getValue().in(Units.Degrees)
+		);
+		m_rawDriveEncoderPublisher.set(
+			isVortex() ?
+				m_driveSparkFlex.getEncoder().getPosition() :
+				m_driveFalcon.getPosition().getValueAsDouble()
+		);
+		m_rawDriveVelocityPublisher.set(
+			isVortex() ?
+				m_driveSparkFlex.getEncoder().getVelocity() :
+				m_driveFalcon.getVelocity().getValue().in(Units.RPM)
+		);
+		m_adjAbsoluteAnglePublisher.set(
+			this.m_encoder.getAbsolutePosition().getValue().in(Units.Radians) - this._constants.encoderOffset()
+		);
 	}
 
 	public SwerveModule setDebug(boolean debug) {

@@ -98,19 +98,22 @@ public final class Constants {
 			public static final Distance Y_FROM_CENTER = Units.Inches.of( 12.34375);
 		}
 
-		public static final class SwerveModuleOffsets {
-			public static final Translation2d FL = new Translation2d(
+		public enum SwerveModuleOffsets {
+			FL(new Translation2d(
 				Wheel.X_FROM_CENTER.in(Units.Meters), Wheel.Y_FROM_CENTER.in(Units.Meters)
-			);
-			public static final Translation2d BL = new Translation2d(
+			)),
+			BL(new Translation2d(
 				-1.0 * Wheel.X_FROM_CENTER.in(Units.Meters), Wheel.Y_FROM_CENTER.in(Units.Meters)
-			);
-			public static final Translation2d BR = new Translation2d(
+			)),
+			BR(new Translation2d(
 				-1.0 * Wheel.X_FROM_CENTER.in(Units.Meters), -1.0 * Wheel.Y_FROM_CENTER.in(Units.Meters)
-			);
-			public static final Translation2d FR = new Translation2d(
+			)),
+			FR(new Translation2d(
 				Wheel.X_FROM_CENTER.in(Units.Meters), -1.0 * Wheel.Y_FROM_CENTER.in(Units.Meters)
-			);
+			));
+
+			public Translation2d translation;
+			SwerveModuleOffsets(Translation2d tx) { this.translation = tx; }
 		}
 	}
 
