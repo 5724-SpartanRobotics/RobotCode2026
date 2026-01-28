@@ -61,3 +61,8 @@ found in this repository.
 ### Checklist
 - [ ] Remove & replace deprecated calls
 - [ ] Wait for robot to be finished to find center of mass, etc.
+
+## 28 Jan 2026
+- We learned that the offset for the absolute encoder in the YAGSL config is in degrees.
+- The FO_DDA command did some weird stuff with the joystick so now we just use FO_DAV and it seems to work.
+- Constants were only updated in the YAGSL config jsons, not in our Constants.java file

@@ -88,12 +88,12 @@ public final class Constants {
 		), Robot.MASS.in(Units.Kilograms));
 
 		public static final MotorType SWERVE_MOTOR = MotorType.Falcon500;
-		public static final double SWERVE_DRIVE_GEAR_RATIO = 6.75;
+		public static final double SWERVE_DRIVE_GEAR_RATIO = 8.14;
 		public static final double SWERVE_TURN_GEAR_RATIO = 150.0 / 7.0;
 
 		public static final class Wheel {
 			public static final Distance RADIUS = Units.Inches.of(2.0);
-			public static final double COF = 1.2;
+			public static final double COF = 1.19;
 			public static final Distance X_FROM_CENTER = Units.Inches.of(11.875);
 			public static final Distance Y_FROM_CENTER = Units.Inches.of( 12.34375);
 		}

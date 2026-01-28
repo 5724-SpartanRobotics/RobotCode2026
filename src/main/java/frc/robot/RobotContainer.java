@@ -13,61 +13,62 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.YagslDriveCommand;
 import frc.robot.commands.autos.DriveAuto;
 import frc.robot.lib.Elastic;
-import frc.robot.subsystems.CustomDriveSubsystem;
+import frc.robot.subsystems.YagslDriveSubsystem;
 
 public class RobotContainer {
-	// private DriveSubsystem _DriveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
-	private CustomDriveSubsystem _DriveSubsystem = CustomDriveSubsystem.initialize(true);
+	private YagslDriveSubsystem _DriveSubsystem = new YagslDriveSubsystem(Constants.Drive.SWERVE_CONFIG);
+	// private CustomDriveSubsystem _DriveSubsystem = CustomDriveSubsystem.initialize(true);
 
 	private CommandJoystick _DriverController = new CommandJoystick(0);
 	private CommandXboxController _OperatorController = new CommandXboxController(1);
 
 	public RobotContainer() {
-		// YagslDriveCommand.initialize(_DriveSubsystem, _DriverController);
+		YagslDriveCommand.initialize(_DriveSubsystem, _DriverController);
 
 		configureControllerBindings();
 	}
 
 	private void configureControllerBindings() {
 		_DriveSubsystem.setDefaultCommand(
-			// YagslDriveCommand.getCommand(YagslDriveCommand.DriveType.FO_DirectAngle, Robot.isSimulation())
-			_DriveSubsystem.getTeleopCommand(_DriverController)
+			YagslDriveCommand.getCommand(YagslDriveCommand.DriveType.FO_AngularVelocity, Robot.isSimulation())
+			// _DriveSubsystem.getTeleopCommand(_DriverController)
 		);
 
 		configureSimAndTestBindings();
 
 		/* USING YAGSL */
-		// _DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
-		// 	Commands.runOnce(_DriveSubsystem::lock, _DriveSubsystem).repeatedly()
-		// );
-		// _DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
-		// 	_DriveSubsystem.resetOdometryCommand(),
-		// 	Commands.runOnce(_DriveSubsystem::zeroGyro)
-		// ));
-		// _DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
-		// 	_DriveSubsystem.centerModulesCommand()
-		// );
+		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
+			Commands.runOnce(_DriveSubsystem::lock, _DriveSubsystem).repeatedly()
+		);
+		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
+			_DriveSubsystem.resetOdometryCommand(),
+			Commands.runOnce(_DriveSubsystem::zeroGyro)
+		));
+		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
+			_DriveSubsystem.centerModulesCommand()
+		);
 
 		/* USING CUSTOM IMPLEMENTATION */
-		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
-			_DriveSubsystem.resetOdometry();
-			_DriveSubsystem.zeroGyro();
-		}, _DriveSubsystem));
-		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
-			Commands.run(() -> _DriveSubsystem.centerModules(), _DriveSubsystem)
-		);
-		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
-			Commands.runOnce(() -> _DriveSubsystem.setSpeedMod(1.0), _DriveSubsystem)
-		).onFalse(
-			Commands.runOnce(() -> _DriveSubsystem.resetSpeedMod(), _DriveSubsystem)
-		);
-		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MID).whileTrue(
-			Commands.runOnce(() -> _DriveSubsystem.setSpeedMod(0.65), _DriveSubsystem)
-		).onFalse(
-			Commands.runOnce(() -> _DriveSubsystem.resetSpeedMod(), _DriveSubsystem)
-		);
+		// _DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
+		// 	_DriveSubsystem.resetOdometry();
+		// 	_DriveSubsystem.zeroGyro();
+		// }, _DriveSubsystem));
+		// _DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
+		// 	Commands.run(() -> _DriveSubsystem.centerModules(), _DriveSubsystem)
+		// );
+		// _DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
+		// 	Commands.runOnce(() -> _DriveSubsystem.setSpeedMod(1.0), _DriveSubsystem)
+		// ).onFalse(
+		// 	Commands.runOnce(() -> _DriveSubsystem.resetSpeedMod(), _DriveSubsystem)
+		// );
+		// _DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MID).whileTrue(
+		// 	Commands.runOnce(() -> _DriveSubsystem.setSpeedMod(0.65), _DriveSubsystem)
+		// ).onFalse(
+		// 	Commands.runOnce(() -> _DriveSubsystem.resetSpeedMod(), _DriveSubsystem)
+		// );
 	}
 
 	private void configureSimAndTestBindings() {

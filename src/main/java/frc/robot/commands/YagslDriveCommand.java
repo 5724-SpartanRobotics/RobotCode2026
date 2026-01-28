@@ -27,6 +27,11 @@ public class YagslDriveCommand {
 	// public static SwerveInputStream DriveAngularVelocity_Keyboard;
 	// public static SwerveInputStream DriveDirectAngle_Keyboard;
 
+	private static double applyJoystickDeadband(double realValue, double deadband) {
+		if (Math.abs(realValue) < deadband) return 0.0;
+		return realValue;
+	}
+
 	public static void initialize(YagslDriveSubsystem drive, CommandJoystick joystick) {
 		_DriveSubsystem = drive;
 		_Joystick = joystick;
@@ -37,10 +42,21 @@ public class YagslDriveCommand {
 		System.out.println("RETURNING A DRIVE COMMAND: DAV");
 		return SwerveInputStream.of(
 			_DriveSubsystem.getSwerveDrive(),
-			() -> _Joystick.getY() * -1.0, // Y axis (forward/back)
-			() -> _Joystick.getX() // X axis (strafe)
+			() -> applyJoystickDeadband(
+				_Joystick.getRawAxis(1) * -1.0,
+				Constants.Controller.DRIVER_DEADBAND_XY
+			), // Y axis (forward/back)
+			() -> applyJoystickDeadband(
+				_Joystick.getRawAxis(0),
+				Constants.Controller.DRIVER_DEADBAND_XY
+			) // X axis (strafe)
 		)
-			.withControllerRotationAxis(() -> _Joystick.getZ()) // twist / rotation
+			.withControllerRotationAxis(() ->
+				applyJoystickDeadband(
+					_Joystick.getRawAxis(2),
+					Constants.Controller.DRIVER_DEADBAND_Z
+				)
+			) // twist / rotation
 			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
@@ -49,8 +65,8 @@ public class YagslDriveCommand {
 		System.out.println("RETURNING A DRIVE COMMAND: DDA");
 		return DriveAngularVelocity().copy()
 			.withControllerHeadingAxis(
-				() -> Math.sin(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
-				() -> Math.cos(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI
+				() -> Math.sin(_Joystick.getX() * Math.PI) * Constants.TWO_PI,
+				() -> Math.cos(_Joystick.getY() * Math.PI * -1.0) * Constants.TWO_PI
 			)
 			.headingWhile(true);
 	}

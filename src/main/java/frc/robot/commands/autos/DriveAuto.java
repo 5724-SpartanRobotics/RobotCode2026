@@ -8,7 +8,7 @@ public class DriveAuto extends SequentialCommandGroup {
 	public DriveAuto(DriveSubsystem driveSubsystem) {
 		addRequirements(driveSubsystem);
 		addCommands(Commands.parallel(
-			Commands.runOnce(() -> System.out.println("<<<<< Auto >>>>>")).repeatedly(),
+			// Commands.runOnce(() -> System.out.println("<<<<< Auto >>>>>")).repeatedly(),
 			driveSubsystem.driveForward().withDeadline(Commands.waitSeconds(5))
 		));
 	}

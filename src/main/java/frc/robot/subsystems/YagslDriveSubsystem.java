@@ -471,7 +471,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	{
 		return run(() -> {
 			ChassisSpeeds v = velocity.get();
-			System.out.println("!!! This should make the robot go\n\t" + v.toString());
+			// System.out.println("!!! This should make the robot go\n\t" + v.toString());
 			SmartDashboard.putString("DRIVE VELOCITIES", v.toString());
 
 			_SwerveDrive.driveFieldOriented(v);
