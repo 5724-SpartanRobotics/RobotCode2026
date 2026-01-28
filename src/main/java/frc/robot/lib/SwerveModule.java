@@ -149,6 +149,9 @@ public class SwerveModule {
 		moduleIndex++;
 
 		this.m_encoder = new CANcoder(this._constants.encoderId());
+		if (IS_SIMULATION) {
+			m_encoderSim = m_encoder.getSimState();
+		}
 
 		switch (this._motorType) {
 			case VortexSparkFlex:
@@ -242,7 +245,6 @@ public class SwerveModule {
 			);
 
 		if (IS_SIMULATION) {
-			m_encoderSim = m_encoder.getSimState();
 			m_turnFalconSim = m_turnFalcon.getSimState();
 			m_driveFalconSim = m_driveFalcon.getSimState();
 		}
@@ -381,7 +383,7 @@ public class SwerveModule {
 	public void simulationPeriodic() {
 		if (!IS_SIMULATION) return;
 		final double dt = 0.02;
-		
+
 		if (IS_SIMULATION && m_encoderSim != null) {
 			_encoderSimAbsolutePosition = _falconSimTurnPosition;
 			_encoderSimAbsoluteVelocity = _falconSimTurnVelocity;
