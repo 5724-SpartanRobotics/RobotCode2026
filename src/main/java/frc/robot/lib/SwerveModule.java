@@ -17,6 +17,8 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.CANcoderSimState;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.revrobotics.PersistMode;
 import com.revrobotics.REVLibError;
 import com.revrobotics.ResetMode;
@@ -38,11 +40,11 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.Drive;
-import frc.robot.Constants.Robot;
 
 public class SwerveModule {
 	public enum MotorType {
@@ -60,6 +62,7 @@ public class SwerveModule {
 		Report(int v) { this.value = v; }
 	}
 
+	private static final boolean IS_SIMULATION = RobotBase.isSimulation();
 	private static int moduleIndex = 0;
 
 	private String _moduleName;
@@ -76,11 +79,20 @@ public class SwerveModule {
 	private double _createdTimestamp;
 
 	private CANcoder m_encoder;
+	private CANcoderSimState m_encoderSim;
+	private double _encoderSimAbsolutePosition = 0.0;
+	private double _encoderSimAbsoluteVelocity = 0.0;
 
 	private TalonFX m_driveFalcon;
 	private TalonFX m_turnFalcon;
 	private TalonFXConfiguration m_falconConfig;
 	private PositionVoltage m_falconTurnPositionVoltage;
+	private TalonFXSimState m_turnFalconSim;
+	private TalonFXSimState m_driveFalconSim;
+	private double _falconSimDrivePosition = 0.0;
+	private double _falconSimDriveVelocity = 0.0;
+	private double _falconSimTurnPosition = 0.0;
+	private double _falconSimTurnVelocity = 0.0;
 
 	private SparkFlex m_driveSparkFlex;
 	private SparkFlex m_turnSparkFlex;
@@ -228,6 +240,12 @@ public class SwerveModule {
 				.withPeakForwardVoltage(Units.Volts.of(10.0))
 				.withPeakReverseVoltage(Units.Volts.of(10.0).unaryMinus())
 			);
+
+		if (IS_SIMULATION) {
+			m_encoderSim = m_encoder.getSimState();
+			m_turnFalconSim = m_turnFalcon.getSimState();
+			m_driveFalconSim = m_driveFalcon.getSimState();
+		}
 	}
 
 	private void resetEncoders() {
@@ -359,6 +377,37 @@ public class SwerveModule {
 	public void report(Report report, boolean force) {
 		report(EnumSet.of(report), force);
 	}
+
+	public void simulationPeriodic() {
+		if (!IS_SIMULATION) return;
+		final double dt = 0.02;
+		
+		if (IS_SIMULATION && m_encoderSim != null) {
+			_encoderSimAbsolutePosition = _falconSimTurnPosition;
+			_encoderSimAbsoluteVelocity = _falconSimTurnVelocity;
+			m_encoderSim.setSupplyVoltage(Units.Volts.of(12));
+			m_encoderSim.setRawPosition(_encoderSimAbsolutePosition);
+			m_encoderSim.setVelocity(_encoderSimAbsoluteVelocity);
+		}
+
+		if (!isVortex()) return;
+		if (m_turnFalconSim != null) {
+			double volts = m_turnFalcon.getMotorVoltage().getValue().in(Units.Volts);
+			_falconSimTurnVelocity = volts * 5.0;
+			_falconSimTurnPosition += _falconSimTurnVelocity * dt;
+			m_turnFalconSim.setSupplyVoltage(Units.Volts.of(12));
+			m_turnFalconSim.setRotorVelocity(_falconSimTurnVelocity);
+			m_turnFalconSim.setRawRotorPosition(_falconSimTurnPosition);
+		}
+		if (m_driveFalconSim != null) {
+			double volts = m_driveFalcon.getMotorVoltage().getValue().in(Units.Volts);
+			_falconSimDriveVelocity = volts * 1.5;
+			_falconSimDrivePosition += _falconSimDriveVelocity * dt;
+			m_driveFalconSim.setSupplyVoltage(Units.Volts.of(12));
+			m_driveFalconSim.setRotorVelocity(_falconSimDriveVelocity);
+			m_driveFalconSim.setRawRotorPosition(_falconSimDrivePosition);
+		}
+	}
 	
 	public void resetTurnToAbsolute() {
 		double absolutePosition = m_encoder.getAbsolutePosition().refresh().getValue().in(Units.Radians);
@@ -383,7 +432,7 @@ public class SwerveModule {
 	 * @param telemetryCallback - <b><i>BE SURE TO END THE CONTROL CYCLE IN THIS CALLBACK<i></b>
 	 */
 	public void setDesiredState(SwerveModuleState desiredState, BiConsumer<Integer, SwerveModuleState> telemetryCallback) {
-		final double maxRobotSpeedmps = Robot.MAX_LINEAR_VELOCITY.in(Units.MetersPerSecond);
+		final double maxRobotSpeedmps = Constants.Robot.MAX_LINEAR_VELOCITY.in(Units.MetersPerSecond);
 		desiredState = CTREModuleState.optimize(desiredState, getState().angle);
 		double angle = (Math.abs(desiredState.speedMetersPerSecond) <= (maxRobotSpeedmps * 0.01)) ?
 			_driveAngle : desiredState.angle.getRadians();

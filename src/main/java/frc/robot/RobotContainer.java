@@ -4,22 +4,18 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.YagslDriveCommand;
 import frc.robot.commands.autos.DriveAuto;
 import frc.robot.lib.Elastic;
 import frc.robot.subsystems.CustomDriveSubsystem;
-import frc.robot.subsystems.YagslDriveSubsystem;
 
 public class RobotContainer {
 	// private DriveSubsystem _DriveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
@@ -36,7 +32,8 @@ public class RobotContainer {
 
 	private void configureControllerBindings() {
 		_DriveSubsystem.setDefaultCommand(
-			YagslDriveCommand.getCommand(YagslDriveCommand.DriveType.FO_DirectAngle, Robot.isSimulation())
+			// YagslDriveCommand.getCommand(YagslDriveCommand.DriveType.FO_DirectAngle, Robot.isSimulation())
+			_DriveSubsystem.getTeleopCommand(_DriverController)
 		);
 
 		configureSimAndTestBindings();
@@ -54,10 +51,10 @@ public class RobotContainer {
 		// );
 
 		/* USING CUSTOM IMPLEMENTATION */
-		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
-			Commands.runOnce(() -> _DriveSubsystem.resetOdometry(), _DriveSubsystem),
-			Commands.runOnce(() -> _DriveSubsystem.zeroGyro(), _DriveSubsystem)
-		));
+		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
+			_DriveSubsystem.resetOdometry();
+			_DriveSubsystem.zeroGyro();
+		}, _DriveSubsystem));
 		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
 			Commands.run(() -> _DriveSubsystem.centerModules(), _DriveSubsystem)
 		);
@@ -74,16 +71,16 @@ public class RobotContainer {
 	}
 
 	private void configureSimAndTestBindings() {
-		if (Robot.isSimulation()) {
+		if (RobotBase.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
-			YagslDriveCommand.DriveDirectAngle_Keyboard().driveToPose(
-				() -> target,
-				new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
-				new ProfiledPIDController(5, 0, 0, new Constraints(
-					Units.Radians.of(Constants.TWO_PI).baseUnitMagnitude(),
-					Units.Radians.of(Math.PI).baseUnitMagnitude()
-				))
-			);
+			// YagslDriveCommand.DriveDirectAngle_Keyboard().driveToPose(
+			// 	() -> target,
+			// 	new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
+			// 	new ProfiledPIDController(5, 0, 0, new Constraints(
+			// 		Units.Radians.of(Constants.TWO_PI).baseUnitMagnitude(),
+			// 		Units.Radians.of(Math.PI).baseUnitMagnitude()
+			// 	))
+			// );
 		}
 	}
 

@@ -4,6 +4,7 @@ import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix6.sim.Pigeon2SimState;
 
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.PIDController;
@@ -24,7 +25,10 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -43,6 +47,10 @@ public class CustomDriveSubsystem extends DriveSubsystem {
 	public enum ModulePosition { FL, BL, BR, FR }
 	
 	private final Pigeon2 m_gyroscope;
+	private final Pigeon2SimState m_gyroscopeSim;
+	private Angle _gyroscopeSimYaw = Units.Degrees.zero();
+	private AngularVelocity _gyroscopeSimYawRate = Units.DegreesPerSecond.zero();
+
 	/** Start from FL and move counter-clockwise to BL, etc. */
 	private final EnumMap<ModulePosition, SwerveModule> m_modules = new EnumMap<>(ModulePosition.class);
 
@@ -63,6 +71,9 @@ public class CustomDriveSubsystem extends DriveSubsystem {
 
 	private CustomDriveSubsystem() throws Exception {
 		m_gyroscope = new Pigeon2(Constants.CanId.PIGEON2);
+		if (RobotBase.isSimulation()) {
+			m_gyroscopeSim = m_gyroscope.getSimState();
+		} else m_gyroscopeSim = null;
 		resetGyro();
 
 		m_modules.put(ModulePosition.FL, new SwerveModule("FL", Constants.Drive.SWERVE_MOTOR, Constants.CanId.FL));
@@ -157,6 +168,24 @@ public class CustomDriveSubsystem extends DriveSubsystem {
 		m_SwerveDrivePoseEstimator.update(currentHdg, positions);
 		NetworkTableInstance.getDefault().getEntry("/Gyro")
 			.setDouble(m_gyroscope.getYaw().getValue().abs(Units.Degrees) % 360.0);
+	}
+
+	@Override
+	public void simulationPeriodic() {
+		final double dt = 0.02;
+		SwerveModuleState[] states = new SwerveModuleState[m_modules.size()];
+		m_modules.forEach((mp, sm) -> states[sm.getModuleNumber()] = sm.getState());
+		_gyroscopeSimYawRate = Units.RadiansPerSecond.of(m_SwerveDriveKinematics.toChassisSpeeds(states).omegaRadiansPerSecond);
+		_gyroscopeSimYaw = Units.Degrees.of(
+			Math.IEEEremainder(_gyroscopeSimYawRate.in(Units.DegreesPerSecond) * dt, 360.0)
+		);
+		if (RobotBase.isSimulation() && m_gyroscopeSim != null) {
+			m_gyroscopeSim.setSupplyVoltage(Units.Volts.of(12));
+			m_gyroscopeSim.setRawYaw(_gyroscopeSimYaw);
+			m_gyroscopeSim.setAngularVelocityZ(_gyroscopeSimYawRate);
+		}
+
+		m_modules.forEach((mp, sm) -> sm.simulationPeriodic());
 	}
 
 	private SwerveModulePosition[] getModulePositions() {
@@ -295,11 +324,10 @@ public class CustomDriveSubsystem extends DriveSubsystem {
 	}
 
 	public Command getTeleopCommand(CommandJoystick joystick) {
-		var swervedrive = this;
+		var driveSubsystem = this;
 		return new Command() {
-			@Override
-			public void initialize() {
-				addRequirements(swervedrive);
+			{
+				addRequirements(driveSubsystem);
 			}
 
 			@Override
@@ -312,9 +340,9 @@ public class CustomDriveSubsystem extends DriveSubsystem {
 					yAxis = -1.0 * joystick.getX(),
 					zAxis = -1.0 * joystick.getTwist();
 				
-				xAxis = Math.abs(xAxis) < jsDeadbandXY ? 0 : xAxis * speedMod;
-				yAxis = Math.abs(yAxis) < jsDeadbandXY ? 0 : yAxis * speedMod;
-				zAxis = Math.abs(zAxis) < jsDeadbandZ ? 0 : zAxis * speedMod * 0.7;
+				xAxis = Math.abs(xAxis) < jsDeadbandXY ? 0 : xAxis * driveSubsystem.speedMod;
+				yAxis = Math.abs(yAxis) < jsDeadbandXY ? 0 : yAxis * driveSubsystem.speedMod;
+				zAxis = Math.abs(zAxis) < jsDeadbandZ ? 0 : zAxis * driveSubsystem.speedMod * 0.7;
 
 				double rotation = zAxis * Constants.Robot.MAX_ANGULAR_VELOCITY.in(Units.RadiansPerSecond);
 
@@ -326,7 +354,7 @@ public class CustomDriveSubsystem extends DriveSubsystem {
 
 				Translation2d tx = new Translation2d(yAxis, xAxis)
 					.times(Constants.Robot.MAX_LINEAR_VELOCITY.abs(Units.MetersPerSecond));
-				swervedrive.drive(tx, rotation);
+				driveSubsystem.drive(tx, rotation);
 			}
 		};
 	}
