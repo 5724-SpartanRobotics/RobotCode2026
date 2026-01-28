@@ -50,6 +50,16 @@ public class RobotContainer {
 		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
 			_DriveSubsystem.centerModulesCommand()
 		);
+		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
+			Commands.runOnce(() -> YagslDriveCommand.speedMod = 0.9)
+		).onFalse(
+			Commands.runOnce(() -> YagslDriveCommand.speedMod = Constants.Robot.DEFAULT_SPEED_MOD, _DriveSubsystem)
+		);
+		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MID).whileTrue(
+			Commands.runOnce(() -> YagslDriveCommand.speedMod = 0.65)
+		).onFalse(
+			Commands.runOnce(() -> YagslDriveCommand.speedMod = Constants.Robot.DEFAULT_SPEED_MOD)
+		);
 
 		/* USING CUSTOM IMPLEMENTATION */
 		// _DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.runOnce(() -> {

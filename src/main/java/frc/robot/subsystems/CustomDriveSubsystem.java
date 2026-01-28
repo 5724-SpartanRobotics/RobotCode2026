@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.commands.YagslDriveCommand;
 import frc.robot.lib.DriveSubsystem;
 import frc.robot.lib.SwerveModule;
 
@@ -316,10 +317,12 @@ public class CustomDriveSubsystem extends DriveSubsystem {
 	}
 
 	public void setSpeedMod(double mod) {
+		YagslDriveCommand.speedMod = mod;
 		speedMod = mod;
 	}
 
 	public void resetSpeedMod() {
+		YagslDriveCommand.speedMod = Constants.Robot.DEFAULT_SPEED_MOD;
 		speedMod = Constants.Robot.DEFAULT_SPEED_MOD;
 	}
 

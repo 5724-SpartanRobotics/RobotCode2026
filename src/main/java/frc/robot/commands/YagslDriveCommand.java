@@ -27,9 +27,22 @@ public class YagslDriveCommand {
 	// public static SwerveInputStream DriveAngularVelocity_Keyboard;
 	// public static SwerveInputStream DriveDirectAngle_Keyboard;
 
+	public static double speedMod = Constants.Robot.DEFAULT_SPEED_MOD;
+
 	private static double applyJoystickDeadband(double realValue, double deadband) {
 		if (Math.abs(realValue) < deadband) return 0.0;
 		return realValue;
+	}
+
+	private static double applyJoystickScale(double realValue, double scale) {
+		return realValue * scale;
+	}
+
+	private static double applyJoystickDeadbandAndScale(double realValue, double deadband) {
+		return applyJoystickScale(
+			applyJoystickDeadband(realValue, deadband),
+			speedMod
+		);
 	}
 
 	public static void initialize(YagslDriveSubsystem drive, CommandJoystick joystick) {
@@ -42,18 +55,18 @@ public class YagslDriveCommand {
 		System.out.println("RETURNING A DRIVE COMMAND: DAV");
 		return SwerveInputStream.of(
 			_DriveSubsystem.getSwerveDrive(),
-			() -> applyJoystickDeadband(
+			() -> applyJoystickDeadbandAndScale(
 				_Joystick.getRawAxis(1) * -1.0,
 				Constants.Controller.DRIVER_DEADBAND_XY
 			), // Y axis (forward/back)
-			() -> applyJoystickDeadband(
+			() -> applyJoystickDeadbandAndScale(
 				_Joystick.getRawAxis(0),
 				Constants.Controller.DRIVER_DEADBAND_XY
 			) // X axis (strafe)
 		)
 			.withControllerRotationAxis(() ->
-				applyJoystickDeadband(
-					_Joystick.getRawAxis(2),
+				applyJoystickDeadbandAndScale(
+					_Joystick.getRawAxis(2) * -1.0,
 					Constants.Controller.DRIVER_DEADBAND_Z
 				)
 			) // twist / rotation
