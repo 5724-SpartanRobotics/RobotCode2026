@@ -10,12 +10,14 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.YagslDriveCommand;
 import frc.robot.commands.autos.DriveAuto;
 import frc.robot.lib.Elastic;
+import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.YagslDriveSubsystem;
 
 public class RobotContainer {
@@ -41,7 +43,7 @@ public class RobotContainer {
 
 		/* USING YAGSL */
 		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
-			Commands.runOnce(_DriveSubsystem::lock, _DriveSubsystem).repeatedly()
+			_DriveSubsystem.aimAtTarget()
 		);
 		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
 			_DriveSubsystem.resetOdometryCommand(),
@@ -110,6 +112,13 @@ public class RobotContainer {
 		if (DriverStation.isDSAttached() && Robot.isFirstConnection.compareAndSet(true, false)) {
 			Elastic.selectTab("Auto");
 		}
+	}
+
+	public void teleopInit() {
+		CommandScheduler.getInstance().schedule(Commands.parallel(
+			_DriveSubsystem.resetOdometryCommand(),
+			Commands.runOnce(_DriveSubsystem::zeroGyro)
+		));
 	}
 
 	public void visionPeriodic() {}

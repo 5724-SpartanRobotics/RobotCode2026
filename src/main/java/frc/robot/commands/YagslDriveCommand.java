@@ -60,7 +60,7 @@ public class YagslDriveCommand {
 				Constants.Controller.DRIVER_DEADBAND_XY
 			), // Y axis (forward/back)
 			() -> applyJoystickDeadbandAndScale(
-				_Joystick.getRawAxis(0),
+				_Joystick.getRawAxis(0) * -1.0,
 				Constants.Controller.DRIVER_DEADBAND_XY
 			) // X axis (strafe)
 		)

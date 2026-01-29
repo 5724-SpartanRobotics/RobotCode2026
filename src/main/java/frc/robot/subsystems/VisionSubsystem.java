@@ -56,33 +56,33 @@ public class VisionSubsystem
 	/**
 	 * Photon Vision Simulation
 	 */
-	public VisionSystemSim visionSim;
+	public VisionSystemSim m_visionSim;
 
 	/**
 	 * Current pose from the pose estimator using wheel odometry.
 	 */
-	private Supplier<Pose2d> _CurrentPose2d;
+	private Supplier<Pose2d> m_currentPose2d;
 	/**
 	 * Field from {@link swervelib.SwerveDrive#field}
 	 */
-	private Field2d _Field2d;
+	private Field2d m_field2d;
 
 	/**
 	 * Constructor for the Vision class.
 	 *
-	 * @param _CurrentPose2d Current pose supplier, should reference {@link SwerveDrive#getPose()}
+	 * @param m_currentPose2d Current pose supplier, should reference {@link SwerveDrive#getPose()}
 	 * @param field			 Current field, should be {@link SwerveDrive#field}
 	 */
 	public VisionSubsystem(Supplier<Pose2d> currentPose, Field2d field) {
-		this._CurrentPose2d = currentPose;
-		this._Field2d = field;
+		this.m_currentPose2d = currentPose;
+		this.m_field2d = field;
 
 		if (Robot.isSimulation()) {
-			visionSim = new VisionSystemSim("Vision");
-			visionSim.addAprilTags(FIELD_LAYOUT);
+			m_visionSim = new VisionSystemSim("Vision");
+			m_visionSim.addAprilTags(FIELD_LAYOUT);
 
 			for (Cameras c : Cameras.values()) {
-				c.addToVisionSim(visionSim);
+				c.addToVisionSim(m_visionSim);
 			}
 
 			openSimCameraViews();
@@ -126,12 +126,14 @@ public class VisionSubsystem
 			 * actual robot pose is provided in the simulator when updating the vision simulation\
 			 * during the simulation.
 			 */
-			visionSim.update(swerveDrive.getSimulationDriveTrainPose().get());
+			m_visionSim.update(swerveDrive.getSimulationDriveTrainPose().get());
 		}
 		for (Cameras camera : Cameras.values()) {
+			if (camera == null) continue;
 			Optional<EstimatedRobotPose> poseEst = getEstimatedGlobalPose(camera);
-			if (poseEst.isPresent()) {
+			if (poseEst != null && poseEst.isPresent()) {
 				var pose = poseEst.get();
+				if (pose == null) continue;
 				swerveDrive.addVisionMeasurement(
 					pose.estimatedPose.toPose2d(),
 					pose.timestampSeconds,
@@ -154,7 +156,7 @@ public class VisionSubsystem
 	public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Cameras camera) {
 		Optional<EstimatedRobotPose> poseEst = camera.getEstimatedGlobalPose();
 		if (Robot.isSimulation()) {
-			Field2d debugField = visionSim.getDebugField();
+			Field2d debugField = m_visionSim.getDebugField();
 			// Uncomment to enable outputting of vision targets in sim.
 			poseEst.ifPresentOrElse(
 					est -> debugField
@@ -176,7 +178,7 @@ public class VisionSubsystem
 	public double getDistanceFromAprilTag(int id) {
 		Optional<Pose3d> tag = FIELD_LAYOUT.getTagPose(id);
 		return tag.map(pose3d -> 
-			PhotonUtils.getDistanceToPose(_CurrentPose2d.get(), pose3d.toPose2d())
+			PhotonUtils.getDistanceToPose(m_currentPose2d.get(), pose3d.toPose2d())
 		).orElse(-1.0);
 	}
 
@@ -207,8 +209,8 @@ public class VisionSubsystem
 	 *
 	 * @return Vision Simulation
 	 */
-	public VisionSystemSim getVisionSim() {
-		return visionSim;
+	public VisionSystemSim getM_visionSim() {
+		return m_visionSim;
 	}
 
 	/**
@@ -251,13 +253,13 @@ public class VisionSubsystem
 			}
 		}
 
-		_Field2d.getObject("tracked targets").setPoses(poses);
+		m_field2d.getObject("tracked targets").setPoses(poses);
 	}
 
 	/**
 	 * Camera Enum to select each camera
 	 */
-	enum Cameras {
+	public enum Cameras {
 		/**
 		 * Left Camera
 		 */
@@ -291,14 +293,17 @@ public class VisionSubsystem
 		 */
 		CENTER_CAM(
 			"center",
-			new Rotation3d(0, Units.degreesToRadians(18), 0),
+			new Rotation3d(0, Units.degreesToRadians(90-59), 0),
 			new Translation3d(
-				Units.inchesToMeters(-4.628),
-				Units.inchesToMeters(-10.687),
-				Units.inchesToMeters(16.129)
+				Units.inchesToMeters(-8),
+				Units.inchesToMeters(0),
+				Units.inchesToMeters(21)
 			),
-			VecBuilder.fill(4, 4, 8),
-			VecBuilder.fill(0.5, 0.5, 1));
+			// Vision measurement std devs: x, y (m), rotation (rad)
+			VecBuilder.fill(1.0, 1.0, 3.0),
+			// Ambiguity / extra noise scaling
+			VecBuilder.fill(0.5, 0.5, 1.0)
+		);
 
 		/**
 		 * Latency alert to use when high latency is detected.

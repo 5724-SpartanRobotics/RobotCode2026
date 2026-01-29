@@ -9,12 +9,16 @@ import static edu.wpi.first.units.Units.Meter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -61,12 +65,12 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	/**
 	 * Swerve drive object.
 	 */
-	private final SwerveDrive _SwerveDrive;
+	private final SwerveDrive m_swerveDrive;
 
 	private final boolean _IsVisionDriveTest =
 		Constants.DebugLevel.isOrAll(Constants.DebugLevel.Vision);
 
-	private VisionSubsystem _VisionSubsystem;
+	private VisionSubsystem m_visionSubsystem;
 
 	private static void configureTelemetry() {
 		SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
@@ -93,7 +97,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		configureTelemetry();
 
 		try {
-			_SwerveDrive = new SwerveParser(directory)
+			m_swerveDrive = new SwerveParser(directory)
 				.createSwerveDrive(
 					Constants.Robot.MAX_LINEAR_VELOCITY.in(Units.MetersPerSecond),
 					startingPose
@@ -104,17 +108,17 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		}
 
 		// Heading correction should only be used while controlling the robot via angle.
-		_SwerveDrive.setHeadingCorrection(false);
-		_SwerveDrive.setCosineCompensator(false);
+		m_swerveDrive.setHeadingCorrection(false);
+		m_swerveDrive.setCosineCompensator(false);
 		//Correct for skew that gets worse as angular velocity increases. Start with a coefficient of 0.1.
-		_SwerveDrive.setAngularVelocityCompensation(true, true, 0.1);
+		m_swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
 		// Enable if you want to resynchronize your absolute encoders and motor
 		// encoders periodically when they are not moving.
-		_SwerveDrive.setModuleEncoderAutoSynchronize(false, 1);
+		m_swerveDrive.setModuleEncoderAutoSynchronize(true, 1);
 
 		setupPhotonVision();
 		if (_IsVisionDriveTest) {
-			_SwerveDrive.stopOdometryThread();
+			m_swerveDrive.stopOdometryThread();
 		}
 		setupPathPlanner();
 	}
@@ -130,7 +134,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		SwerveControllerConfiguration controllerCfg
 	) {
 		configureTelemetry();
-		_SwerveDrive = new SwerveDrive(
+		m_swerveDrive = new SwerveDrive(
 			driveCfg,
 			controllerCfg,
 			Constants.Robot.MAX_LINEAR_VELOCITY.in(Units.MetersPerSecond),
@@ -142,7 +146,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	}
 
 	public void setupPhotonVision() {
-		_VisionSubsystem = new VisionSubsystem(_SwerveDrive::getPose, _SwerveDrive.field);
+		m_visionSubsystem = new VisionSubsystem(m_swerveDrive::getPose, m_swerveDrive.field);
 	}
 
 	public void setupPathPlanner() {
@@ -157,16 +161,17 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 				this::getRobotVelocity,
 				(speedsRobotRelative, moduleFeedForwards) -> {
 					if (enableFeedForward) {
-						_SwerveDrive.drive(
+						m_swerveDrive.drive(
 							speedsRobotRelative,
-							_SwerveDrive.kinematics.toSwerveModuleStates(speedsRobotRelative),
+							m_swerveDrive.kinematics.toSwerveModuleStates(speedsRobotRelative),
 							moduleFeedForwards.linearForces()
 						);
 					} else {
-						_SwerveDrive.setChassisSpeeds(speedsRobotRelative);
+						m_swerveDrive.setChassisSpeeds(speedsRobotRelative);
 					}
 				},
 				new PPHolonomicDriveController(
+					// TODO: Do these PIDs need adjusted?
 					new PIDConstants(5.0, 0.0, 0.0),
 					new PIDConstants(5.0, 0.0, 0.0)
 				),
@@ -181,20 +186,50 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		PathfindingCommand.warmupCommand().schedule();
 	}
 
+	private Optional<PhotonPipelineResult> getBestAcrossAllCameras() {
+		return List.of(VisionSubsystem.Cameras.values()).stream()
+			.map(Cameras::getLatestResult)
+			.filter(Objects::nonNull)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.filter(r -> r.hasTargets())
+			.min(Comparator.comparingDouble(r -> r.getBestTarget().getPoseAmbiguity()));
+	}
+
 	public Command aimAtTarget(Cameras camera) {
+		if (camera == null) return Commands.none();
 		return run(() -> {
 			Optional<PhotonPipelineResult> resultO = camera.getBestResult();
-			if (resultO.isPresent()) {
-				var result = resultO.get();
-				if (result.hasTargets()) {
-					this.drive(
-						this.getTargetSpeeds(
-							0, 0,
-							Rotation2d.fromDegrees(result.getBestTarget().getYaw())
-						)
-					);
-				}
-			}
+			if (resultO == null || resultO.isEmpty()) return;
+			PhotonPipelineResult result = resultO.get();
+			if (!result.hasTargets()) return;
+			PhotonTrackedTarget target = result.getBestTarget();
+			if (target == null) return;
+			double yaw = target.getYaw();
+			this.drive(
+				this.getTargetSpeeds(
+					0, 0,
+					Rotation2d.fromDegrees(yaw).unaryMinus().plus(getHeading())
+				)
+			);
+		});
+	}
+
+	public Command aimAtTarget() {
+		return run(() -> {
+			Optional<PhotonPipelineResult> resultO = getBestAcrossAllCameras();
+			if (resultO == null || resultO.isEmpty()) return;
+			PhotonPipelineResult result = resultO.get();
+			if (!result.hasTargets()) return;
+			PhotonTrackedTarget target = result.getBestTarget();
+			if (target == null) return;
+			double yaw = target.getYaw();
+			this.drive(
+				this.getTargetSpeeds(
+					0, 0,
+					Rotation2d.fromDegrees(yaw).unaryMinus().plus(getHeading())
+				)
+			);
 		});
 	}
 
@@ -204,9 +239,9 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 
 	public Command driveToPose(Pose2d pose) {
 		PathConstraints constraints = new PathConstraints(
-			_SwerveDrive.getMaximumChassisVelocity(),
+			m_swerveDrive.getMaximumChassisVelocity(),
 			4.0,
-			_SwerveDrive.getMaximumChassisAngularVelocity(),
+			m_swerveDrive.getMaximumChassisAngularVelocity(),
 			Units.Degrees.of(720).in(Units.Radians)
 		);
 		return AutoBuilder.pathfindToPose(pose, constraints, Units.MetersPerSecond.of(0));
@@ -216,13 +251,13 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	throws IOException, org.json.simple.parser.ParseException {
 		SwerveSetpointGenerator setpointGenerator = new SwerveSetpointGenerator(
 			RobotConfig.fromGUISettings(),
-			_SwerveDrive.getMaximumChassisAngularVelocity()
+			m_swerveDrive.getMaximumChassisAngularVelocity()
 		);
 		AtomicReference<SwerveSetpoint> prevSetpoint = new AtomicReference<>(
 			new SwerveSetpoint(
-				_SwerveDrive.getRobotVelocity(),
-				_SwerveDrive.getStates(),
-				DriveFeedforwards.zeros(_SwerveDrive.getModules().length)
+				m_swerveDrive.getRobotVelocity(),
+				m_swerveDrive.getStates(),
+				DriveFeedforwards.zeros(m_swerveDrive.getModules().length)
 			)
 		);
 		AtomicReference<Double> previousTime = new AtomicReference<>();
@@ -237,7 +272,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 					newTime - previousTime.get()
 				);
 
-				_SwerveDrive.drive(
+				m_swerveDrive.drive(
 					newSetpoint.robotRelativeSpeeds(),
 					newSetpoint.moduleStates(),
 					newSetpoint.feedforwards().linearForces()
@@ -266,9 +301,9 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	@Override
 	public void periodic() {
 		if (_IsVisionDriveTest) {
-			_SwerveDrive.updateOdometry();
 		}
-		_VisionSubsystem.updatePoseEstimation(_SwerveDrive);
+		m_swerveDrive.updateOdometry();
+		m_visionSubsystem.updatePoseEstimation(m_swerveDrive);
 	}
 
 	@Override
@@ -276,7 +311,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 
 	public void addVisionMeasurement(Pose2d pose, double timestamp)
 	{
-		_SwerveDrive.addVisionMeasurement(pose, timestamp);
+		m_swerveDrive.addVisionMeasurement(pose, timestamp);
 	}
 
 	/**
@@ -290,7 +325,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 			SwerveDriveTest.setDriveSysIdRoutine(
 				new Config(),
 				this,
-				_SwerveDrive,
+				m_swerveDrive,
 				12,
 				true
 			),
@@ -311,7 +346,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 			SwerveDriveTest.setAngleSysIdRoutine(
 				new Config(),
 				this,
-				_SwerveDrive
+				m_swerveDrive
 			),
 			3.0,
 			5.0,
@@ -327,7 +362,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	public Command centerModulesCommand()
 	{
 		return run(
-			() -> Arrays.asList(_SwerveDrive.getModules()).forEach(it -> it.setAngle(0.0))
+			() -> Arrays.asList(m_swerveDrive.getModules()).forEach(it -> it.setAngle(0.0))
 		);
 	}
 
@@ -340,8 +375,8 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	public Command driveForward()
 	{
 		return run(() -> {
-			_SwerveDrive.drive(new Translation2d(1, 0), 0, false, false);
-		}).finallyDo(() -> _SwerveDrive.drive(new Translation2d(0, 0), 0, false, false));
+			m_swerveDrive.drive(new Translation2d(1, 0), 0, false, false);
+		}).finallyDo(() -> m_swerveDrive.drive(new Translation2d(0, 0), 0, false, false));
 	}
 
 
@@ -354,7 +389,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void replaceSwerveModuleFeedforward(double kS, double kV, double kA)
 	{
-		_SwerveDrive.replaceSwerveModuleFeedforward(new SimpleMotorFeedforward(kS, kV, kA));
+		m_swerveDrive.replaceSwerveModuleFeedforward(new SimpleMotorFeedforward(kS, kV, kA));
 	}
 
 	/**
@@ -372,16 +407,16 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	) {
 		return run(() -> {
 			// Make the robot move
-			_SwerveDrive.drive(
+			m_swerveDrive.drive(
 				SwerveMath.scaleTranslation(
 					new Translation2d(
-						translationX.getAsDouble() * _SwerveDrive.getMaximumChassisVelocity(),
-						translationY.getAsDouble() * _SwerveDrive.getMaximumChassisVelocity()
+						translationX.getAsDouble() * m_swerveDrive.getMaximumChassisVelocity(),
+						translationY.getAsDouble() * m_swerveDrive.getMaximumChassisVelocity()
 					),
 					0.8
 				),
 				Math.pow(angularRotationX.getAsDouble(), 3) *
-					_SwerveDrive.getMaximumChassisAngularVelocity(),
+					m_swerveDrive.getMaximumChassisAngularVelocity(),
 				true,
 				false
 			);
@@ -415,11 +450,11 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 
 			// Make the robot move
 			driveFieldOriented(
-				_SwerveDrive.swerveController.getTargetSpeeds(
+				m_swerveDrive.swerveController.getTargetSpeeds(
 					scaledInputs.getX(), scaledInputs.getY(),
 					headingX.getAsDouble(), headingY.getAsDouble(),
-					_SwerveDrive.getOdometryHeading().getRadians(),
-					_SwerveDrive.getMaximumChassisVelocity()
+					m_swerveDrive.getOdometryHeading().getRadians(),
+					m_swerveDrive.getMaximumChassisVelocity()
 				)
 			);
 		});
@@ -444,7 +479,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void drive(Translation2d translation, double rotation, boolean fieldRelative)
 	{
-		_SwerveDrive.drive(
+		m_swerveDrive.drive(
 			translation,
 			rotation,
 			fieldRelative,
@@ -459,7 +494,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void driveFieldOriented(ChassisSpeeds velocity)
 	{
-		_SwerveDrive.driveFieldOriented(velocity);
+		m_swerveDrive.driveFieldOriented(velocity);
 	}
 
 	/**
@@ -474,7 +509,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 			// System.out.println("!!! This should make the robot go\n\t" + v.toString());
 			SmartDashboard.putString("DRIVE VELOCITIES", v.toString());
 
-			_SwerveDrive.driveFieldOriented(v);
+			m_swerveDrive.driveFieldOriented(v);
 		});
 	}
 
@@ -485,7 +520,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void drive(ChassisSpeeds velocity)
 	{
-		_SwerveDrive.drive(velocity);
+		m_swerveDrive.drive(velocity);
 	}
 
 	/**
@@ -495,7 +530,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public SwerveDriveKinematics getKinematics()
 	{
-		return _SwerveDrive.kinematics;
+		return m_swerveDrive.kinematics;
 	}
 
 	/**
@@ -508,7 +543,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void resetOdometry(Pose2d initialHolonomicPose)
 	{
-		_SwerveDrive.resetOdometry(initialHolonomicPose);
+		m_swerveDrive.resetOdometry(initialHolonomicPose);
 	}
 
 	public Command resetOdometryCommand() {
@@ -522,7 +557,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public Pose2d getPose()
 	{
-		return _SwerveDrive.getPose();
+		return m_swerveDrive.getPose();
 	}
 
 	/**
@@ -532,7 +567,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void setChassisSpeeds(ChassisSpeeds chassisSpeeds)
 	{
-		_SwerveDrive.setChassisSpeeds(chassisSpeeds);
+		m_swerveDrive.setChassisSpeeds(chassisSpeeds);
 	}
 
 	/**
@@ -542,7 +577,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void postTrajectory(Trajectory trajectory)
 	{
-		_SwerveDrive.postTrajectory(trajectory);
+		m_swerveDrive.postTrajectory(trajectory);
 	}
 
 	/**
@@ -550,7 +585,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void zeroGyro()
 	{
-		_SwerveDrive.zeroGyro();
+		m_swerveDrive.zeroGyro();
 	}
 
 	/**
@@ -564,7 +599,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		{
 			zeroGyro();
 			//Set the pose 180 degrees
-			resetOdometry(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(180)));
+			resetOdometry(new Pose2d(getPose().getTranslation(), Rotation2d.k180deg));
 		} else
 		{
 			zeroGyro();
@@ -578,7 +613,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void setMotorBrake(boolean brake)
 	{
-		_SwerveDrive.setMotorIdleMode(brake);
+		m_swerveDrive.setMotorIdleMode(brake);
 	}
 
 	/**
@@ -610,7 +645,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		double headingX, double headingY
 	) {
 		Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(xInput, yInput));
-		return _SwerveDrive.swerveController.getTargetSpeeds(
+		return m_swerveDrive.swerveController.getTargetSpeeds(
 			scaledInputs.getX(),
 			scaledInputs.getY(),
 			headingX,
@@ -632,7 +667,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	public ChassisSpeeds getTargetSpeeds(double xInput, double yInput, Rotation2d angle)
 	{
 		Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(xInput, yInput));
-		return _SwerveDrive.swerveController.getTargetSpeeds(
+		return m_swerveDrive.swerveController.getTargetSpeeds(
 			scaledInputs.getX(),
 			scaledInputs.getY(),
 			angle.getRadians(),
@@ -648,7 +683,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public ChassisSpeeds getFieldVelocity()
 	{
-		return _SwerveDrive.getFieldVelocity();
+		return m_swerveDrive.getFieldVelocity();
 	}
 
 	/**
@@ -658,7 +693,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public ChassisSpeeds getRobotVelocity()
 	{
-		return _SwerveDrive.getRobotVelocity();
+		return m_swerveDrive.getRobotVelocity();
 	}
 
 	/**
@@ -668,7 +703,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public SwerveController getSwerveController()
 	{
-		return _SwerveDrive.swerveController;
+		return m_swerveDrive.swerveController;
 	}
 
 	/**
@@ -678,7 +713,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public SwerveDriveConfiguration getSwerveDriveConfiguration()
 	{
-		return _SwerveDrive.swerveDriveConfiguration;
+		return m_swerveDrive.swerveDriveConfiguration;
 	}
 
 	/**
@@ -686,7 +721,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public void lock()
 	{
-		_SwerveDrive.lockPose();
+		m_swerveDrive.lockPose();
 	}
 
 	/**
@@ -696,7 +731,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public Rotation2d getPitch()
 	{
-		return _SwerveDrive.getPitch();
+		return m_swerveDrive.getPitch();
 	}
 
 	/**
@@ -706,6 +741,6 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public SwerveDrive getSwerveDrive()
 	{
-		return _SwerveDrive;
+		return m_swerveDrive;
 	}
 }

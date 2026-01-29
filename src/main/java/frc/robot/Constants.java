@@ -67,7 +67,7 @@ public final class Constants {
 		public static final MomentOfInertia MOMENT_OF_INERTIA =
 			Units.KilogramSquareMeters.of(16.5);
 		public static final LinearVelocity MAX_LINEAR_VELOCITY =
-			Units.FeetPerSecond.of(14.5); // about 4.42m/s
+			Units.FeetPerSecond.of(7.33); // about 4.42m/s
 		public static final LinearAcceleration MAX_LINEAR_ACCELERATION =
 			Units.FeetPerSecondPerSecond.of(13.12); // about 4m/s^2
 		public static final AngularVelocity MAX_ANGULAR_VELOCITY =
@@ -118,8 +118,8 @@ public final class Constants {
 	}
 
 	public static final class Controller {
-		public static final double DRIVER_DEADBAND_XY = 0.1;
-		public static final double DRIVER_DEADBAND_Z = 0.35;
+		public static final double DRIVER_DEADBAND_XY = 0.1 / 2;
+		public static final double DRIVER_DEADBAND_Z = 0.35 / 2;
 		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
 		public static final class DriverMap {
