@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -17,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.YagslDriveCommand;
 import frc.robot.commands.autos.DriveAuto;
 import frc.robot.lib.Elastic;
-import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.YagslDriveSubsystem;
 
 public class RobotContainer {
@@ -45,10 +45,12 @@ public class RobotContainer {
 		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
 			_DriveSubsystem.aimAtTarget()
 		);
-		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.parallel(
-			_DriveSubsystem.resetOdometryCommand(),
-			Commands.runOnce(_DriveSubsystem::zeroGyro)
+		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.run(
+			_DriveSubsystem::zeroGyro
 		));
+		_DriverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
+			_DriveSubsystem.resetOdometryCommand()
+		);
 		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
 			_DriveSubsystem.centerModulesCommand()
 		);
@@ -111,17 +113,35 @@ public class RobotContainer {
 
 		if (DriverStation.isDSAttached() && Robot.isFirstConnection.compareAndSet(true, false)) {
 			Elastic.selectTab("Auto");
+			CommandScheduler.getInstance().schedule(Commands.parallel(
+				_DriveSubsystem.resetOdometryCommand(),
+				Commands.runOnce(_DriveSubsystem::zeroGyro)
+			));
 		}
+
+		SmartDashboard.putNumber("Aim At Target/X", 0);
+		SmartDashboard.putNumber("Aim At Target/Y", 0);
+		SmartDashboard.putNumber("Aim At Target/Theta (Degrees)", 0);
+		SmartDashboard.putNumber("Aim At Target/Aim Constant (Degrees)", 5.0);
 	}
 
 	public void teleopInit() {
-		CommandScheduler.getInstance().schedule(Commands.parallel(
-			_DriveSubsystem.resetOdometryCommand(),
-			Commands.runOnce(_DriveSubsystem::zeroGyro)
-		));
+		// CommandScheduler.getInstance().schedule(Commands.parallel(
+		// 	_DriveSubsystem.resetOdometryCommand(),
+		// 	Commands.runOnce(_DriveSubsystem::zeroGyro)
+		// ));
 	}
 
-	public void visionPeriodic() {}
+	private boolean hasBeenEnabledYet = false;
+	public void visionPeriodic() {
+		if (!hasBeenEnabledYet) {
+			hasBeenEnabledYet = DriverStation.isEnabled();
+			// CommandScheduler.getInstance().schedule(Commands.parallel(
+			// 	_DriveSubsystem.resetOdometryCommand(),
+			// 	Commands.runOnce(_DriveSubsystem::zeroGyro)
+			// ));
+		}
+	}
 
 	public void setMotorBrake(boolean brake) {
 		// _DriveSubsystem.setMotorBrake(brake);

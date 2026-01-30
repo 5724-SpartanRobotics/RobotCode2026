@@ -72,7 +72,7 @@ public final class Constants {
 			Units.FeetPerSecondPerSecond.of(13.12); // about 4m/s^2
 		public static final AngularVelocity MAX_ANGULAR_VELOCITY =
 			Units.RadiansPerSecond.of(TWO_PI);
-		public static final double DEFAULT_SPEED_MOD = 0.3;
+		public static final double DEFAULT_SPEED_MOD = 0.425;
 	}
 
 	public static final class Drive {
@@ -118,7 +118,7 @@ public final class Constants {
 	}
 
 	public static final class Controller {
-		public static final double DRIVER_DEADBAND_XY = 0.1 / 2;
+		public static final double DRIVER_DEADBAND_XY = 0.025;
 		public static final double DRIVER_DEADBAND_Z = 0.35 / 2;
 		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
@@ -127,7 +127,8 @@ public final class Constants {
 			public static final int SPEEDMOD_MAX = 2; // thumb button
 			public static final int ZERO_GYRO = 7;
 			public static final int DRIVE_TO_POSE = 1;
-			public static final int CENTER_SWERVES = 8;
+			public static final int CENTER_SWERVES = 10;
+			public static final int RESET_ODOMETRY = 8;
 		}
 		
 		public static final class OperatorMap {}

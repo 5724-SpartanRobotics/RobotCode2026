@@ -66,3 +66,7 @@ found in this repository.
 - We learned that the offset for the absolute encoder in the YAGSL config is in degrees.
 - The FO_DDA command did some weird stuff with the joystick so now we just use FO_DAV and it seems to work.
 - Constants were only updated in the YAGSL config jsons, not in our Constants.java file
+
+## 30 Jan 2026
+- Switch from Pi 4 photon (~5fps) to Limelight 2+ photon (~45fps)
+- It's a hot mess. Sometimes locking onto the pose will lock it to the center, and sometimes it will lock it to an extrema of a the camera's viewport (either far left or right). There is some problem with the gyro such that it starts the robot with about +58deg and I can't figure that out; no amount of zeroing the gyro will make it actually zero; I cannot tell if this problem introduces other problems or not. Zeroing the pose also breaks things sometimes: it seems like zeroing the pose and then trying to use the `aimToTarget` function will do nothing (or little) because the pose is now constantly stuck at zero for an unknown reason. Unrelated, but with some quick testing: adjusting `SmartDashboard/Aim At Target/Aim Constant (Degrees)` seems to adjust where the pose will be locked on to, but it also seems somewhat arbitrary. High latency between the camera and Elastic is a problem, but it doesn't seem to affect vision locking; not sure if that matters or not. This is gonna take a long time to trace down but we don't have that time.

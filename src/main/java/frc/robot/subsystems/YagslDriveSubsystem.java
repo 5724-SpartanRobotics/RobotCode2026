@@ -216,6 +216,10 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	}
 
 	public Command aimAtTarget() {
+		double x_override = SmartDashboard.getNumber("Aim At Target/X", 0);
+		double y_override = SmartDashboard.getNumber("Aim At Target/Y", 0);
+		double theta_override = SmartDashboard.getNumber("Aim At Target/Theta (Degrees)", 0);
+		double aim_constant = SmartDashboard.getNumber("Aim At Target/Aim Constant (Degrees)", 0);
 		return run(() -> {
 			Optional<PhotonPipelineResult> resultO = getBestAcrossAllCameras();
 			if (resultO == null || resultO.isEmpty()) return;
@@ -224,10 +228,12 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 			PhotonTrackedTarget target = result.getBestTarget();
 			if (target == null) return;
 			double yaw = target.getYaw();
+			var gyroRotation = m_swerveDrive.getGyroRotation3d().toRotation2d().unaryMinus().times(2.0);
 			this.drive(
 				this.getTargetSpeeds(
-					0, 0,
-					Rotation2d.fromDegrees(yaw).unaryMinus().plus(getHeading())
+					x_override, y_override,
+					Rotation2d.fromDegrees(theta_override == 0 ? yaw : theta_override).unaryMinus()
+						.plus(gyroRotation).plus(Rotation2d.fromDegrees(aim_constant))
 				)
 			);
 		});
@@ -548,6 +554,13 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 
 	public Command resetOdometryCommand() {
 		return Commands.runOnce(() -> this.resetOdometry(new Pose2d(3, 3, new Rotation2d())));
+	}
+
+	public Command flipOdometry() {
+		var nowPose = getPose();
+		return Commands.runOnce(() -> this.resetOdometry(
+			nowPose.rotateBy(Rotation2d.k180deg)
+		));
 	}
 
 	/**
