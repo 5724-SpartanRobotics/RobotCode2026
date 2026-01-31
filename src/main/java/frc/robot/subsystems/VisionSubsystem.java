@@ -221,8 +221,8 @@ public class VisionSubsystem
 		if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 			try {
 				Desktop.getDesktop().browse(new URI("http://localhost:1182/"));
-				Desktop.getDesktop().browse(new URI("http://localhost:1184/"));
-				Desktop.getDesktop().browse(new URI("http://localhost:1186/"));
+				// Desktop.getDesktop().browse(new URI("http://localhost:1184/"));
+				// Desktop.getDesktop().browse(new URI("http://localhost:1186/"));
 			} catch (IOException | URISyntaxException e) {
 				e.printStackTrace();
 			}
@@ -373,10 +373,10 @@ public class VisionSubsystem
 
 			poseEstimator = new PhotonPoseEstimator(
 				VisionSubsystem.FIELD_LAYOUT,
-				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+				PoseStrategy.CONSTRAINED_SOLVEPNP,
 				robotToCamTransform
 			);
-			poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+			poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
 
 			this.singleTagStdDevs = singleTagStdDevs;
 			this.multiTagStdDevs = multiTagStdDevsMatrix;

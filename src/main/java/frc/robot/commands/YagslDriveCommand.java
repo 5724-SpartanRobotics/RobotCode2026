@@ -49,10 +49,11 @@ public class YagslDriveCommand {
 		_DriveSubsystem = drive;
 		_Joystick = joystick;
 		System.out.println("===== The <<DriveCommand>>s have been initialized. =====");
+		SmartDashboard.putBoolean("DriveCommands Initialized", true);
 	}
 
 	public static SwerveInputStream DriveAngularVelocity() {
-		System.out.println("RETURNING A DRIVE COMMAND: DAV");
+		// System.out.println("RETURNING A DRIVE COMMAND: DAV");
 		return SwerveInputStream.of(
 			_DriveSubsystem.getSwerveDrive(),
 			() -> applyJoystickDeadbandAndScale(
@@ -75,7 +76,7 @@ public class YagslDriveCommand {
 			.allianceRelativeControl(true);
 	}
 	public static SwerveInputStream DriveDirectAngle() {
-		System.out.println("RETURNING A DRIVE COMMAND: DDA");
+		// System.out.println("RETURNING A DRIVE COMMAND: DDA");
 		return DriveAngularVelocity().copy()
 			.withControllerHeadingAxis(
 				() -> Math.sin(_Joystick.getX() * Math.PI) * Constants.TWO_PI,
@@ -84,14 +85,14 @@ public class YagslDriveCommand {
 			.headingWhile(true);
 	}
 	public static SwerveInputStream DriveRobotOriented() {
-		System.out.println("RETURNING A DRIVE COMMAND: DRO");
+		// System.out.println("RETURNING A DRIVE COMMAND: DRO");
 		return DriveAngularVelocity().copy()
 			.robotRelative(false)
 			.allianceRelativeControl(false);
 	}
 
 	public static SwerveInputStream DriveAngularVelocity_Keyboard() {
-		System.out.println("RETURNING A DRIVE COMMAND: DAVK");
+		// System.out.println("RETURNING A DRIVE COMMAND: DAVK");
 		return SwerveInputStream.of(
 			_DriveSubsystem.getSwerveDrive(),
 			() -> _Joystick.getRawAxis(1) * -1.0,
@@ -103,7 +104,7 @@ public class YagslDriveCommand {
 			.allianceRelativeControl(true);
 	}
 	public static SwerveInputStream DriveDirectAngle_Keyboard() {
-		System.out.println("RETURNING A DRIVE COMMAND: DDAK");
+		// System.out.println("RETURNING A DRIVE COMMAND: DDAK");
 		return DriveAngularVelocity_Keyboard().copy()
 			.withControllerHeadingAxis(
 				() -> Math.sin(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
@@ -122,7 +123,7 @@ public class YagslDriveCommand {
 	}
 
 	public static Command getCommand(DriveType t, boolean isKeyboard) {
-		System.out.println("\\\\\\\\\\\\\\ DRIVE COMMAND GOTTEN");
+		// System.out.println("\\\\\\\\\\\\\\ DRIVE COMMAND GOTTEN");
 		if (t == DriveType.RO_AngularVelocity && isKeyboard) {
 			return Commands.none();
 		}

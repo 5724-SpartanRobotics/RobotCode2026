@@ -51,6 +51,9 @@ public class RobotContainer {
 		_DriverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
 			_DriveSubsystem.resetOdometryCommand()
 		);
+		_DriverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
+			_DriveSubsystem.resetOdometryFlippedCommand()
+		);
 		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
 			_DriveSubsystem.centerModulesCommand()
 		);
@@ -122,7 +125,7 @@ public class RobotContainer {
 		SmartDashboard.putNumber("Aim At Target/X", 0);
 		SmartDashboard.putNumber("Aim At Target/Y", 0);
 		SmartDashboard.putNumber("Aim At Target/Theta (Degrees)", 0);
-		SmartDashboard.putNumber("Aim At Target/Aim Constant (Degrees)", 5.0);
+		SmartDashboard.putNumber("Aim At Target/Aim Constant (Degrees)", 30.0);
 	}
 
 	public void teleopInit() {

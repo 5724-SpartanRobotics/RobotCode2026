@@ -38,6 +38,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
@@ -219,14 +220,18 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		double x_override = SmartDashboard.getNumber("Aim At Target/X", 0);
 		double y_override = SmartDashboard.getNumber("Aim At Target/Y", 0);
 		double theta_override = SmartDashboard.getNumber("Aim At Target/Theta (Degrees)", 0);
-		double aim_constant = SmartDashboard.getNumber("Aim At Target/Aim Constant (Degrees)", 0);
+		double aim_constant = SmartDashboard.getNumber("Aim At Target/Aim Constant (Degrees)", 30);
 		return run(() -> {
+			SmartDashboard.putBoolean("Photon/Ok", false);
 			Optional<PhotonPipelineResult> resultO = getBestAcrossAllCameras();
 			if (resultO == null || resultO.isEmpty()) return;
 			PhotonPipelineResult result = resultO.get();
 			if (!result.hasTargets()) return;
 			PhotonTrackedTarget target = result.getBestTarget();
 			if (target == null) return;
+			SmartDashboard.putBoolean("Photon/Ok", true);
+			SmartDashboard.putString("Photon/Pipeline Result", result.toString());
+			SmartDashboard.putString("Photon/Best Target", target.toString());
 			double yaw = target.getYaw();
 			var gyroRotation = m_swerveDrive.getGyroRotation3d().toRotation2d().unaryMinus().times(2.0);
 			this.drive(
@@ -554,6 +559,10 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 
 	public Command resetOdometryCommand() {
 		return Commands.runOnce(() -> this.resetOdometry(new Pose2d(3, 3, new Rotation2d())));
+	}
+
+	public Command resetOdometryFlippedCommand() {
+		return Commands.runOnce(() -> this.resetOdometry(new Pose2d(3, 3, Rotation2d.k180deg)));
 	}
 
 	public Command flipOdometry() {
