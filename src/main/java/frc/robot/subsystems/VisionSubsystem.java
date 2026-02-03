@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.PhotonUtils;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -464,10 +463,11 @@ public class VisionSubsystem
 
 			poseEstimator = new PhotonPoseEstimator(
 				VisionSubsystem.FIELD_LAYOUT,
-				PoseStrategy.CONSTRAINED_SOLVEPNP,
+				// PoseStrategy.CONSTRAINED_SOLVEPNP, // Remove in favor of specific methods
 				robotToCamTransform
 			);
-			poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
+			// Deprecated so remove. It doesn't really matter cause we only use the specific methods.
+			// poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
 
 			this.singleTagStdDevs = singleTagStdDevs;
 			this.multiTagStdDevs = multiTagStdDevsMatrix;
@@ -587,7 +587,11 @@ public class VisionSubsystem
 		private void updateEstimatedGlobalPose() {
 			Optional<EstimatedRobotPose> visionEst = Optional.empty();
 			for (var change : resultsList) {
-				visionEst = poseEstimator.update(change);
+				// Get rid of this because they've deprecated it in favor of specific methods
+				// visionEst = poseEstimator.update(change);
+				// so here we'll use the specific method. (I have a hunch that we'll only
+				// do estimation from coproc as to not overload the rio.)
+				visionEst = poseEstimator.estimateCoprocMultiTagPose(change);
 				updateEstimationStdDevs(visionEst, change.getTargets());
 			}
 			estimatedRobotPose = visionEst;

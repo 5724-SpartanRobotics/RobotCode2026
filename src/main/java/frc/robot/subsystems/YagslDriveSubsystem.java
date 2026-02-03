@@ -46,6 +46,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
@@ -197,7 +198,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 			DriverStation.reportError(getName(), e.getStackTrace());
 		}
 
-		PathfindingCommand.warmupCommand().schedule();
+		CommandScheduler.getInstance().schedule(PathfindingCommand.warmupCommand());
 	}
 
 	private Optional<PhotonPipelineResult> getBestAcrossAllCameras() {
