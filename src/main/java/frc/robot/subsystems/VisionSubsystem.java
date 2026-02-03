@@ -35,7 +35,9 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import swervelib.SwerveDrive;
@@ -45,6 +47,8 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 /**
  * Example PhotonVision class to aid in the pursuit of accurate odometry. Taken from
  * https://gitlab.com/ironclad_code/ironclad-2024/-/blob/master/src/main/java/frc/robot/vision/Vision.java?ref_type=heads
+ * Now with updates trying to follow
+ * https://github.com/PhotonVision/photonvision/blob/main/photonlib-java-examples/poseest/src/main/java/frc/robot/Vision.java
  */
 public class VisionSubsystem
 {
@@ -67,6 +71,8 @@ public class VisionSubsystem
 	 */
 	private Field2d m_field2d;
 
+	private YagslDriveSubsystem m_driveSubsystem;
+
 	/**
 	 * Constructor for the Vision class.
 	 *
@@ -77,7 +83,7 @@ public class VisionSubsystem
 		this.m_currentPose2d = currentPose;
 		this.m_field2d = field;
 
-		if (Robot.isSimulation()) {
+		if (RobotBase.isSimulation()) {
 			m_visionSim = new VisionSystemSim("Vision");
 			m_visionSim.addAprilTags(FIELD_LAYOUT);
 
@@ -256,6 +262,85 @@ public class VisionSubsystem
 		m_field2d.getObject("tracked targets").setPoses(poses);
 	}
 
+	public void setDriveSubsystem(YagslDriveSubsystem yds) {
+		this.m_driveSubsystem = yds;
+	}
+
+	// 2026-02-02: add this periodic per the photonvision example code
+	public void periodic() {
+		Optional<EstimatedRobotPose> visionEst = Optional.empty();
+		for ( var camera : Cameras.values() ) {
+			// Iterate over each camera
+			// TODO: find out if this is too much of a performance implication if we have >1 camera
+			for ( var result : camera.camera.getAllUnreadResults() ) {
+				visionEst = camera.poseEstimator.estimateCoprocMultiTagPose(result);
+				if (visionEst.isEmpty()) {
+					visionEst = camera.poseEstimator.estimateLowestAmbiguityPose(result);
+				}
+				SmartDashboard.putString(
+					String.format("/VisionSubsystemCameras/%s/EstPose", camera.name()),
+					visionEst.orElse(new EstimatedRobotPose(new Pose3d(), 0, new ArrayList<>())).estimatedPose.toString()
+				);
+				SmartDashboard.putNumberArray(
+					String.format("/VisionSubsystemCameras/%s/TargetIds", camera.name()),
+					result.getTargets().stream().mapToDouble(PhotonTrackedTarget::getFiducialId).toArray()
+				);
+				updateEstimationStdDevs(camera, visionEst, result.getTargets());
+
+				
+				visionEst.ifPresentOrElse(est -> {
+					m_field2d.getObject("VisionEstimation").setPose(est.estimatedPose.toPose2d());
+				}, () -> {
+					m_field2d.getObject("VisionEstimation").setPoses();
+				});
+				
+				visionEst.ifPresent(est -> {
+					var estStdDevs = camera.curStdDevs;
+					// Comment this out for testing and hope that motor encoders & gyro can find the robot pose well enough
+					// m_driveSubsystem.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+				});
+			}
+		}
+	}
+
+	public void updateEstimationStdDevs(
+		Cameras camera,
+		Optional<EstimatedRobotPose> estPose,
+		List<PhotonTrackedTarget> targets
+	) {
+		final var SingleTagStdDevs = VecBuilder.fill(4, 4, 8);
+		final var MultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+
+		if (estPose.isEmpty()) {
+			camera.curStdDevs = SingleTagStdDevs;
+			return;
+		}
+
+		var estStdDevs = SingleTagStdDevs;
+		int numTags = 0;
+		double avgDist = 0;
+
+		for ( var t : targets ) {
+			var tagPose = camera.poseEstimator.getFieldTags().getTagPose(t.getFiducialId());
+			if (tagPose.isEmpty()) continue;
+			numTags++;
+			avgDist += tagPose.get()
+				.toPose2d().getTranslation()
+				.getDistance(estPose.get().estimatedPose.toPose2d().getTranslation());
+		}
+
+		if (numTags == 0) {
+			camera.curStdDevs = SingleTagStdDevs;
+		} else {
+			avgDist /= numTags;
+			if (numTags > 1) estStdDevs = MultiTagStdDevs;
+			if (numTags == 1 && avgDist > 4)
+				estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+			else estStdDevs = estStdDevs.times(1.0 + (avgDist * avgDist / 30.0));
+			camera.curStdDevs = estStdDevs;
+		}
+	}
+
 	/**
 	 * Camera Enum to select each camera
 	 */
@@ -292,6 +377,11 @@ public class VisionSubsystem
 		 * Center Camera
 		 */
 		CENTER_CAM(
+			// This has been updated for the limelight, but I don't know if the vectors are correct...
+			// Also I have no idea how to find the standard deviations or ambiguity...
+			// TODO: Configure Photon to use low exposure/high brightness per the link below
+			// https://docs.photonvision.org/en/latest/docs/pipelines/input.html#apriltags-and-motion-blur
+			// I'm not sure if the limelight 2+ uses a global shutter or rolling shutter so that may make a difference at some point.
 			"center",
 			new Rotation3d(0, Units.degreesToRadians(90-59), 0),
 			new Translation3d(
@@ -299,6 +389,7 @@ public class VisionSubsystem
 				Units.inchesToMeters(0),
 				Units.inchesToMeters(21)
 			),
+			// TODO: Figure out how to compute these values instead of just asking ai.
 			// Vision measurement std devs: x, y (m), rotation (rad)
 			VecBuilder.fill(1.0, 1.0, 3.0),
 			// Ambiguity / extra noise scaling
@@ -396,6 +487,11 @@ public class VisionSubsystem
 				cameraSim = new PhotonCameraSim(camera, cameraProp);
 				cameraSim.enableDrawWireframe(true);
 			}
+
+			SmartDashboard.putString(
+				String.format("/VisionSubsystemCameras/%s/ZNote", name),
+				"EstPose is a Pose3d of the vision estimate, or all zeros/empty if none."
+			);
 		}
 
 		/**

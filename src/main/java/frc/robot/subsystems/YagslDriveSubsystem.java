@@ -31,14 +31,16 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
@@ -158,6 +160,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 
 	public void setupPhotonVision() {
 		m_visionSubsystem = new VisionSubsystem(m_swerveDrive::getPose, m_swerveDrive.field);
+		m_visionSubsystem.setDriveSubsystem(this);
 	}
 
 	public void setupPathPlanner() {
@@ -326,7 +329,11 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		m_swerveDrive.updateOdometry();
 		// 2026-02-02: Disable updating the vision pose estimation for testing
 		// we leave the swerve drive odometry cause it's visionless and is very necessary
+		// This is the old "periodic" function from the YAGSL example
 		// m_visionSubsystem.updatePoseEstimation(m_swerveDrive);
+		// This is the "new" periodic function from the Photon example.
+		// I'm going to leave this in cause it will only update NT, not add to the Drive pose estimate
+		m_visionSubsystem.periodic();
 	}
 
 	@Override
@@ -335,6 +342,11 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	public void addVisionMeasurement(Pose2d pose, double timestamp)
 	{
 		m_swerveDrive.addVisionMeasurement(pose, timestamp);
+	}
+
+	public void addVisionMeasurement(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs)
+	{
+		m_swerveDrive.addVisionMeasurement(pose, timestamp, stdDevs);
 	}
 
 	/**
