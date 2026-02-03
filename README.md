@@ -73,3 +73,10 @@ found in this repository.
 - Seems like the same problem in sim now? Idk this is really confusing.
 - In an attempt to trace the constant CommandScheduler loop overrun -- Some snooping with VisualVM shows that perhaps the lies in `frc.robot.subsystems.VisionSubsystem.updatePoseEstimation (swervelib.SwerveDrive)`, which seems very plausible, but I also cannot just blindly trust this as the readings were taken from sim, and updating the visionsim is very cpu intensive. I'll see if I can sort this out on the real robot tomorrow, but idk.
 - PS: I'm very close to scrapping this all and moving back to a custom swerve implementation that I know works, and a custom vision implementation that I know I can get to work (cause it is mostly there), and I know basically all the ins and outs of each system. That way I can also debug basically as deep as I need without wishing that it was my code. It seems like "Plug'n'Play" is turning out to be more like "Plug'n'Sob-and-Wonder-Why-Nothing-Works" (but of course I'm not annoyed or anything, wink wink). 
+
+## 2 Feb 2026 (Notes as I work on some code debugging)
+- 2026 REBUILT field uses a [rotated field setup](https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html#mirrored-field-vs-rotated-field).
+![2026 REBUILT field](https://raw.githubusercontent.com/pranavgundu/Strategy-Board/a0b54ab5c105db7abd68f5407c4208cd250ede1e/src/images/2026.png)
+- Looking at the way the coordinate system/FMS interact, I think it's best if we use the "always blue" strategy, even though our lab is red.
+- Invert joystick for Red alliance
+- We'll say our starting pose for testing is (12.87357, 1.88546)m or (506.833294, 74.2306672)in from the absolue-blue origin, or (3.36383, 1.88546)m in (red origin x, blue origin y). That means that when the robot faces the blue alliance, the left bumper (or side of the robot, really) will align with the left edge of the bump, and the front bumper will be aligned with the line in front of the bump. [See this image](https://drive.google.com/file/d/13pm5pMjGclVOwoO9fd6nxytOIUW3MV8C/view?usp=sharing).

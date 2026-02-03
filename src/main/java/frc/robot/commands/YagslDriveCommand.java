@@ -57,17 +57,19 @@ public class YagslDriveCommand {
 		return SwerveInputStream.of(
 			_DriveSubsystem.getSwerveDrive(),
 			() -> applyJoystickDeadbandAndScale(
-				_Joystick.getRawAxis(1) * -1.0,
+				_Joystick.getRawAxis(1) * (Constants.isRedAlliance() ? -1.0 : 1.0),
 				Constants.Controller.DRIVER_DEADBAND_XY
 			), // Y axis (forward/back)
 			() -> applyJoystickDeadbandAndScale(
-				_Joystick.getRawAxis(0) * -1.0,
+				_Joystick.getRawAxis(0) * (Constants.isRedAlliance() ? -1.0 : 1.0),
 				Constants.Controller.DRIVER_DEADBAND_XY
 			) // X axis (strafe)
 		)
 			.withControllerRotationAxis(() ->
 				applyJoystickDeadbandAndScale(
-					_Joystick.getRawAxis(2) * -1.0,
+					// Gonna invert this based on alliance, idk if that's right (we'll see later)
+					// TODO: Test this on the actual robot
+					_Joystick.getRawAxis(2) * (Constants.isRedAlliance() ? -1.0 : 1.0),
 					Constants.Controller.DRIVER_DEADBAND_Z
 				)
 			) // twist / rotation
@@ -75,6 +77,10 @@ public class YagslDriveCommand {
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
 	}
+	/**
+	 * @deprecated This function scares me. Don't use it (since 2026-02-02)
+	 */
+	@Deprecated(since = "2026-02-02")
 	public static SwerveInputStream DriveDirectAngle() {
 		// System.out.println("RETURNING A DRIVE COMMAND: DDA");
 		return DriveAngularVelocity().copy()

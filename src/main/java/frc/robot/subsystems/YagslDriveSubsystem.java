@@ -84,15 +84,25 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	 */
 	public YagslDriveSubsystem(File directory)
 	{ 
+
 		boolean blueAlliance = !Constants.isRedAlliance();
-		Pose2d startingPose = blueAlliance ?
-			new Pose2d(
-				new Translation2d(Meter.of(1), Meter.of(4)),
-				Rotation2d.fromDegrees(0)
-			) : new Pose2d(
-				new Translation2d(Meter.of(16), Meter.of(4)),
-				Rotation2d.fromDegrees(180)
-			);
+		
+		// 2026-02-02: Commenting this out for testing right now, we'll just use the initial pose
+		// as written in the readme (12.873565673828125, 1.8854589462280273) meters, always-blue
+		// origin. Since we are facing the blue alliance, we'll need to rotate the robot 180deg.
+		// Pose2d startingPose = blueAlliance ?
+		// 	new Pose2d(
+		// 		new Translation2d(Meter.of(1), Meter.of(4)),
+		// 		Rotation2d.fromDegrees(0)
+		// 	) : new Pose2d(
+		// 		new Translation2d(Meter.of(16), Meter.of(4)),
+		// 		Rotation2d.fromDegrees(180)
+		// 	);
+		Pose2d startingPose = new Pose2d(
+			new Translation2d(12.873565673828125, 1.8854589462280273),
+			Rotation2d.k180deg
+		);
+
 		// Configure the Telemetry before creating the SwerveDrive to avoid
 		// unnecessary objectsbeing created.
 		configureTelemetry();
@@ -314,7 +324,9 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		if (_IsVisionDriveTest) {
 		}
 		m_swerveDrive.updateOdometry();
-		m_visionSubsystem.updatePoseEstimation(m_swerveDrive);
+		// 2026-02-02: Disable updating the vision pose estimation for testing
+		// we leave the swerve drive odometry cause it's visionless and is very necessary
+		// m_visionSubsystem.updatePoseEstimation(m_swerveDrive);
 	}
 
 	@Override
