@@ -66,6 +66,10 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
  */
 public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 {
+	private final Pose2d kInitialPose = new Pose2d(
+		new Translation2d(12.873565673828125, 1.8854589462280273),
+		Rotation2d.k180deg
+	);
 	/**
 	 * Swerve drive object.
 	 */
@@ -101,10 +105,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		// 		new Translation2d(Meter.of(16), Meter.of(4)),
 		// 		Rotation2d.fromDegrees(180)
 		// 	);
-		Pose2d startingPose = new Pose2d(
-			new Translation2d(12.873565673828125, 1.8854589462280273),
-			Rotation2d.k180deg
-		);
+		Pose2d startingPose = kInitialPose;
 
 		// Configure the Telemetry before creating the SwerveDrive to avoid
 		// unnecessary objectsbeing created.
@@ -255,6 +256,27 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 						.plus(gyroRotation).plus(Rotation2d.fromDegrees(aim_constant))
 				)
 			);
+		});
+	}
+
+	public Command driveToTarget() {
+		var nowPose = getPose();
+		return run(() -> {
+			Optional<PhotonPipelineResult> resultO = getBestAcrossAllCameras();
+			if (resultO == null || resultO.isEmpty()) return;
+			PhotonPipelineResult result = resultO.get();
+			if (!result.hasTargets()) return;
+			PhotonTrackedTarget target = result.getBestTarget();
+			if (target == null) return;
+			var yaw = Rotation2d.fromDegrees(target.getYaw());
+			var newPose = nowPose.rotateBy(yaw.unaryMinus());
+			this.driveToPose(newPose);
+		});
+	}
+
+	public Command driveToInitialPosition() {
+		return run(() -> {
+			this.driveToPose(kInitialPose);
 		});
 	}
 

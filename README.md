@@ -85,3 +85,5 @@ found in this repository.
 
 ## 3 Feb 2026
 - Get rid of deprecated methods/calls in favor of newer/more specific (less general) ones. 
+- Discovered via VirtualVM that the loop overrun may be caused by unnecessary telemetry of the swerve library (go from HIGH to INFO once we are done testint).
+- The pose and all is fine but the autolock doesn't work. Tried correcting it by using position instead of offset, but haven't yet tested.

@@ -121,6 +121,8 @@ public class VisionSubsystem
 	 * @param swerveDrive {@link SwerveDrive} instance.
 	 */
 	public void updatePoseEstimation(SwerveDrive swerveDrive) {
+	}
+	public void _updatePoseEstimation(SwerveDrive swerveDrive) {
 		if (SwerveDriveTelemetry.isSimulation && swerveDrive.getSimulationDriveTrainPose().isPresent()) {
 			/*
 			 * In the maple-sim, odometry is simulated using encoder values, accounting for
@@ -237,7 +239,7 @@ public class VisionSubsystem
 	/**
 	 * Update the {@link Field2d} to include tracked targets/
 	 */
-	public void updateVisionField() {
+	/*public void updateVisionField() {
 		List<PhotonTrackedTarget> targets = new ArrayList<PhotonTrackedTarget>();
 		for (Cameras c : Cameras.values()) {
 			if (!c.resultsList.isEmpty()) {
@@ -259,7 +261,7 @@ public class VisionSubsystem
 		}
 
 		m_field2d.getObject("tracked targets").setPoses(poses);
-	}
+	}*/
 
 	public void setDriveSubsystem(YagslDriveSubsystem yds) {
 		this.m_driveSubsystem = yds;
@@ -296,7 +298,7 @@ public class VisionSubsystem
 				visionEst.ifPresent(est -> {
 					var estStdDevs = camera.curStdDevs;
 					// Comment this out for testing and hope that motor encoders & gyro can find the robot pose well enough
-					// m_driveSubsystem.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+					m_driveSubsystem.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
 				});
 			}
 		}

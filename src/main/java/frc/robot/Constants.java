@@ -119,7 +119,7 @@ public final class Constants {
 
 	public static final class Controller {
 		public static final double DRIVER_DEADBAND_XY = 0.025;
-		public static final double DRIVER_DEADBAND_Z = 0.35 / 2;
+		public static final double DRIVER_DEADBAND_Z = 0.35 / 1.5;
 		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
 		public static final class DriverMap {

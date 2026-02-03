@@ -43,7 +43,7 @@ public class RobotContainer {
 
 		/* USING YAGSL */
 		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
-			_DriveSubsystem.aimAtTarget()
+			_DriveSubsystem.driveToTarget()
 		);
 		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.run(
 			_DriveSubsystem::zeroGyro
