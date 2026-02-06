@@ -35,6 +35,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -50,7 +51,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
-import frc.robot.subsystems.VisionSubsystem.Cameras;
+import frc.robot.subsystems.VisionSubsystem2.Cameras;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
@@ -78,7 +79,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	private final boolean _IsVisionDriveTest =
 		Constants.DebugLevel.isOrAll(Constants.DebugLevel.Vision);
 
-	private VisionSubsystem m_visionSubsystem;
+	private VisionSubsystem2 m_visionSubsystem;
 
 	private static void configureTelemetry() {
 		SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
@@ -136,6 +137,8 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 			m_swerveDrive.stopOdometryThread();
 		}
 		setupPathPlanner();
+
+		SmartDashboard.putString("VisSubSysMsg", "<empty string>");
 	}
 
 	/**
@@ -161,7 +164,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	}
 
 	public void setupPhotonVision() {
-		m_visionSubsystem = new VisionSubsystem(m_swerveDrive::getPose, m_swerveDrive.field);
+		m_visionSubsystem = new VisionSubsystem2(m_swerveDrive::getPose, m_swerveDrive.field);
 		m_visionSubsystem.setDriveSubsystem(this);
 	}
 
@@ -203,8 +206,8 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	}
 
 	private Optional<PhotonPipelineResult> getBestAcrossAllCameras() {
-		return List.of(VisionSubsystem.Cameras.values()).stream()
-			.map(Cameras::getLatestResult)
+		return Arrays.stream(VisionSubsystem2.Cameras.values())
+			.map(VisionSubsystem2.Cameras::getLatestResult)
 			.filter(Objects::nonNull)
 			.filter(Optional::isPresent)
 			.map(Optional::get)
@@ -260,24 +263,88 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	}
 
 	public Command driveToTarget() {
-		var nowPose = getPose();
-		return run(() -> {
-			Optional<PhotonPipelineResult> resultO = getBestAcrossAllCameras();
-			if (resultO == null || resultO.isEmpty()) return;
-			PhotonPipelineResult result = resultO.get();
-			if (!result.hasTargets()) return;
+		final double allSpeedsMultiplier = 0.8;
+
+		// DIRECT camera read — no caching, no unread draining
+		PhotonPipelineResult result = VisionSubsystem2.Cameras.CENTER_CAM.camera.getLatestResult();
+
+		if (!result.hasTargets()) {
+			SmartDashboard.putString("VisSubSysMsg", "driveToTarget: no targets in latest result");
+			return Commands.none();
+		}
+
+		Pose2d tagPoseForGoal;
+
+		// Try multi-tag if available
+		var multiO = result.getMultiTagResult();  // may be null depending on PV version
+		if (multiO.isPresent() && !multiO.get().fiducialIDsUsed.isEmpty()) {
+			var multi = multiO.get();
+			var ids = multi.fiducialIDsUsed;
+
+			var poses = ids.stream()
+				.map(m_visionSubsystem::getTagPose)
+				.flatMap(Optional::stream)
+				.toList();
+
+			if (!poses.isEmpty()) {
+				double meanX = poses.stream().mapToDouble(Pose2d::getX).average().getAsDouble();
+				double meanY = poses.stream().mapToDouble(Pose2d::getY).average().getAsDouble();
+				tagPoseForGoal = new Pose2d(meanX, meanY, new Rotation2d());
+			} else {
+				SmartDashboard.putString("VisSubSysMsg","driveToTarget: multi-tag IDs not in field layout");
+				return Commands.none();
+			}
+
+		} else {
+			// FALLBACK: single tag
 			PhotonTrackedTarget target = result.getBestTarget();
-			if (target == null) return;
-			var yaw = Rotation2d.fromDegrees(target.getYaw());
-			var newPose = nowPose.rotateBy(yaw.unaryMinus());
-			this.driveToPose(newPose);
-		});
+			if (target == null) {
+				SmartDashboard.putString("VisSubSysMsg","driveToTarget: bestTarget is null");
+				return Commands.none();
+			}
+
+			var tagPoseO = m_visionSubsystem.getTagPose(target.getFiducialId());
+			if (tagPoseO.isEmpty()) {
+				SmartDashboard.putString("VisSubSysMsg","driveToTarget: tag " + target.getFiducialId() + " not in layout");
+				return Commands.none();
+			}
+
+			tagPoseForGoal = tagPoseO.get();
+		}
+
+		// 1 meter behind the tag
+		Transform2d offset = new Transform2d(-1.0, 0.0, new Rotation2d());
+		Pose2d goalPose = tagPoseForGoal.transformBy(offset);
+
+		// Face the tag
+		Rotation2d facing = tagPoseForGoal.getTranslation()
+			.minus(goalPose.getTranslation())
+			.getAngle();
+		goalPose = new Pose2d(goalPose.getTranslation(), facing);
+
+		SmartDashboard.putString("VisSubSysMsg","driveToTarget: goalPose = " + goalPose);
+
+		return AutoBuilder.pathfindToPose(
+			goalPose,
+			new PathConstraints(
+				m_swerveDrive.getMaximumChassisVelocity() * allSpeedsMultiplier,
+				Constants.Robot.MAX_LINEAR_ACCELERATION
+					.times(allSpeedsMultiplier)
+					.in(Units.MetersPerSecondPerSecond),
+				m_swerveDrive.getMaximumChassisAngularVelocity() * allSpeedsMultiplier,
+				Units.Degrees.of(720).in(Units.Radians)
+			)
+		);
 	}
 
 	public Command driveToInitialPosition() {
-		return run(() -> {
-			this.driveToPose(kInitialPose);
-		});
+		return this.driveToPose(kInitialPose);
+	}
+
+	public Command driveToInitialPosition(double maxSpeedMultiplier) {
+		// THIS METHOD WORKS SO WELL
+		// but only when the robot is about >1 meter from the inital pose
+		return this.driveToPose(kInitialPose, maxSpeedMultiplier);
 	}
 
 	public Command getAutonomousCommand(String pathName) {
@@ -287,11 +354,21 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	public Command driveToPose(Pose2d pose) {
 		PathConstraints constraints = new PathConstraints(
 			m_swerveDrive.getMaximumChassisVelocity(),
-			4.0,
+			Constants.Robot.MAX_LINEAR_ACCELERATION.in(Units.MetersPerSecondPerSecond),
 			m_swerveDrive.getMaximumChassisAngularVelocity(),
 			Units.Degrees.of(720).in(Units.Radians)
 		);
 		return AutoBuilder.pathfindToPose(pose, constraints, Units.MetersPerSecond.of(0));
+	}
+
+	public Command driveToPose(Pose2d pose, double allSpeedsMultiplier) {
+		PathConstraints c = new PathConstraints(
+			m_swerveDrive.getMaximumChassisVelocity() * allSpeedsMultiplier,
+			Constants.Robot.MAX_LINEAR_ACCELERATION.times(allSpeedsMultiplier).in(Units.MetersPerSecondPerSecond),
+			m_swerveDrive.getMaximumChassisAngularVelocity() * allSpeedsMultiplier,
+			Units.Degrees.of(720).in(Units.Radians)
+		);
+		return AutoBuilder.pathfindToPose(pose, c, Units.MetersPerSecond.of(0));
 	}
 
 	private Command driveWithSetpointGenerator(Supplier<ChassisSpeeds> robotRelativeChassisSpeeds)

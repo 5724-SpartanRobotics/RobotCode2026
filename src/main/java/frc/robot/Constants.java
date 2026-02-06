@@ -130,6 +130,7 @@ public final class Constants {
 			public static final int CENTER_SWERVES = 10;
 			public static final int RESET_ODOMETRY = 8;
 			public static final int RESET_ODOMETRY_FLIPPED = 5;
+			public static final int DRIVE_TO_INITIAL_POSE = 9;
 		}
 		
 		public static final class OperatorMap {}

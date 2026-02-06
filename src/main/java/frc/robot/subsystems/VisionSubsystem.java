@@ -189,6 +189,12 @@ public class VisionSubsystem
 		).orElse(-1.0);
 	}
 
+	public Optional<Pose2d> getTagPose(int id) {
+		var tag = FIELD_LAYOUT.getTagPose(id);
+		if (tag.isEmpty()) return Optional.empty();
+		return Optional.of(tag.get().toPose2d());
+	}
+
 	/**
 	 * Get tracked target from a camera of AprilTagID
 	 *
@@ -300,6 +306,8 @@ public class VisionSubsystem
 					// Comment this out for testing and hope that motor encoders & gyro can find the robot pose well enough
 					m_driveSubsystem.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
 				});
+
+				camera.getEstimatedGlobalPose();
 			}
 		}
 	}
@@ -459,6 +467,7 @@ public class VisionSubsystem
 			latencyAlert = new Alert("'" + name + "' Camera is experiencing high latency.", AlertType.kWarning);
 
 			camera = new PhotonCamera(name);
+			camera.setPipelineIndex(0);
 
 			// https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
 			robotToCamTransform = new Transform3d(robotToCamTranslation, robotToCamRotation);

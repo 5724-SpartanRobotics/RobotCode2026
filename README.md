@@ -87,3 +87,8 @@ found in this repository.
 - Get rid of deprecated methods/calls in favor of newer/more specific (less general) ones. 
 - Discovered via VirtualVM that the loop overrun may be caused by unnecessary telemetry of the swerve library (go from HIGH to INFO once we are done testint).
 - The pose and all is fine but the autolock doesn't work. Tried correcting it by using position instead of offset, but haven't yet tested.
+
+## 5 Feb 2026
+- Vision pose estimate works.
+- Drive to pose & align to pose doesn't.
+- Auto return to inital pose works but it has some drift, seems about 6in.

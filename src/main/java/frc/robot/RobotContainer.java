@@ -43,7 +43,7 @@ public class RobotContainer {
 
 		/* USING YAGSL */
 		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
-			_DriveSubsystem.driveToTarget()
+			_DriveSubsystem.driveToTarget().repeatedly()
 		);
 		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.run(
 			_DriveSubsystem::zeroGyro
@@ -56,6 +56,9 @@ public class RobotContainer {
 		);
 		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
 			_DriveSubsystem.centerModulesCommand()
+		);
+		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_INITIAL_POSE).whileTrue(
+			_DriveSubsystem.driveToInitialPosition(0.8).repeatedly()
 		);
 		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
 			Commands.runOnce(() -> YagslDriveCommand.speedMod = 0.9)
