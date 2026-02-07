@@ -18,8 +18,9 @@ import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
-import frc.robot.lib.SwerveModuleConstantsRecord;
+import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.lib.SwerveModule.MotorType;
+import frc.robot.lib.SwerveModuleConstantsRecord;
 import swervelib.math.Matter;
 
 public final class Constants {
@@ -35,6 +36,26 @@ public final class Constants {
 	public static boolean isRedAlliance() {
 		var alliance = DriverStation.getAlliance();
 		return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+	}
+
+	public static Color getAllianceColor() {
+		var alliance = DriverStation.getAlliance();
+		if (alliance.isEmpty()) return Color.kWhite;
+		return switch (alliance.get()) {
+			case Red -> Color.kRed;
+			case Blue -> Color.kBlue;
+			default -> Color.kWhite;
+		};
+	}
+
+	public static Color getInverseAllianceColor() {
+		var alliance = DriverStation.getAlliance();
+		if (alliance.isEmpty()) return Color.kWhite;
+		return switch (alliance.get()) {
+			case Red -> Color.kBlue;
+			case Blue -> Color.kRed;
+			default -> Color.kWhite;
+		};
 	}
 
 	public static final class CanId {
@@ -131,6 +152,7 @@ public final class Constants {
 			public static final int RESET_ODOMETRY = 8;
 			public static final int RESET_ODOMETRY_FLIPPED = 5;
 			public static final int DRIVE_TO_INITIAL_POSE = 9;
+			public static final int TOGGLE_NOTIFICATION = 12;
 		}
 		
 		public static final class OperatorMap {}
@@ -146,6 +168,11 @@ public final class Constants {
 	public static final class Field {
 		public static final Translation2d RED_HUB_CENTER = new Translation2d(Units.Meters.of(11.91515064239502), Units.Meters.of(4.038271903991699));
 		public static final Translation2d BLUE_HUB_CENTER = new Translation2d(Units.Meters.of(4.625269412994385), Units.Meters.of(4.039185523986816));
+	}
+
+	public static final class LED {
+        public static final int PORT = 0;
+        public static final int STRIP_LENGTH = 200;
 	}
 
 	public static enum DebugLevel {

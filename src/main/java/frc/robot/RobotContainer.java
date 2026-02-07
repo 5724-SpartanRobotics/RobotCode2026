@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -18,11 +19,15 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.YagslDriveCommand;
 import frc.robot.commands.autos.DriveAuto;
 import frc.robot.lib.Elastic;
+import frc.robot.lib.Elastic.Notification;
+import frc.robot.lib.Elastic.NotificationLevel;
+import frc.robot.subsystems.LedSubsystem2;
 import frc.robot.subsystems.YagslDriveSubsystem;
 
 public class RobotContainer {
 	private YagslDriveSubsystem _DriveSubsystem = new YagslDriveSubsystem(Constants.Drive.SWERVE_CONFIG);
 	// private CustomDriveSubsystem _DriveSubsystem = CustomDriveSubsystem.initialize(true);
+	public LedSubsystem2 ledSubsystem = new LedSubsystem2();
 
 	private CommandJoystick _DriverController = new CommandJoystick(0);
 	private CommandXboxController _OperatorController = new CommandXboxController(1);
@@ -38,6 +43,7 @@ public class RobotContainer {
 			YagslDriveCommand.getCommand(YagslDriveCommand.DriveType.FO_AngularVelocity, Robot.isSimulation())
 			// _DriveSubsystem.getTeleopCommand(_DriverController)
 		);
+		ledSubsystem.setColor(Color.kWhite);
 
 		configureSimAndTestBindings();
 
@@ -70,6 +76,11 @@ public class RobotContainer {
 		).onFalse(
 			Commands.runOnce(() -> YagslDriveCommand.speedMod = Constants.Robot.DEFAULT_SPEED_MOD)
 		);
+		_DriverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).toggleOnTrue(Commands.startEnd(
+			() -> ledSubsystem.setNotification(),
+			() -> ledSubsystem.endNotification(),
+			ledSubsystem
+		).repeatedly());
 
 		/* USING CUSTOM IMPLEMENTATION */
 		// _DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
@@ -106,6 +117,7 @@ public class RobotContainer {
 	}
 
 	public void robotFinishedBooting() {
+		ledSubsystem.setColor(Constants.getAllianceColor());
 		// Last year, we:
 		// Flash the LEDs on the robot for 2s as an indicator
 		// Zero the gyro
@@ -136,6 +148,14 @@ public class RobotContainer {
 		// 	_DriveSubsystem.resetOdometryCommand(),
 		// 	Commands.runOnce(_DriveSubsystem::zeroGyro)
 		// ));
+	}
+
+	public void indicateWheelsUnlocked() {
+		Elastic.sendNotification(new Notification(
+			NotificationLevel.INFO,
+			"Robot Brake State Changed",
+			"The wheel brake has been disabled and the robot can move freely."
+		));
 	}
 
 	private boolean hasBeenEnabledYet = false;

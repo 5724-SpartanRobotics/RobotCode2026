@@ -67,6 +67,7 @@ public class Robot extends TimedRobot {
 			_RobotContainer.setMotorBrake(false);
 			_DisabledTimer.get().stop();
 			_DisabledTimer.get().reset();
+			_RobotContainer.indicateWheelsUnlocked();
 		}
 	}
 
@@ -91,6 +92,7 @@ public class Robot extends TimedRobot {
 		if (_AutoCommand != null) _AutoCommand.cancel();
 		else CommandScheduler.getInstance().cancelAll();
 		_RobotContainer.teleopInit();
+		_RobotContainer.ledSubsystem.setInactive();
 	}
 
 	@Override

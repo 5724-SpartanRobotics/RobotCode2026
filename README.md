@@ -100,4 +100,9 @@ found in this repository.
 - Did some trig on a paper and I think I might have something that'll point to the center of a HUB.
 - Going to pose button works.
 - Add another limelight facing the other direction.
-
+- Added LEDs and can manipulate them (commands don't work)
+	- They turn the alliance color on boot.
+	- Enable --> off, correct. Disable --> still off, incorrect, they should turn back to the alliance color.
+	- Enable --> off, correct. Button 12 (toggle on) --> Flash notification (white), quickly fade to red, incorrect, they should stay white. Button 12 (toggle off) --> stay red, incorrect. Disable --> stay red, incorrect.
+	- there was another combo but I forgot it but it was also incorrect
+	- Correct: Boot --> alliance color; Enable --> off; Button 12 (toggle on) --> white; Button 12 (toggle off) --> off; Disable --> return to alliance color. Any disable during the Button 12 toggled on time should turn them the alliance color, and reenabling after that should have them off.
