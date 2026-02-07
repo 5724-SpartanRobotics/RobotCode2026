@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Meter;
-import static edu.wpi.first.units.Units.Rotation;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +19,6 @@ import java.util.function.Supplier;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import com.ctre.phoenix6.swerve.jni.SwerveJNI.DriveState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -44,16 +42,17 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
+import frc.robot.commands.RotateToAngleCommand;
 import frc.robot.subsystems.VisionSubsystem2.Cameras;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
@@ -378,14 +377,50 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		);
 	}
 
-	public Command driveToTargetCommand() {
+	public Command driveToTargetCommand2() {
 		final double allSpeedsMultiplier = 0.8;
-		final Pose2d robotPose = getPose();
-		Translation2d hubT = Constants.isRedAlliance() ? Constants.Field.RED_HUB_CENTER : Constants.Field.BLUE_HUB_CENTER;
-		Translation2d diff = hubT.minus(robotPose.getTranslation());
-		Rotation2d heading = new Rotation2d(diff.getX(), diff.getY());
-		Pose2d pose = new Pose2d(diff, Rotation2d.k180deg.minus(heading));
-		return this.driveToPose(pose, allSpeedsMultiplier);
+		return this.driveToPose(() -> {
+			m_visionSubsystem.periodic();
+			final Pose2d robotPose = getPose();
+			Translation2d robotTranslation = robotPose.getTranslation();
+			Translation2d targetCenterTranslation = Constants.isRedAlliance() ? Constants.Field.RED_HUB_CENTER : Constants.Field.BLUE_HUB_CENTER;
+			double diffX = targetCenterTranslation.getX() - robotTranslation.getX();
+			double diffY = targetCenterTranslation.getY() - robotTranslation.getY();
+			Angle requiredRotation = Units.Radians.of(Math.atan2(diffY, diffX));
+			double absV = Math.sqrt( Math.pow(diffX, 2) + Math.pow(diffY, 2) );
+			double x_new = targetCenterTranslation.getX() - ( 2.0 * ((diffX) / (absV)) );
+			double y_new = targetCenterTranslation.getY() - ( 2.0 * ((diffY) / (absV)) );
+			Angle newHdg = Units.Radians.of(Math.atan2(targetCenterTranslation.getY() - y_new, targetCenterTranslation.getX() - x_new));
+			Angle rotationAvg = requiredRotation.plus(newHdg).div(2);
+			return new Pose2d(new Translation2d(x_new, y_new), new Rotation2d(rotationAvg));
+		}, allSpeedsMultiplier);
+	}
+
+	public Command driveToTargetCommand() {
+		return new InstantCommand(() -> {
+			// 1) Read current robot pose and compute the offset pose ONCE
+			Pose2d currentPose = getPose(); // ensure odometry is up-to-date
+			Translation2d robotTranslation = currentPose.getTranslation();
+			Translation2d hub = Constants.isRedAlliance()
+				? Constants.Field.RED_HUB_CENTER
+				: Constants.Field.BLUE_HUB_CENTER;
+
+			double diffX = hub.getX() - robotTranslation.getX();
+			double diffY = hub.getY() - robotTranslation.getY();
+			double dist = Math.hypot(diffX, diffY);
+			double ux = diffX / dist;
+			double uy = diffY / dist;
+
+			double x_new = hub.getX() - 2.0 * ux;
+			double y_new = hub.getY() - 2.0 * uy;
+			Rotation2d heading = new Rotation2d(Math.atan2(diffY, diffX));
+
+			Pose2d staticTarget = new Pose2d(new Translation2d(x_new, y_new), heading);
+
+			Command pathCmd = this.driveToPose(staticTarget, 0.8);
+			Command rotCmd = new RotateToAngleCommand(this, () -> staticTarget.getRotation());
+			CommandScheduler.getInstance().schedule(pathCmd.andThen(rotCmd));
+		}, this);
 	}
 
 	public Command driveToInitialPosition() {
@@ -420,6 +455,14 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 			Units.Degrees.of(720).in(Units.Radians)
 		);
 		return AutoBuilder.pathfindToPose(pose, c, Units.MetersPerSecond.of(0));
+	}
+
+	public Command driveToPose(Supplier<Pose2d> poseSupplier, double allSpeedsMultiplier) {
+		return driveToPose(poseSupplier.get(), allSpeedsMultiplier);
+	}
+
+	public void stop() {
+		this.drive(new ChassisSpeeds());
 	}
 
 	private Command driveWithSetpointGenerator(Supplier<ChassisSpeeds> robotRelativeChassisSpeeds)

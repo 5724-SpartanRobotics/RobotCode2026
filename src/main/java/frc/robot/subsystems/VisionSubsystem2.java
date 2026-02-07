@@ -249,19 +249,37 @@ public class VisionSubsystem2 {
 	public enum Cameras {
 
 		CENTER_CAM(
-				// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
-				"center",
-				// Camera rotation relative to robot (tune as needed)
-				new Rotation3d(0, Units.degreesToRadians(15), 0),
-				// Camera translation relative to robot center (tune as needed)
-				new Translation3d(
-						Units.inchesToMeters(-8),
-						Units.inchesToMeters(0),
-						Units.inchesToMeters(21)),
-				// Single-tag std devs
-				VecBuilder.fill(1.0, 1.0, 3.0),
-				// Multi-tag std devs
-				VecBuilder.fill(0.5, 0.5, 1.0));
+			// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
+			"center",
+			// Camera rotation relative to robot (tune as needed)
+			new Rotation3d(0, Units.degreesToRadians(15), 0),
+			// Camera translation relative to robot center (tune as needed)
+			new Translation3d(
+				Units.inchesToMeters(-8),
+				Units.inchesToMeters(0),
+				Units.inchesToMeters(21)
+			),
+			// Single-tag std devs
+			VecBuilder.fill(1.0, 1.0, 3.0),
+			// Multi-tag std devs
+			VecBuilder.fill(0.5, 0.5, 1.0)
+		),
+		CENTER_BACK_CAM(
+			// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
+			"center-back",
+			// Camera rotation relative to robot (tune as needed)
+			new Rotation3d(0, 0, 0),
+			// Camera translation relative to robot center (tune as needed)
+			new Translation3d(
+				Units.inchesToMeters(-14.5),
+				Units.inchesToMeters(3.75),
+				Units.inchesToMeters(26.5)
+			),
+			// Single-tag std devs
+			VecBuilder.fill(1.0, 1.0, 3.0),
+			// Multi-tag std devs
+			VecBuilder.fill(0.5, 0.5, 1.0)
+		);
 
 		public final Alert latencyAlert;
 		public final PhotonCamera camera;

@@ -98,3 +98,6 @@ found in this repository.
 
 # 7 Feb 2026
 - Did some trig on a paper and I think I might have something that'll point to the center of a HUB.
+- Going to pose button works.
+- Add another limelight facing the other direction.
+
