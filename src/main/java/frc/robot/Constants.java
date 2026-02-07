@@ -143,6 +143,11 @@ public final class Constants {
 		public static final Transform3d CAMERA_TO_ROBOT = new Transform3d();
 	}
 
+	public static final class Field {
+		public static final Translation2d RED_HUB_CENTER = new Translation2d(Units.Meters.of(11.91515064239502), Units.Meters.of(4.038271903991699));
+		public static final Translation2d BLUE_HUB_CENTER = new Translation2d(Units.Meters.of(4.625269412994385), Units.Meters.of(4.039185523986816));
+	}
+
 	public static enum DebugLevel {
 		Off,
 		All,

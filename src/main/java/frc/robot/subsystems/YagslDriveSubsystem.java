@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Meter;
+import static edu.wpi.first.units.Units.Rotation;
 
 import java.io.File;
 import java.io.IOException;
@@ -353,7 +354,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		);
 	}
 
-	public Command driveToTargetCommand() {
+	public Command driveToTargetCommandOld() {
 		final double allSpeedsMultiplier = 0.8;
 		var tagPoseO = m_visionSubsystem.getTagPose(9);
 		if (tagPoseO.isEmpty()) return Commands.none();
@@ -375,6 +376,16 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 			), Rotation2d.k180deg.minus(Rotation2d.fromRadians(0.5))),
 			allSpeedsMultiplier
 		);
+	}
+
+	public Command driveToTargetCommand() {
+		final double allSpeedsMultiplier = 0.8;
+		final Pose2d robotPose = getPose();
+		Translation2d hubT = Constants.isRedAlliance() ? Constants.Field.RED_HUB_CENTER : Constants.Field.BLUE_HUB_CENTER;
+		Translation2d diff = hubT.minus(robotPose.getTranslation());
+		Rotation2d heading = new Rotation2d(diff.getX(), diff.getY());
+		Pose2d pose = new Pose2d(diff, Rotation2d.k180deg.minus(heading));
+		return this.driveToPose(pose, allSpeedsMultiplier);
 	}
 
 	public Command driveToInitialPosition() {

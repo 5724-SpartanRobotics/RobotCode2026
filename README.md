@@ -95,3 +95,6 @@ found in this repository.
 
 # 6 Feb 2026
 - See YagslDriveSystem.java:363
+
+# 7 Feb 2026
+- Did some trig on a paper and I think I might have something that'll point to the center of a HUB.
