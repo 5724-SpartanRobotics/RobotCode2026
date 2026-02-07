@@ -126,7 +126,7 @@ public final class Constants {
 			public static final int SPEEDMOD_MID = 1; // trigger
 			public static final int SPEEDMOD_MAX = 2; // thumb button
 			public static final int ZERO_GYRO = 7;
-			public static final int DRIVE_TO_POSE = 1;
+			public static final int DRIVE_TO_POSE = 11;
 			public static final int CENTER_SWERVES = 10;
 			public static final int RESET_ODOMETRY = 8;
 			public static final int RESET_ODOMETRY_FLIPPED = 5;

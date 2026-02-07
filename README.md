@@ -92,3 +92,6 @@ found in this repository.
 - Vision pose estimate works.
 - Drive to pose & align to pose doesn't.
 - Auto return to inital pose works but it has some drift, seems about 6in.
+
+# 6 Feb 2026
+- See YagslDriveSystem.java:363

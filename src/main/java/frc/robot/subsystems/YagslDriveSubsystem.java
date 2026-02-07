@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -20,6 +19,7 @@ import java.util.function.Supplier;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import com.ctre.phoenix6.swerve.jni.SwerveJNI.DriveState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -44,11 +44,13 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.subsystems.VisionSubsystem2.Cameras;
@@ -166,6 +168,8 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	public void setupPhotonVision() {
 		m_visionSubsystem = new VisionSubsystem2(m_swerveDrive::getPose, m_swerveDrive.field);
 		m_visionSubsystem.setDriveSubsystem(this);
+
+		SmartDashboard.putString("Tag9Pose", m_visionSubsystem.getTagPose(9).get().toString());
 	}
 
 	public void setupPathPlanner() {
@@ -262,78 +266,114 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		});
 	}
 
+	private Pose2d visionTargetPose = new Pose2d();
 	public Command driveToTarget() {
 		final double allSpeedsMultiplier = 0.8;
+		return Commands.sequence(
+			Commands.run(() -> {
+				m_visionSubsystem.periodic();
+				var resList = VisionSubsystem2.Cameras.CENTER_CAM.resultsList;
 
-		// DIRECT camera read — no caching, no unread draining
-		PhotonPipelineResult result = VisionSubsystem2.Cameras.CENTER_CAM.camera.getLatestResult();
+				if (resList.isEmpty()) {
+					SmartDashboard.putString("VisSubSysMsg", "driveToTarget: camera resultList empty");
+					return;
+				}
 
-		if (!result.hasTargets()) {
-			SmartDashboard.putString("VisSubSysMsg", "driveToTarget: no targets in latest result");
-			return Commands.none();
-		}
+				// DIRECT camera read — no caching, no unread draining
+				PhotonPipelineResult result = resList.get(0);
 
-		Pose2d tagPoseForGoal;
+				if (!result.hasTargets()) {
+					SmartDashboard.putString("VisSubSysMsg", "driveToTarget: no targets in latest result");
+					return;
+				}
 
-		// Try multi-tag if available
-		var multiO = result.getMultiTagResult();  // may be null depending on PV version
-		if (multiO.isPresent() && !multiO.get().fiducialIDsUsed.isEmpty()) {
-			var multi = multiO.get();
-			var ids = multi.fiducialIDsUsed;
+				Pose2d tagPoseForGoal;
 
-			var poses = ids.stream()
-				.map(m_visionSubsystem::getTagPose)
-				.flatMap(Optional::stream)
-				.toList();
+				// Try multi-tag if available
+				var multiO = result.getMultiTagResult();  // may be null depending on PV version
+				if (multiO.isPresent() && !multiO.get().fiducialIDsUsed.isEmpty()) {
+					var multi = multiO.get();
+					var ids = multi.fiducialIDsUsed;
 
-			if (!poses.isEmpty()) {
-				double meanX = poses.stream().mapToDouble(Pose2d::getX).average().getAsDouble();
-				double meanY = poses.stream().mapToDouble(Pose2d::getY).average().getAsDouble();
-				tagPoseForGoal = new Pose2d(meanX, meanY, new Rotation2d());
-			} else {
-				SmartDashboard.putString("VisSubSysMsg","driveToTarget: multi-tag IDs not in field layout");
-				return Commands.none();
-			}
+					var poses = ids.stream()
+						.map(m_visionSubsystem::getTagPose)
+						.flatMap(Optional::stream)
+						.toList();
 
-		} else {
-			// FALLBACK: single tag
-			PhotonTrackedTarget target = result.getBestTarget();
-			if (target == null) {
-				SmartDashboard.putString("VisSubSysMsg","driveToTarget: bestTarget is null");
-				return Commands.none();
-			}
+					if (!poses.isEmpty()) {
+						double meanX = poses.stream().mapToDouble(Pose2d::getX).average().getAsDouble();
+						double meanY = poses.stream().mapToDouble(Pose2d::getY).average().getAsDouble();
+						tagPoseForGoal = new Pose2d(meanX, meanY, new Rotation2d());
+					} else {
+						SmartDashboard.putString("VisSubSysMsg","driveToTarget: multi-tag IDs not in field layout");
+						return;
+					}
 
-			var tagPoseO = m_visionSubsystem.getTagPose(target.getFiducialId());
-			if (tagPoseO.isEmpty()) {
-				SmartDashboard.putString("VisSubSysMsg","driveToTarget: tag " + target.getFiducialId() + " not in layout");
-				return Commands.none();
-			}
+				} else {
+					// FALLBACK: single tag
+					PhotonTrackedTarget target = result.getBestTarget();
+					if (target == null) {
+						SmartDashboard.putString("VisSubSysMsg","driveToTarget: bestTarget is null");
+						return;
+					}
 
-			tagPoseForGoal = tagPoseO.get();
-		}
+					var tagPoseO = m_visionSubsystem.getTagPose(target.getFiducialId());
+					if (tagPoseO.isEmpty()) {
+						SmartDashboard.putString("VisSubSysMsg","driveToTarget: tag " + target.getFiducialId() + " not in layout");
+						return;
+					}
 
-		// 1 meter behind the tag
-		Transform2d offset = new Transform2d(-1.0, 0.0, new Rotation2d());
-		Pose2d goalPose = tagPoseForGoal.transformBy(offset);
+					tagPoseForGoal = tagPoseO.get();
+				}
 
-		// Face the tag
-		Rotation2d facing = tagPoseForGoal.getTranslation()
-			.minus(goalPose.getTranslation())
-			.getAngle();
-		goalPose = new Pose2d(goalPose.getTranslation(), facing);
+				// 1 meter behind the tag
+				Transform2d offset = new Transform2d(-1.0, 0.0, new Rotation2d());
+				Pose2d goalPose = tagPoseForGoal.transformBy(offset);
 
-		SmartDashboard.putString("VisSubSysMsg","driveToTarget: goalPose = " + goalPose);
+				// Face the tag
+				Rotation2d facing = tagPoseForGoal.getTranslation()
+					.minus(goalPose.getTranslation())
+					.getAngle();
+				goalPose = new Pose2d(goalPose.getTranslation(), facing);
+				visionTargetPose = goalPose;
 
-		return AutoBuilder.pathfindToPose(
-			goalPose,
-			new PathConstraints(
-				m_swerveDrive.getMaximumChassisVelocity() * allSpeedsMultiplier,
-				Constants.Robot.MAX_LINEAR_ACCELERATION
-					.times(allSpeedsMultiplier)
-					.in(Units.MetersPerSecondPerSecond),
-				m_swerveDrive.getMaximumChassisAngularVelocity() * allSpeedsMultiplier,
-				Units.Degrees.of(720).in(Units.Radians)
+				SmartDashboard.putString("VisSubSysMsg","driveToTarget: goalPose = " + visionTargetPose);
+			}),
+			AutoBuilder.pathfindToPose(
+				visionTargetPose,
+				new PathConstraints(
+					m_swerveDrive.getMaximumChassisVelocity() * allSpeedsMultiplier,
+					Constants.Robot.MAX_LINEAR_ACCELERATION
+						.times(allSpeedsMultiplier)
+						.in(Units.MetersPerSecondPerSecond),
+					m_swerveDrive.getMaximumChassisAngularVelocity() * allSpeedsMultiplier,
+					Units.Degrees.of(720).in(Units.Radians)
+				)
 			)
+		);
+	}
+
+	public Command driveToTargetCommand() {
+		final double allSpeedsMultiplier = 0.8;
+		var tagPoseO = m_visionSubsystem.getTagPose(9);
+		if (tagPoseO.isEmpty()) return Commands.none();
+		var pose = tagPoseO.get();
+		double offsetXMeters = Constants.isRedAlliance() ? 1.0 : -1.0;
+		double offsetYMeters = pose.getY() > 3.7 /* past the center of the HUB */ ? 1.0 : -1.0;
+		// Right now this drives to tag 9, y-1m and 1m closer to the red driver station, facing an angle of 1rad
+		// (idk if that's right). I'd like a way to stay 1m+23in from the center of the HUB at all times, having
+		// a rotation that always faces the center of the HUB. I don't know the correct math to do this, and also
+		// what offsets are necessary based on Y component and alliance (X component). I'm thinking that this will
+		// more easily be done by using polar, staying that radius away (1m+23in), and then somehow computing the
+		// theta on the fly using the best tag pose and the robot's current gyro heading. The math should be simple
+		// but I barely learned geometry/trig so IDK how to do it. Then we'd have to convert from polar back to
+		// Cartesian/rectangular and add the offsets to the tag pose (and its offset the the center of the HUB),
+		// and this would also have to be mindful of alliance/theta. Overall not hard but IDK trig so it is.  
+		return this.driveToPose(
+			new Pose2d(pose.getTranslation().plus(
+				new Translation2d(offsetXMeters, offsetYMeters)
+			), Rotation2d.k180deg.minus(Rotation2d.fromRadians(0.5))),
+			allSpeedsMultiplier
 		);
 	}
 
