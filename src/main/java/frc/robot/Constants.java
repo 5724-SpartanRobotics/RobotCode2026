@@ -180,6 +180,7 @@ public final class Constants {
 		All,
 		Autonomous,
 		Drive,
+		LED,
 		Vision;
 
 		/**

@@ -21,13 +21,13 @@ import frc.robot.commands.autos.DriveAuto;
 import frc.robot.lib.Elastic;
 import frc.robot.lib.Elastic.Notification;
 import frc.robot.lib.Elastic.NotificationLevel;
-import frc.robot.subsystems.LedSubsystem2;
+import frc.robot.subsystems.LedSubsystem3;
 import frc.robot.subsystems.YagslDriveSubsystem;
 
 public class RobotContainer {
 	private YagslDriveSubsystem _DriveSubsystem = new YagslDriveSubsystem(Constants.Drive.SWERVE_CONFIG);
 	// private CustomDriveSubsystem _DriveSubsystem = CustomDriveSubsystem.initialize(true);
-	public LedSubsystem2 ledSubsystem = new LedSubsystem2();
+	public LedSubsystem3 ledSubsystem = new LedSubsystem3();
 
 	private CommandJoystick _DriverController = new CommandJoystick(0);
 	private CommandXboxController _OperatorController = new CommandXboxController(1);
@@ -43,7 +43,7 @@ public class RobotContainer {
 			YagslDriveCommand.getCommand(YagslDriveCommand.DriveType.FO_AngularVelocity, Robot.isSimulation())
 			// _DriveSubsystem.getTeleopCommand(_DriverController)
 		);
-		ledSubsystem.setColor(Color.kWhite);
+		// ledSubsystem.setColor(Color.kWhite); // v2
 
 		configureSimAndTestBindings();
 
@@ -76,11 +76,14 @@ public class RobotContainer {
 		).onFalse(
 			Commands.runOnce(() -> YagslDriveCommand.speedMod = Constants.Robot.DEFAULT_SPEED_MOD)
 		);
-		_DriverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).toggleOnTrue(Commands.startEnd(
-			() -> ledSubsystem.setNotification(),
-			() -> ledSubsystem.endNotification(),
-			ledSubsystem
-		).repeatedly());
+		// _DriverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).toggleOnTrue(Commands.startEnd(
+		// 	// () -> ledSubsystem.setNotification(), // v2
+		// 	// () -> ledSubsystem.endNotification(), // v2
+		// 	ledSubsystem
+		// ).repeatedly());
+		_DriverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).onTrue(
+			ledSubsystem.togglePersistentNotificationCommand(LedSubsystem3.kNotification3Color)
+		);
 
 		/* USING CUSTOM IMPLEMENTATION */
 		// _DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
@@ -117,7 +120,7 @@ public class RobotContainer {
 	}
 
 	public void robotFinishedBooting() {
-		ledSubsystem.setColor(Constants.getAllianceColor());
+		// ledSubsystem.setColor(Constants.getAllianceColor()); // v2
 		// Last year, we:
 		// Flash the LEDs on the robot for 2s as an indicator
 		// Zero the gyro

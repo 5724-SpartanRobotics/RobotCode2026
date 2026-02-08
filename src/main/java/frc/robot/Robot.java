@@ -53,6 +53,8 @@ public class Robot extends TimedRobot {
 
 		NetworkTableInstance.getDefault().getEntry("/Match Time").setDouble(DriverStation.getMatchTime());
 		NetworkTableInstance.getDefault().getEntry("/Voltage").setDouble(RobotController.getBatteryVoltage());
+		if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.LED))
+			SmartDashboard.putData(_RobotContainer.ledSubsystem);
 	}
 
 	@Override
@@ -92,7 +94,7 @@ public class Robot extends TimedRobot {
 		if (_AutoCommand != null) _AutoCommand.cancel();
 		else CommandScheduler.getInstance().cancelAll();
 		_RobotContainer.teleopInit();
-		_RobotContainer.ledSubsystem.setInactive();
+		// _RobotContainer.ledSubsystem.setInactive(); // v2
 	}
 
 	@Override
