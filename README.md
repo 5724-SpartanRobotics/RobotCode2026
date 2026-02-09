@@ -61,3 +61,7 @@ found in this repository.
 ### Checklist
 - [ ] Remove & replace deprecated calls
 - [ ] Wait for robot to be finished to find center of mass, etc.
+
+## 9 Feb 2026
+- Implement/Import the working subsystems from floor-demon branch
+- Need to re-do the YAGSL config because robot dimensions changed.

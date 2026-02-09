@@ -20,46 +20,101 @@ import swervelib.math.SwerveMath;
 
 public class DriveCommand {
 	private static DriveSubsystem _DriveSubsystem;
-	public static SwerveInputStream DriveAngularVelocity;
-	public static SwerveInputStream DriveDirectAngle;
-	public static SwerveInputStream DriveRobotOriented;
-	public static SwerveInputStream DriveAngularVelocity_Keyboard;
-	public static SwerveInputStream DriveDirectAngle_Keyboard;
+	private static CommandJoystick _Joystick;
+	// public static SwerveInputStream DriveAngularVelocity;
+	// public static SwerveInputStream DriveDirectAngle;
+	// public static SwerveInputStream DriveRobotOriented;
+	// public static SwerveInputStream DriveAngularVelocity_Keyboard;
+	// public static SwerveInputStream DriveDirectAngle_Keyboard;
+
+	public static double speedMod = Constants.Robot.DEFAULT_SPEED_MOD;
+
+	private static double applyJoystickDeadband(double realValue, double deadband) {
+		if (Math.abs(realValue) < deadband) return 0.0;
+		return realValue;
+	}
+
+	private static double applyJoystickScale(double realValue, double scale) {
+		return realValue * scale;
+	}
+
+	private static double applyJoystickDeadbandAndScale(double realValue, double deadband) {
+		return applyJoystickScale(
+			applyJoystickDeadband(realValue, deadband),
+			speedMod
+		);
+	}
 
 	public static void initialize(DriveSubsystem drive, CommandJoystick joystick) {
 		_DriveSubsystem = drive;
-		DriveAngularVelocity = SwerveInputStream.of(
-			drive.getSwerveDrive(),
-			() -> joystick.getRawAxis(1) * -1.0, // Y axis (forward/back)
-			() -> joystick.getRawAxis(0) // X axis (strafe)
+		_Joystick = joystick;
+		System.out.println("===== The <<DriveCommand>>s have been initialized. =====");
+		SmartDashboard.putBoolean("DriveCommands Initialized", true);
+	}
+
+	public static SwerveInputStream DriveAngularVelocity() {
+		// System.out.println("RETURNING A DRIVE COMMAND: DAV");
+		return SwerveInputStream.of(
+			_DriveSubsystem.getSwerveDrive(),
+			() -> applyJoystickDeadbandAndScale(
+				_Joystick.getRawAxis(1) * (Constants.isRedAlliance() ? -1.0 : 1.0),
+				Constants.Controller.DRIVER_DEADBAND_XY
+			), // Y axis (forward/back)
+			() -> applyJoystickDeadbandAndScale(
+				_Joystick.getRawAxis(0) * (Constants.isRedAlliance() ? -1.0 : 1.0),
+				Constants.Controller.DRIVER_DEADBAND_XY
+			) // X axis (strafe)
 		)
-			.withControllerRotationAxis(() -> joystick.getRawAxis(2)) // twist / rotation
-			.deadband(Constants.Controller.DRIVER_DEADBAND)
+			.withControllerRotationAxis(() ->
+				applyJoystickDeadbandAndScale(
+					// Gonna invert this based on alliance, idk if that's right (we'll see later)
+					// TODO: Test this on the actual robot
+					_Joystick.getRawAxis(2) * (Constants.isRedAlliance() ? -1.0 : 1.0),
+					Constants.Controller.DRIVER_DEADBAND_Z
+				)
+			) // twist / rotation
+			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
-		DriveDirectAngle = DriveAngularVelocity.copy()
+	}
+	/**
+	 * @deprecated This function scares me. Don't use it (since 2026-02-02)
+	 */
+	@Deprecated(since = "2026-02-02")
+	public static SwerveInputStream DriveDirectAngle() {
+		// System.out.println("RETURNING A DRIVE COMMAND: DDA");
+		return DriveAngularVelocity().copy()
 			.withControllerHeadingAxis(
-				() -> Math.sin(joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
-				() -> Math.cos(joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI
+				() -> Math.sin(_Joystick.getX() * Math.PI) * Constants.TWO_PI,
+				() -> Math.cos(_Joystick.getY() * Math.PI * -1.0) * Constants.TWO_PI
 			)
 			.headingWhile(true);
-		DriveRobotOriented = DriveAngularVelocity.copy()
+	}
+	public static SwerveInputStream DriveRobotOriented() {
+		// System.out.println("RETURNING A DRIVE COMMAND: DRO");
+		return DriveAngularVelocity().copy()
 			.robotRelative(false)
 			.allianceRelativeControl(false);
-		
-		DriveAngularVelocity_Keyboard = SwerveInputStream.of(
-			drive.getSwerveDrive(),
-			() -> joystick.getRawAxis(1) * -1.0,
-			() -> joystick.getRawAxis(0) * -1.0
+	}
+
+	public static SwerveInputStream DriveAngularVelocity_Keyboard() {
+		// System.out.println("RETURNING A DRIVE COMMAND: DAVK");
+		return SwerveInputStream.of(
+			_DriveSubsystem.getSwerveDrive(),
+			() -> _Joystick.getRawAxis(1) * -1.0,
+			() -> _Joystick.getRawAxis(0) * -1.0
 		)
-			.withControllerRotationAxis(() -> joystick.getRawAxis(2))
-			.deadband(Constants.Controller.DRIVER_DEADBAND)
+			.withControllerRotationAxis(() -> _Joystick.getRawAxis(2))
+			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
-		DriveDirectAngle_Keyboard = DriveAngularVelocity_Keyboard.copy()
+	}
+	public static SwerveInputStream DriveDirectAngle_Keyboard() {
+		// System.out.println("RETURNING A DRIVE COMMAND: DDAK");
+		return DriveAngularVelocity_Keyboard().copy()
 			.withControllerHeadingAxis(
-				() -> Math.sin(joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
-				() -> Math.cos(joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI
+				() -> Math.sin(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
+				() -> Math.cos(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI
 			)
 			.headingWhile(true)
 			.translationHeadingOffset(true)
@@ -74,17 +129,18 @@ public class DriveCommand {
 	}
 
 	public static Command getCommand(DriveType t, boolean isKeyboard) {
+		// System.out.println("\\\\\\\\\\\\\\ DRIVE COMMAND GOTTEN");
 		if (t == DriveType.RO_AngularVelocity && isKeyboard) {
 			return Commands.none();
 		}
 		return switch (t) {
 			case FO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(!isKeyboard ?
-				DriveAngularVelocity : DriveAngularVelocity_Keyboard);
+				DriveAngularVelocity() : DriveAngularVelocity_Keyboard());
 			case FO_DirectAngle -> _DriveSubsystem.driveFieldOriented(!isKeyboard ?
-				DriveDirectAngle : DriveDirectAngle_Keyboard);
-			case RO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(DriveRobotOriented);
+				DriveDirectAngle() : DriveDirectAngle_Keyboard());
+			case RO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(DriveRobotOriented());
 			case SetpointGenerator -> _DriveSubsystem.driveWithSetpointGeneratorFieldRelative(
-				!isKeyboard ? DriveDirectAngle : DriveDirectAngle_Keyboard);
+				!isKeyboard ? DriveDirectAngle() : DriveDirectAngle_Keyboard());
 		};
 	}
 
@@ -94,13 +150,13 @@ public class DriveCommand {
 		private boolean _initRotation = false;
 
 		public AbsoluteDrive(
-			DriveSubsystem driveSubsystem,
+			DriveSubsystem DriveSubsystem,
 			DoubleSupplier vX,
 			DoubleSupplier vY,
 			DoubleSupplier hdgHorizontal,
 			DoubleSupplier hdgVertical
 		) {
-			this._DriveSubsystem = driveSubsystem;
+			this._DriveSubsystem = DriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
 			this._HdgHorizontal = hdgHorizontal;
@@ -116,6 +172,8 @@ public class DriveCommand {
 
 		@Override
 		public void execute() {
+			System.out.println("AbsoluteDrive");
+
 			ChassisSpeeds desiredSpeeds = _DriveSubsystem.getTargetSpeeds(
 				_VX.getAsDouble(), _VY.getAsDouble(),
 				_HdgHorizontal.getAsDouble(), _HdgVertical.getAsDouble()
@@ -165,7 +223,7 @@ public class DriveCommand {
 		private boolean _resetHeading = false;
 
 		public AbsoluteDriveAdvanced(
-			DriveSubsystem driveSubsystem,
+			DriveSubsystem DriveSubsystem,
 			DoubleSupplier vX,
 			DoubleSupplier vY,
 			DoubleSupplier hdgAdjust,
@@ -174,7 +232,7 @@ public class DriveCommand {
 			BooleanSupplier lookLeft,
 			BooleanSupplier lookRight
 		) {
-			this._DriveSubsystem = driveSubsystem;
+			this._DriveSubsystem = DriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
 			this._HdgAdjust = hdgAdjust;
@@ -193,6 +251,7 @@ public class DriveCommand {
 
 		@Override
 		public void execute() {
+			System.out.println("AbsoluteDriveAdv");
 			double hdgX = 0;
 			double hdgY = 0;
 
@@ -261,12 +320,12 @@ public class DriveCommand {
 		private final DoubleSupplier _VX, _VY, _Hdg;
 
 		public AbsoluteFieldDrive(
-			DriveSubsystem driveSubsystem,
+			DriveSubsystem DriveSubsystem,
 			DoubleSupplier vX,
 			DoubleSupplier vY,
 			DoubleSupplier hdg
 		) {
-			this._DriveSubsystem = driveSubsystem;
+			this._DriveSubsystem = DriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
 			this._Hdg = hdg;
@@ -279,6 +338,8 @@ public class DriveCommand {
 
 		@Override
 		public void execute() {
+			System.out.println("AbsoluteFieldDrive");
+
 			ChassisSpeeds desiredSpeeds = _DriveSubsystem.getTargetSpeeds(
 				_VX.getAsDouble(), _VY.getAsDouble(),
 				new Rotation2d(_Hdg.getAsDouble() * Math.PI)

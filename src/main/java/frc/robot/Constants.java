@@ -14,13 +14,45 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.util.Color;
 import swervelib.math.Matter;
 
 public final class Constants {
 	public static final double TWO_PI = Math.PI * 2.0;
 	public static final double HALF_PI = Math.PI / 2.0;
 	public static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
+
+		/**
+	 * Checks if the alliance is red, defaults to false if alliance isn't available.
+	 *
+	 * @return true if the red alliance, false if blue. Defaults to false if none is available.
+	 */
+	public static boolean isRedAlliance() {
+		var alliance = DriverStation.getAlliance();
+		return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+	}
+
+	public static Color getAllianceColor() {
+		var alliance = DriverStation.getAlliance();
+		if (alliance.isEmpty()) return Color.kWhite;
+		return switch (alliance.get()) {
+			case Red -> Color.kRed;
+			case Blue -> Color.kBlue;
+			default -> Color.kWhite;
+		};
+	}
+
+	public static Color getInverseAllianceColor() {
+		var alliance = DriverStation.getAlliance();
+		if (alliance.isEmpty()) return Color.kWhite;
+		return switch (alliance.get()) {
+			case Red -> Color.kBlue;
+			case Blue -> Color.kRed;
+			default -> Color.kWhite;
+		};
+	}
 
 	public static final class CanId {
 		// https://docs.google.com/spreadsheets/d/1t8Ids1RzCOn0vlFqbZAr0mgEd12h2sJ_fCfxJkntMR0/edit?gid=0#gid=0
@@ -50,6 +82,8 @@ public final class Constants {
 			Units.FeetPerSecond.of(14.5); // about 4.42m/s
 		public static final LinearAcceleration MAX_LINEAR_ACCELERATION =
 			Units.FeetPerSecondPerSecond.of(13.12); // about 4m/s^2
+
+		public static final double DEFAULT_SPEED_MOD = 0.425;
 	}
 
 	public static final class Drive {
@@ -88,13 +122,20 @@ public final class Constants {
 	}
 
 	public static final class Controller {
-		public static final double DRIVER_DEADBAND = 0.5;
+		public static final double DRIVER_DEADBAND_XY = 0.025;
+		public static final double DRIVER_DEADBAND_Z = 0.35 / 1.5;
 		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
 		public static final class DriverMap {
+			public static final int SPEEDMOD_MID = 1; // trigger
+			public static final int SPEEDMOD_MAX = 2; // thumb button
 			public static final int ZERO_GYRO = 7;
-			public static final int DRIVE_TO_POSE = 1;
-			public static final int CENTER_SWERVES = 8;
+			public static final int DRIVE_TO_POSE = 11;
+			public static final int CENTER_SWERVES = 10;
+			public static final int RESET_ODOMETRY = 8;
+			public static final int RESET_ODOMETRY_FLIPPED = 5;
+			public static final int DRIVE_TO_INITIAL_POSE = 9;
+			public static final int TOGGLE_NOTIFICATION = 12;
 		}
 		
 		public static final class OperatorMap {}
@@ -107,11 +148,22 @@ public final class Constants {
 		public static final Transform3d CAMERA_TO_ROBOT = new Transform3d();
 	}
 
+	public static final class Field {
+		public static final Translation2d RED_HUB_CENTER = new Translation2d(Units.Meters.of(11.91515064239502), Units.Meters.of(4.038271903991699));
+		public static final Translation2d BLUE_HUB_CENTER = new Translation2d(Units.Meters.of(4.625269412994385), Units.Meters.of(4.039185523986816));
+	}
+
+	public static final class LED {
+        public static final int PORT = 0;
+        public static final int STRIP_LENGTH = 200;
+	}
+
 	public static enum DebugLevel {
 		Off,
 		All,
 		Autonomous,
 		Drive,
+		LED,
 		Vision;
 
 		/**
