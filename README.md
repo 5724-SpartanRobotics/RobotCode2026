@@ -68,3 +68,4 @@ found in this repository.
 - Fix/change some problems/oddities across the drive system
 - Update (to an extent) YAGSL config
 - add basic PathPlanner config based on floor demon
+- Intake system with arm and rollers (not tested in sim)
