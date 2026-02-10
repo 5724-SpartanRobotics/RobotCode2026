@@ -68,8 +68,7 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 /**
  * {@link https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_with_PhotonVision/src/main/java/frc/robot/subsystems/swervedrive/SwerveSubsystem.java}
  */
-public class DriveSubsystem extends SubsystemBase
-{
+public class DriveSubsystem extends SubsystemBase {
 	private final Pose2d kInitialPose;
 
 	private final Pose2d kInitialPoseRed = new Pose2d(

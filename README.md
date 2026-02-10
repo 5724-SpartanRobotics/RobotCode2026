@@ -65,3 +65,6 @@ found in this repository.
 ## 9 Feb 2026
 - Implement/Import the working subsystems from floor-demon branch
 - Need to re-do the YAGSL config because robot dimensions changed.
+- Fix/change some problems/oddities across the drive system
+- Update (to an extent) YAGSL config
+- add basic PathPlanner config based on floor demon

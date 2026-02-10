@@ -144,6 +144,14 @@ public class DriveCommand {
 		};
 	}
 
+	public static Command setSpeedModCommand(double s) {
+		return Commands.runOnce(() -> speedMod = s);
+	}
+
+	public static Command resetSpeedModCommand() {
+		return setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD);
+	}
+
 	public class AbsoluteDrive extends Command {
 		private final DriveSubsystem _DriveSubsystem;
 		private final DoubleSupplier _VX, _VY, _HdgHorizontal, _HdgVertical;
