@@ -8,6 +8,10 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -59,6 +63,7 @@ public final class Constants {
 		public static final int ROBORIO = 0;
 		public static final int PDH = 1;
 		public static final int PIGEON2 = 2;
+
 		public static final int FL_DRIVE = 3;
 		public static final int FL_ENCODER = 4;
 		public static final int FL_TURN = 5;
@@ -71,6 +76,13 @@ public final class Constants {
 		public static final int FR_DRIVE = 12;
 		public static final int FR_ENCODER = 13;
 		public static final int FR_TURN = 14;
+
+		public static final int INTAKE_UPPER = 20;
+		public static final int INTAKE_LOWER = 21;
+		public static final int ARM_LEFT_MASTER = 22;
+		public static final int ARM_RIGHT_SLAVE = 23;
+
+		public static final int CLIMBER = 25;
 	}
 
 	public static final class Robot {
@@ -158,11 +170,39 @@ public final class Constants {
         public static final int STRIP_LENGTH = 200;
 	}
 
+	public static final class Motors {
+		public static final AngularVelocity REDLINE_MAX_VELOCITY = Units.RPM.of(21020);
+		public static final AngularVelocity VORTEX_MAX_VELOCITY = Units.RPM.of(6784);
+		public static final AngularVelocity NEO_MAX_VELOCITY = Units.RPM.of(5676);
+		
+		public static final double NEO_COUNTS_PER_REVOLUTION = 1.0;
+
+		public static final Current KRAKENX60_STALL_CURRENT = Units.Amps.of(233);
+	}
+
+	public static final class Intake {
+		public static final Dimensionless SPEED = Units.Percent.of(50);
+
+		public static final class Arm {
+			public static final double GEAR_RATIO = 5; // 5:1
+			public static final AngularVelocity SETPOINT_RAMP_RATE = Units.DegreesPerSecond.of(60);
+			public static final Angle MIN_ROTATION = Units.Degrees.of(0);
+			public static final Angle MAX_ROTATION = Units.Degrees.of(100);
+		}
+	}
+
+	public static final class Climber {
+		public static final double GEAR_RATIO = 12;
+		public static final Current MAX_CURRENT = Units.Amps.of(40);
+	}
+
 	public static enum DebugLevel {
 		Off,
 		All,
 		Autonomous,
+		Climb,
 		Drive,
+		Intake,
 		LED,
 		Vision;
 

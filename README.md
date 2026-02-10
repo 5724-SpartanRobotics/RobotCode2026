@@ -69,3 +69,8 @@ found in this repository.
 - Update (to an extent) YAGSL config
 - add basic PathPlanner config based on floor demon
 - Intake system with arm and rollers (not tested in sim)
+- TalonFX wrapper created to allow "easy" working in sim (i.e., no crashing)
+- Climber system with Kraken X60 (not tested in sim)
+- Constants for everything
+- Remove old stuff & duplicates from RobotContainer
+- controller triggers updated but unsure if they'll work as intended.

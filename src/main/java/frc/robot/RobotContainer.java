@@ -4,12 +4,9 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -19,109 +16,78 @@ import frc.robot.commands.DriveCommand;
 import frc.robot.lib.Elastic;
 import frc.robot.lib.Elastic.Notification;
 import frc.robot.lib.Elastic.NotificationLevel;
+import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LedSubsystem;
 
 public class RobotContainer {
-	private DriveSubsystem _DriveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
-	// private CustomDriveSubsystem _DriveSubsystem = CustomDriveSubsystem.initialize(true);
+	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
+	private final ClimberSubsystem m_climberSubsystem = ClimberSubsystem.getInstance();
+	private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
 
-	private CommandJoystick _DriverController = new CommandJoystick(0);
-	private CommandXboxController _OperatorController = new CommandXboxController(1);
+	private final CommandJoystick m_driverController = new CommandJoystick(0);
+	private final CommandXboxController m_operatorController = new CommandXboxController(1);
+
+	private boolean hasBeenEnabledYet = false;
 
 	public RobotContainer() {
-		DriveCommand.initialize(_DriveSubsystem, _DriverController);
+		DriveCommand.initialize(m_driveSubsystem, m_driverController);
 		LedSubsystem.createInstance();
 
 		configureControllerBindings();
 	}
 
 	private void configureControllerBindings() {
-		_DriveSubsystem.setDefaultCommand(
+		m_driveSubsystem.setDefaultCommand(
 			DriveCommand.getCommand(DriveCommand.DriveType.FO_AngularVelocity, RobotBase.isSimulation())
-			// _DriveSubsystem.getTeleopCommand(_DriverController)
 		);
-		// ledSubsystem.setColor(Color.kWhite); // v2
 
 		configureSimAndTestBindings();
 
-		/* USING YAGSL */
-		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
-			_DriveSubsystem.driveToTargetCommand().repeatedly()
+		m_driverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
+			m_driveSubsystem.driveToTargetCommand().repeatedly()
 		);
-		_DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.run(
-			_DriveSubsystem::zeroGyro
+		m_driverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.run(
+			m_driveSubsystem::zeroGyro
 		));
-		_DriverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
-			_DriveSubsystem.resetOdometryCommand()
+		m_driverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
+			m_driveSubsystem.resetOdometryFlippedCommand()
 		);
-		_DriverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
-			_DriveSubsystem.resetOdometryFlippedCommand()
+		m_driverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
+			m_driveSubsystem.centerModulesCommand()
 		);
-		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
-			_DriveSubsystem.centerModulesCommand()
+		m_driverController.button(Constants.Controller.DriverMap.DRIVE_TO_INITIAL_POSE).whileTrue(
+			m_driveSubsystem.driveToInitialPosition(0.8).repeatedly()
 		);
-		_DriverController.button(Constants.Controller.DriverMap.DRIVE_TO_INITIAL_POSE).whileTrue(
-			_DriveSubsystem.driveToInitialPosition(0.8).repeatedly()
-		);
-		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
-			Commands.runOnce(() -> DriveCommand.speedMod = 0.9)
+		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
+			DriveCommand.setSpeedModCommand(0.9)
 		).onFalse(
-			Commands.runOnce(() -> DriveCommand.speedMod = Constants.Robot.DEFAULT_SPEED_MOD, _DriveSubsystem)
+			DriveCommand.resetSpeedModCommand()
 		);
-		_DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MID).whileTrue(
-			Commands.runOnce(() -> DriveCommand.speedMod = 0.65)
+		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MID).whileTrue(
+			DriveCommand.setSpeedModCommand(0.65)
 		).onFalse(
-			Commands.runOnce(() -> DriveCommand.speedMod = Constants.Robot.DEFAULT_SPEED_MOD)
+			DriveCommand.resetSpeedModCommand()
 		);
-		// _DriverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).toggleOnTrue(Commands.startEnd(
-		// 	// () -> ledSubsystem.setNotification(), // v2
-		// 	// () -> ledSubsystem.endNotification(), // v2
-		// 	ledSubsystem
-		// ).repeatedly());
-		_DriverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).onTrue(
+		m_driverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).onTrue(
 			LedSubsystem.getInstance().togglePersistentNotificationCommand(LedSubsystem.kNotification3Color)
 		);
 
-		/* USING CUSTOM IMPLEMENTATION */
-		// _DriverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.runOnce(() -> {
-		// 	_DriveSubsystem.resetOdometry();
-		// 	_DriveSubsystem.zeroGyro();
-		// }, _DriveSubsystem));
-		// _DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
-		// 	Commands.run(() -> _DriveSubsystem.centerModules(), _DriveSubsystem)
-		// );
-		// _DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
-		// 	Commands.runOnce(() -> _DriveSubsystem.setSpeedMod(1.0), _DriveSubsystem)
-		// ).onFalse(
-		// 	Commands.runOnce(() -> _DriveSubsystem.resetSpeedMod(), _DriveSubsystem)
-		// );
-		// _DriverController.button(Constants.Controller.DriverMap.SPEEDMOD_MID).whileTrue(
-		// 	Commands.runOnce(() -> _DriveSubsystem.setSpeedMod(0.65), _DriveSubsystem)
-		// ).onFalse(
-		// 	Commands.runOnce(() -> _DriveSubsystem.resetSpeedMod(), _DriveSubsystem)
-		// );
+		m_operatorController.axisGreaterThan(XboxController.Axis.kRightY.value, 0.1).whileTrue(
+			Commands.run(m_intakeSubsystem::enableIntake)
+		).onFalse(
+			Commands.run(m_intakeSubsystem::disableIntake)
+		);
+		m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleReverse());
+		m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
 	}
 
-	private void configureSimAndTestBindings() {
-		if (RobotBase.isSimulation()) {
-			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
-			// DriveCommand.DriveDirectAngle_Keyboard().driveToPose(
-			// 	() -> target,
-			// 	new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
-			// 	new ProfiledPIDController(5, 0, 0, new Constraints(
-			// 		Units.Radians.of(Constants.TWO_PI).baseUnitMagnitude(),
-			// 		Units.Radians.of(Math.PI).baseUnitMagnitude()
-			// 	))
-			// );
-		}
-	}
+	private void configureSimAndTestBindings() {}
 
 	public void robotFinishedBooting() {
-		// ledSubsystem.setColor(Constants.getAllianceColor()); // v2
-		// Last year, we:
-		// Flash the LEDs on the robot for 2s as an indicator
-		// Zero the gyro
+		// LEDs do their thing automatically.
+
 		if (Constants.DebugLevel.isAny()) {
 			System.out.println(
 				"[via RobotContainter.robotFinishedBooting] " +
@@ -133,23 +99,13 @@ public class RobotContainer {
 		if (DriverStation.isDSAttached() && Robot.isFirstConnection.compareAndSet(true, false)) {
 			Elastic.selectTab("Auto");
 			CommandScheduler.getInstance().schedule(Commands.parallel(
-				_DriveSubsystem.resetOdometryCommand(),
-				Commands.runOnce(_DriveSubsystem::zeroGyro)
+				m_driveSubsystem.resetOdometryCommand(),
+				Commands.runOnce(m_driveSubsystem::zeroGyro)
 			));
 		}
-
-		SmartDashboard.putNumber("Aim At Target/X", 0);
-		SmartDashboard.putNumber("Aim At Target/Y", 0);
-		SmartDashboard.putNumber("Aim At Target/Theta (Degrees)", 0);
-		SmartDashboard.putNumber("Aim At Target/Aim Constant (Degrees)", 30.0);
 	}
 
-	public void teleopInit() {
-		// CommandScheduler.getInstance().schedule(Commands.parallel(
-		// 	_DriveSubsystem.resetOdometryCommand(),
-		// 	Commands.runOnce(_DriveSubsystem::zeroGyro)
-		// ));
-	}
+	public void teleopInit() {}
 
 	public void indicateWheelsUnlocked() {
 		Elastic.sendNotification(new Notification(
@@ -159,7 +115,6 @@ public class RobotContainer {
 		));
 	}
 
-	private boolean hasBeenEnabledYet = false;
 	public void visionPeriodic() {
 		if (!hasBeenEnabledYet) {
 			hasBeenEnabledYet = DriverStation.isEnabled();
