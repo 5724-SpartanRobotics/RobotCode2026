@@ -182,6 +182,10 @@ public final class Constants {
 
 	public static final class Intake {
 		public static final Dimensionless SPEED = Units.Percent.of(50);
+		public static final double UPPER_GEAR_RATIO = 5; // 5:1
+		public static final Distance UPPER_WHEEL_CURCUMFERENCE = Units.Inches.of(4).times(Math.PI);
+		public static final Distance LOWER_WHEEL_CURCUMFERENCE = Units.Inches.of(2.25).times(Math.PI);
+		public static final double LOWER_GEAR_RATIO = 4; // 4:1
 
 		public static final class Arm {
 			public static final double GEAR_RATIO = 5; // 5:1

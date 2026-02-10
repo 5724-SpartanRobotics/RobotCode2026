@@ -74,3 +74,8 @@ found in this repository.
 - Constants for everything
 - Remove old stuff & duplicates from RobotContainer
 - controller triggers updated but unsure if they'll work as intended.
+
+## 10 Feb 2026
+- calculate the setpoint for the lower intake stage from the top stage's setpoint
+	> Upper reference = 0.5 = 6784 RPM * 0.5 = 3392 RPM. On the other side of the gear box, the hex shaft is going 3392 / 5 RPM = 678.4. The circumference of the 4 inch wheel is Pi * 4 = 12.566 inches. Therefore the surface speed is 678.4*12.566 = 8525 inches per minute. The lower intake hex shaft RPM for 8525 inches per minute would be 8525 / (2.25 * Pi) = 1206 RPM. With the lower gear ratio of 4:1 the redline motor would run 1206 * 4 = 4824 RPM and with top speed of 21020, this would mean a reference of 0.23. So, in software I think we should make the upper speed a constant that we can change of 0.5 and make the lower speed the upper speed * 0.46.
+- Find out whether reducer/gearbox for climber changes the output voltage for the motor (I don't think it will). 

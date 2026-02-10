@@ -14,6 +14,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -86,6 +87,18 @@ public class IntakeSubsystem extends SubsystemBase {
         builder.addDoubleProperty("IntakeLowerSpeedPercent", () -> lowerIntakeSpeedReference, null);
     }
 
+    private static double calculateLowerReferenceInRelationToTop(double setpoint) {
+        AngularVelocity upperVelocity = Constants.Motors.NEO_MAX_VELOCITY.times(setpoint);
+        AngularVelocity otherSide = upperVelocity.div(Constants.Intake.UPPER_GEAR_RATIO);
+        double linearSpeedSurfaceSpeedInchesPerMinute = otherSide.in(Units.RPM) * 
+            Constants.Intake.UPPER_WHEEL_CURCUMFERENCE.in(Units.Inches);
+        double lowerMotorRpm = linearSpeedSurfaceSpeedInchesPerMinute *
+            Constants.Intake.LOWER_WHEEL_CURCUMFERENCE.in(Units.Inches);
+        double lowerRpmWithReducer = lowerMotorRpm * Constants.Intake.LOWER_GEAR_RATIO;
+        double lowerReference = lowerRpmWithReducer / Constants.Motors.REDLINE_MAX_VELOCITY.in(Units.RPM);
+        return lowerReference;
+    }
+
     public void extendArm() {
         m_arm.rotateOut();
     }
@@ -95,9 +108,9 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void enableIntake() {
-        final double speed = Constants.Intake.SPEED.in(Units.Value);
+        final double speed = Constants.Intake.SPEED.in(Units.Value); // Value gives n/100
         upperIntakeSpeedReference = speed;
-        lowerIntakeSpeedReference = speed * 0.46;
+        lowerIntakeSpeedReference = calculateLowerReferenceInRelationToTop(speed);
         m_upperIntake.set(upperIntakeSpeedReference);
         m_lowerIntake.set(lowerIntakeSpeedReference);
     }
@@ -105,7 +118,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void enableReverse() {
         final double speed = Constants.Intake.SPEED.times(-1.0).in(Units.Value);
         upperIntakeSpeedReference = speed;
-        lowerIntakeSpeedReference = speed * 0.46;
+        lowerIntakeSpeedReference = calculateLowerReferenceInRelationToTop(speed);
         m_upperIntake.set(upperIntakeSpeedReference);
         m_lowerIntake.set(lowerIntakeSpeedReference);
     }

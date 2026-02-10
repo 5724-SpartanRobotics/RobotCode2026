@@ -64,6 +64,10 @@ public class ClimberSubsystem extends SubsystemBase {
     }
 
     private void enable(boolean invert) {
+        // TODO: See if a reducer affects the setpoint voltage (I don't see why it would)
+        // Right now we calculate the voltage by using the stall current
+        // TODO: Instead of using a nominal voltage, should we grab the real voltage of the battery
+        // double realVoltage = Units.Volts.of(RobotController.getBatteryVoltage());
         Voltage nominalBusVoltage = Units.Volts.of(12);
         setpoint = nominalBusVoltage.times(
             Constants.Climber.MAX_CURRENT.div(Constants.Motors.KRAKENX60_STALL_CURRENT)
