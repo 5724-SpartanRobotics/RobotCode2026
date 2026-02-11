@@ -7,10 +7,12 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLED.ColorOrder;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -18,13 +20,16 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class LedSubsystem extends SubsystemBase {
-    private static LedSubsystem instance;
+    // Bing AI told me that WPILib uses 24 bits/pixel for LEDs (cannot corroborate this).
+    private static final int WPILIB_BITS_PER_PIXEL = 24;
+
+    private static LedSubsystem instance = null;
 
     /** Default: 10 seconds */
     public static Time kDefaultStandbyDelay = Constants.Drive.WHEEL_LOCK_TIME;
     /** Default: #FFF2D9 (cream) */
     public static Color kDisabledColor = new Color("#FFF2D9");
-    /** Default: Black (off) */
+    /** Default: Black */
     public static Color kInactiveColor = Color.kBlack;
     /** Default: Green */
     public static Color kNotification1Color = Color.kGreen;
@@ -32,6 +37,8 @@ public class LedSubsystem extends SubsystemBase {
     public static Color kNotification2Color = Color.kYellow;
     /** Default: Purple */
     public static Color kNotification3Color = Color.kPurple;
+
+    private static final boolean kIsRGB_Only = false;
 
     private final AddressableLED m_led;
     private final AddressableLEDBuffer m_buffer;
@@ -67,8 +74,17 @@ public class LedSubsystem extends SubsystemBase {
 
     private LedSubsystem() {
         m_led = new AddressableLED(Constants.LED.PORT);
-        m_buffer = new AddressableLEDBuffer(Constants.LED.STRIP_LENGTH);
-        m_led.setLength(Constants.LED.STRIP_LENGTH);
+        m_led.setColorOrder(ColorOrder.kRGB);
+        // The magic of floating point numbers does something to this value, but I'm not sure
+        // exactly what. This is calculated somehow, and this calculation yields correct results,
+        // but I'm not exactly sure how I came to it.
+        double countCoeff = (WPILIB_BITS_PER_PIXEL / Constants.LED.STRIP_BITS_PER_PIXEL_0) *
+            ( Constants.LED.STRIP_BITS_PER_PIXEL_0 / Constants.LED.STRIP_BITS_PER_PIXEL_1 );
+        // This magic value of 9 is to reduce the length of the buffer so we aren't trying to index
+        // too many LEDs out of the strip. Not calculated, I just counted on the actual strip.
+        int adjustedStripLength = (int)(Constants.LED.LED_COUNT * countCoeff) - 9;
+        m_buffer = new AddressableLEDBuffer(adjustedStripLength);
+        m_led.setLength(adjustedStripLength);
         m_led.start();
 
         if (RobotBase.isSimulation()) {
@@ -168,12 +184,16 @@ public class LedSubsystem extends SubsystemBase {
         }
 
         m_led.setData(m_buffer);
+
+        if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.LED))
+            SmartDashboard.putData(this);
     }
 
     private void setPixelGRBW(int i, Color c)  {
         int r = (int)(c.red * 255),
             g = (int)(c.green * 255),
             b = (int)(c.blue * 255);
+        if (kIsRGB_Only) { m_buffer.setRGB(i, r, g, b); return; }
         switch (i % 4) {
             // This says "setRGB", but we're just using it as a hack to set the bytes in a specific order.
             // The LED strip we have has color order GRBW, so that's why for the first component we pass

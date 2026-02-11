@@ -167,7 +167,10 @@ public final class Constants {
 
 	public static final class LED {
         public static final int PORT = 0;
-        public static final int STRIP_LENGTH = 200;
+        public static final int LED_COUNT = 300;
+
+		public static final double STRIP_BITS_PER_PIXEL_0 = 18.0;
+    	public static final double STRIP_BITS_PER_PIXEL_1 = 13.0;
 	}
 
 	public static final class Motors {
