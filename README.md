@@ -109,3 +109,6 @@ found in this repository.
 
 ## 8 Feb 2026
 - New LED subsystem, written with help from GPT. Works in sim.
+
+## 10 Feb 2026
+- copypaste of working led subsystem from main.

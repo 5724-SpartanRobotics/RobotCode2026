@@ -53,8 +53,6 @@ public class Robot extends TimedRobot {
 
 		NetworkTableInstance.getDefault().getEntry("/Match Time").setDouble(DriverStation.getMatchTime());
 		NetworkTableInstance.getDefault().getEntry("/Voltage").setDouble(RobotController.getBatteryVoltage());
-		if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.LED))
-			SmartDashboard.putData(_RobotContainer.ledSubsystem);
 	}
 
 	@Override

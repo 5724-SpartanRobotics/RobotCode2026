@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -27,13 +26,13 @@ import frc.robot.subsystems.YagslDriveSubsystem;
 public class RobotContainer {
 	private YagslDriveSubsystem _DriveSubsystem = new YagslDriveSubsystem(Constants.Drive.SWERVE_CONFIG);
 	// private CustomDriveSubsystem _DriveSubsystem = CustomDriveSubsystem.initialize(true);
-	public LedSubsystem3 ledSubsystem = new LedSubsystem3();
 
 	private CommandJoystick _DriverController = new CommandJoystick(0);
 	private CommandXboxController _OperatorController = new CommandXboxController(1);
 
 	public RobotContainer() {
 		YagslDriveCommand.initialize(_DriveSubsystem, _DriverController);
+		LedSubsystem3.createInstance();
 
 		configureControllerBindings();
 	}
@@ -82,7 +81,7 @@ public class RobotContainer {
 		// 	ledSubsystem
 		// ).repeatedly());
 		_DriverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).onTrue(
-			ledSubsystem.togglePersistentNotificationCommand(LedSubsystem3.kNotification3Color)
+			LedSubsystem3.getInstance().togglePersistentNotificationCommand(LedSubsystem3.kNotification3Color)
 		);
 
 		/* USING CUSTOM IMPLEMENTATION */
