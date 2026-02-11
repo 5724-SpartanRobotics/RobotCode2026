@@ -160,15 +160,16 @@ public class LedSubsystem3 extends SubsystemBase {
     private void setPixelGRBW(int i, Color c)  {
         int r = (int)(c.red * 255),
             g = (int)(c.green * 255),
-            b = (int)(c.blue * 255);
+            b = (int)(c.blue * 255),
+            w = (int)((r + g + b) / ( 255 * 3 ));
         switch (i % 4) {
             // This says "setRGB", but we're just using it as a hack to set the bytes in a specific order.
             // The LED strip we have has color order GRBW, so that's why for the first component we pass
             // green, then the second X, etc., etc.
             case 0: m_buffer.setRGB(i, g, r, b); break;
-            case 1: m_buffer.setRGB(i, 0, g, r); break;
-            case 2: m_buffer.setRGB(i, b, 0, g); break;
-            case 3: m_buffer.setRGB(i, r, b, 0); break;
+            case 1: m_buffer.setRGB(i, w, g, r); break;
+            case 2: m_buffer.setRGB(i, b, w, g); break;
+            case 3: m_buffer.setRGB(i, r, b, w); break;
             default: break;
         }
     }

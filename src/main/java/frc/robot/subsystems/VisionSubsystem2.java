@@ -268,7 +268,7 @@ public class VisionSubsystem2 {
 			// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
 			"center-back",
 			// Camera rotation relative to robot (tune as needed)
-			new Rotation3d(0, 0, 0),
+			new Rotation3d(0, 0, Math.PI),
 			// Camera translation relative to robot center (tune as needed)
 			new Translation3d(
 				Units.inchesToMeters(-14.5),
