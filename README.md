@@ -112,3 +112,8 @@ found in this repository.
 
 ## 10 Feb 2026
 - copypaste of working led subsystem from main.
+
+# 12 Feb 2026
+- Fixing some problems with the LEDs being too bright and thus causing the thing to brown out.
+	- They seem to draw a lot of current, 1.8A but the voltage stays ~4.5V.
+	- We were not able to trace a problem that dropped the voltage to ~2.3V.

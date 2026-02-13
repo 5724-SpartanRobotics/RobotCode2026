@@ -27,8 +27,8 @@ public class LedSubsystem3 extends SubsystemBase {
 
     /** Default: 10 seconds */
     public static Time kDefaultStandbyDelay = Constants.Drive.WHEEL_LOCK_TIME;
-    /** Default: #FFF2D9 (cream) */
-    public static Color kDisabledColor = new Color("#FFF2D9");
+    /** Default: #7f796c (gray) */
+    public static Color kDisabledColor = new Color("#5f5a5a");
     /** Default: Black */
     public static Color kInactiveColor = Color.kBlack;
     /** Default: Green */
@@ -176,7 +176,10 @@ public class LedSubsystem3 extends SubsystemBase {
         } else {
             switch (_baseState) {
                 case RAINBOW: renderRainbow(); break;
-                case DISABLED_STANDBY: renderSolid(kDisabledColor); break;
+                case DISABLED_STANDBY:
+                    clearAllPersistentNotify(); // this doesn't work here?
+                    renderSolid(kDisabledColor);
+                    break;
                 case ACTIVE_OFF:
                 default:
                     renderSolid(kInactiveColor); break;
@@ -190,9 +193,11 @@ public class LedSubsystem3 extends SubsystemBase {
     }
 
     private void setPixelGRBW(int i, Color c)  {
-        int r = (int)(c.red * 255),
-            g = (int)(c.green * 255),
-            b = (int)(c.blue * 255);
+        // Max is so that we don't burn out the LEDs and the VRM.
+        final int max = 100;
+        int r = (int)(c.red * max) / 2,
+            g = (int)(c.green * max) / 2,
+            b = (int)(c.blue * max) / 2;
         if (kIsRGB_Only) { m_buffer.setRGB(i, r, g, b); return; }
         switch (i % 4) {
             // This says "setRGB", but we're just using it as a hack to set the bytes in a specific order.
