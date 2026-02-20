@@ -83,6 +83,10 @@ public final class Constants {
 		public static final int ARM_RIGHT_SLAVE = 23;
 
 		public static final int CLIMBER = 25;
+
+		public static final int INDEXER = 27;
+		public static final int SHOOTER = 28;
+		public static final int SHOOTER_UPPER_FEED = 29;
 	}
 
 	public static final class Robot {
