@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,6 +32,9 @@ public class RobotContainer {
 	private CommandXboxController _OperatorController = new CommandXboxController(1);
 
 	public RobotContainer() {
+		PortForwarder.add(5900, "limelight.local", 5800);
+		PortForwarder.add(5901, "limelight-back.local", 5800);
+
 		YagslDriveCommand.initialize(_DriveSubsystem, _DriverController);
 		LedSubsystem3.createInstance();
 
@@ -55,9 +59,6 @@ public class RobotContainer {
 		));
 		_DriverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
 			_DriveSubsystem.resetOdometryCommand()
-		);
-		_DriverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
-			_DriveSubsystem.resetOdometryFlippedCommand()
 		);
 		_DriverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
 			_DriveSubsystem.centerModulesCommand()
