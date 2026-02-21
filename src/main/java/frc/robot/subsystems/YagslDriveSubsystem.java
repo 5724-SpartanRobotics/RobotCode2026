@@ -525,6 +525,9 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	public void periodic() {
 		Pigeon2 gyro = (Pigeon2)m_swerveDrive.getGyro().getIMU();
 		NetworkTableInstance.getDefault().getEntry("/Gyro").setDouble(Math.abs(gyro.getYaw().getValueAsDouble()) % 360.0);
+		NetworkTableInstance.getDefault().getEntry("/Rotation").setDouble(Math.abs(
+			getPose().getRotation().getDegrees() - (Constants.isRedAlliance() ? 180.0 : 0.0)
+		) % 360.0);
 		if (_IsVisionDriveTest) {
 		}
 

@@ -275,7 +275,7 @@ public class VisionSubsystem2 {
 			new Rotation3d(0, 0, Math.PI),
 			// Camera translation relative to robot center (tune as needed)
 			new Translation3d(
-				Units.inchesToMeters(-12),
+				Units.inchesToMeters(-8),
 				Units.inchesToMeters(6),
 				Units.inchesToMeters(11)
 			),
@@ -283,7 +283,24 @@ public class VisionSubsystem2 {
 			VecBuilder.fill(1.0, 1.0, 3.0),
 			// Multi-tag std devs
 			VecBuilder.fill(0.5, 0.5, 1.0)
-		);
+		),
+		RIGHT_CAM(
+			// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
+			"right",
+			// Camera rotation relative to robot (tune as needed)
+			new Rotation3d(0, Units.degreesToRadians(45), Constants.THREE_HALVES_PI),
+			// Camera translation relative to robot center (tune as needed)
+			new Translation3d(
+				Units.inchesToMeters(-3),
+				Units.inchesToMeters(-9),
+				Units.inchesToMeters(8)
+			),
+			// Single-tag std devs
+			VecBuilder.fill(1.0, 1.0, 3.0),
+			// Multi-tag std devs
+			VecBuilder.fill(0.5, 0.5, 1.0)
+		)
+		;
 
 		public final Alert latencyAlert;
 		public final PhotonCamera camera;

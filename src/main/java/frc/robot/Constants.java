@@ -26,6 +26,7 @@ import swervelib.math.Matter;
 public final class Constants {
 	public static final double TWO_PI = Math.PI * 2.0;
 	public static final double HALF_PI = Math.PI / 2.0;
+	public static final double THREE_HALVES_PI = (3.0 * Math.PI) / 2.0;
 	public static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
 
 	/**
