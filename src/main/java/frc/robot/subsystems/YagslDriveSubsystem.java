@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -34,6 +35,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -41,6 +43,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -84,8 +87,10 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	private VisionSubsystem2 m_visionSubsystem;
 
 	private static void configureTelemetry() {
-		SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+		SwerveDriveTelemetry.verbosity = TelemetryVerbosity.POSE;
 	}
+
+	private boolean useVision = true;
 
 	/**
 	 * Initialize {@link SwerveDrive} with the directory provided.
@@ -271,7 +276,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 		final double allSpeedsMultiplier = 0.8;
 		return Commands.sequence(
 			Commands.run(() -> {
-				m_visionSubsystem.periodic();
+				if (useVision) m_visionSubsystem.periodic();
 				var resList = VisionSubsystem2.Cameras.CENTER_CAM.resultsList;
 
 				if (resList.isEmpty()) {
@@ -518,16 +523,20 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 
 	@Override
 	public void periodic() {
+		Pigeon2 gyro = (Pigeon2)m_swerveDrive.getGyro().getIMU();
+		NetworkTableInstance.getDefault().getEntry("/Gyro").setDouble(Math.abs(gyro.getYaw().getValueAsDouble()) % 360.0);
 		if (_IsVisionDriveTest) {
 		}
-		m_swerveDrive.updateOdometry();
+
 		// 2026-02-02: Disable updating the vision pose estimation for testing
 		// we leave the swerve drive odometry cause it's visionless and is very necessary
 		// This is the old "periodic" function from the YAGSL example
 		// m_visionSubsystem.updatePoseEstimation(m_swerveDrive);
 		// This is the "new" periodic function from the Photon example.
 		// I'm going to leave this in cause it will only update NT, not add to the Drive pose estimate
-		m_visionSubsystem.periodic();
+		if (useVision) m_visionSubsystem.periodic();
+
+		m_swerveDrive.updateOdometry();
 	}
 
 	@Override
@@ -535,12 +544,12 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 
 	public void addVisionMeasurement(Pose2d pose, double timestamp)
 	{
-		m_swerveDrive.addVisionMeasurement(pose, timestamp);
+		if (useVision) m_swerveDrive.addVisionMeasurement(pose, timestamp);
 	}
 
 	public void addVisionMeasurement(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs)
 	{
-		m_swerveDrive.addVisionMeasurement(pose, timestamp, stdDevs);
+		if (useVision) m_swerveDrive.addVisionMeasurement(pose, timestamp, stdDevs);
 	}
 
 	/**
@@ -776,7 +785,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	}
 
 	public Command resetOdometryCommand() {
-		return Commands.runOnce(() -> this.resetOdometry(new Pose2d(3, 3, new Rotation2d())));
+		return Commands.runOnce(() -> this.resetOdometry(kInitialPose));
 	}
 
 	public Command resetOdometryFlippedCommand() {
@@ -826,6 +835,7 @@ public class YagslDriveSubsystem extends frc.robot.lib.DriveSubsystem
 	public void zeroGyro()
 	{
 		m_swerveDrive.zeroGyro();
+		m_swerveDrive.setGyro(new Rotation3d(Rotation2d.k180deg));
 	}
 
 	/**

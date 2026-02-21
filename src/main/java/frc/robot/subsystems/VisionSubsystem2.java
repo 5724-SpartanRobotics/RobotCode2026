@@ -163,7 +163,6 @@ public class VisionSubsystem2 {
 		for (var camera : Cameras.values()) {
 			// Pull all unread results
 			for (var result : camera.camera.getAllUnreadResults()) {
-
 				// Keep a small cache so getLatestResult() works
 				camera.resultsList.add(0, result);
 				if (camera.resultsList.size() > 20) {
@@ -171,12 +170,17 @@ public class VisionSubsystem2 {
 				}
 
 				// Multi-tag first, then lowest ambiguity
-				Optional<EstimatedRobotPose> visionEst =
-						camera.poseEstimator.estimateCoprocMultiTagPose(result);
+				String strat = "Multi-tag";
+				Optional<EstimatedRobotPose> visionEst = camera.poseEstimator.estimateCoprocMultiTagPose(result);
 				if (visionEst.isEmpty()) {
+					strat = "Lowest ambiguity";
 					visionEst = camera.poseEstimator.estimateLowestAmbiguityPose(result);
 				}
 
+				SmartDashboard.putString(
+					String.format("VisionSubsystemCameras/%s/Strategy", camera.name()),
+					strat
+				);
 				SmartDashboard.putString(
 						String.format("VisionSubsystemCameras/%s/EstPose", camera.name()),
 						visionEst.orElse(new EstimatedRobotPose(new Pose3d(), 0, new ArrayList<>()))
@@ -190,7 +194,7 @@ public class VisionSubsystem2 {
 				visionEst.ifPresentOrElse(est -> {
 					m_field2d.getObject("VisionEstimation").setPose(est.estimatedPose.toPose2d());
 				}, () -> {
-					m_field2d.getObject("VisionEstimation").setPoses();
+					// m_field2d.getObject("VisionEstimation").setPoses();
 				});
 
 				visionEst.ifPresent(est -> {
@@ -252,12 +256,12 @@ public class VisionSubsystem2 {
 			// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
 			"center",
 			// Camera rotation relative to robot (tune as needed)
-			new Rotation3d(0, Units.degreesToRadians(15), 0),
+			new Rotation3d(0, Units.degreesToRadians(20), 0),
 			// Camera translation relative to robot center (tune as needed)
 			new Translation3d(
-				Units.inchesToMeters(-8),
-				Units.inchesToMeters(0),
-				Units.inchesToMeters(21)
+				Units.inchesToMeters(8),
+				Units.inchesToMeters(-9),
+				Units.inchesToMeters(10.5)
 			),
 			// Single-tag std devs
 			VecBuilder.fill(1.0, 1.0, 3.0),
@@ -271,9 +275,9 @@ public class VisionSubsystem2 {
 			new Rotation3d(0, 0, Math.PI),
 			// Camera translation relative to robot center (tune as needed)
 			new Translation3d(
-				Units.inchesToMeters(-14.5),
-				Units.inchesToMeters(3.75),
-				Units.inchesToMeters(26.5)
+				Units.inchesToMeters(-12),
+				Units.inchesToMeters(6),
+				Units.inchesToMeters(11)
 			),
 			// Single-tag std devs
 			VecBuilder.fill(1.0, 1.0, 3.0),
@@ -328,7 +332,7 @@ public class VisionSubsystem2 {
 			}
 
 			SmartDashboard.putString(
-					String.format("/VisionSubsystemCameras/%s/ZNote", name),
+					String.format("VisionSubsystemCameras/%s/ZNote", this.name()),
 					"EstPose is a Pose3d of the vision estimate, or all zeros/empty if none.");
 		}
 
