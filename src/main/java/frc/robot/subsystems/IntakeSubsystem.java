@@ -23,6 +23,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class IntakeSubsystem extends SubsystemBase {
+    private static IntakeSubsystem instance = null;
+
     /** NEO Vortex on SparkFlex */
     private final SparkFlex m_upperIntake;
     private double upperIntakeSpeedReference = 0;
@@ -32,7 +34,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final IntakeArm m_arm = IntakeArm.getInstance();
 
-    public IntakeSubsystem() {
+    private IntakeSubsystem() {
         m_upperIntake = new SparkFlex(Constants.CanId.INTAKE_UPPER, MotorType.kBrushless);
         m_upperIntake.configure(
             new SparkFlexConfig()
@@ -68,6 +70,15 @@ public class IntakeSubsystem extends SubsystemBase {
             ResetMode.kResetSafeParameters,
             PersistMode.kNoPersistParameters
         );
+    }
+
+    public static void createInstance() {
+        getInstance();
+    }
+
+    public static IntakeSubsystem getInstance() {
+        if (instance == null) instance = new IntakeSubsystem();
+        return instance;
     }
 
     @Override

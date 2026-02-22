@@ -7,8 +7,10 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -21,14 +23,18 @@ import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.util.Color;
+import frc.robot.lib.PIDFfRecord;
 import swervelib.math.Matter;
 
 public final class Constants {
+	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
+
 	public static final double TWO_PI = Math.PI * 2.0;
 	public static final double HALF_PI = Math.PI / 2.0;
-	public static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
+	public static final double THREE_HALVES_PI = (3.0 * Math.PI) / 2.0;
+	public static final LinearAcceleration g = Units.MetersPerSecondPerSecond.of(9.80665);
 
-		/**
+	/**
 	 * Checks if the alliance is red, defaults to false if alliance isn't available.
 	 *
 	 * @return true if the red alliance, false if blue. Defaults to false if none is available.
@@ -170,21 +176,30 @@ public final class Constants {
 	}
 
 	public static final class LED {
-        public static final int PORT = 0;
-        public static final int LED_COUNT = 300;
+		public static final int PORT = 0;
+		public static final int LED_COUNT = 300;
 
 		public static final double STRIP_BITS_PER_PIXEL_0 = 18.0;
-    	public static final double STRIP_BITS_PER_PIXEL_1 = 13.0;
+		public static final double STRIP_BITS_PER_PIXEL_1 = 13.0;
 	}
 
 	public static final class Motors {
-		public static final AngularVelocity REDLINE_MAX_VELOCITY = Units.RPM.of(21020);
-		public static final AngularVelocity VORTEX_MAX_VELOCITY = Units.RPM.of(6784);
-		public static final AngularVelocity NEO_MAX_VELOCITY = Units.RPM.of(5676);
+		public static final AngularVelocity REDLINE_MAX_VELOCITY = Units.RadiansPerSecond.of(
+			DCMotor.getAndymarkRs775_125(1).freeSpeedRadPerSec
+		);
+		public static final AngularVelocity VORTEX_MAX_VELOCITY = Units.RadiansPerSecond.of(
+			DCMotor.getNeoVortex(1).freeSpeedRadPerSec
+		);
+		public static final AngularVelocity NEO_MAX_VELOCITY = Units.RadiansPerSecond.of(
+			DCMotor.getNEO(1).freeSpeedRadPerSec
+		);
 		
+		// Encoder resolution (I think number of encoder polls per frame)
 		public static final double NEO_COUNTS_PER_REVOLUTION = 1.0;
 
-		public static final Current KRAKENX60_STALL_CURRENT = Units.Amps.of(233);
+		public static final Current KRAKENX60_STALL_CURRENT = Units.Amps.of(
+			DCMotor.getKrakenX60(1).stallCurrentAmps
+		);
 	}
 
 	public static final class Intake {
@@ -207,14 +222,44 @@ public final class Constants {
 		public static final Current MAX_CURRENT = Units.Amps.of(40);
 	}
 
+	public static final class Indexer {
+		public static final double RUN_SETPOINT = 0.4;
+	}
+
+	public static final class Shooter {
+		public static final double GEAR_RATIO = 1.0;
+		public static final PIDFfRecord SHOOTER_PIDF = new PIDFfRecord(
+			0.00004, 0.0, 0.0, 0.0002,
+			0.0,
+			Units.VoltsPerRadianPerSecond.of(12.0 /* volts */ * 0.0002 /* kFf */ * (60.0 / TWO_PI) /* radians per second */)
+				.baseUnitMagnitude() /* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
+			0.0
+		);
+		public static final AngularVelocity MAX_VELOCITY = Units.RadiansPerSecond.of(
+			DCMotor.getNeoVortex(1).freeSpeedRadPerSec
+		);
+		public static final AngularAcceleration MAX_ACCELERATION = Units.RadiansPerSecondPerSecond.of(1);
+		public static final Current MAX_CURRENT = Units.Amps.of(40);
+
+		public static final AngularVelocity SOFT_LIMIT_VELOCITY = Units.RPM.of(500);
+
+		public static final Angle LAUNCH_ANGLE = Units.Degrees.of(45);
+		public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 1.2; // usually between 1.1 and 1.4;
+
+		public static final Distance FLYWHEEL_DIAMETER = Units.Inches.of(4);
+		public static final Distance FEEDER_PULLEY_DIAMETER = Units.Inches.of(1.2);
+	}
+
 	public static enum DebugLevel {
 		Off,
 		All,
 		Autonomous,
 		Climb,
 		Drive,
+		Indexer,
 		Intake,
 		LED,
+		Shooter,
 		Vision;
 
 		/**
@@ -261,6 +306,10 @@ public final class Constants {
 		 */
 		public static boolean isOrAll(DebugLevel level) {
 			return is(level) || DEBUG_TRACE_LEVEL == All;
+		}
+
+		public static DebugLevel get() {
+			return DEBUG_TRACE_LEVEL;
 		}
 	}
 

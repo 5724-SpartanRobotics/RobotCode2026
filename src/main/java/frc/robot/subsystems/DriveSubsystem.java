@@ -43,6 +43,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -430,6 +431,18 @@ public class DriveSubsystem extends SubsystemBase {
 			Command rotCmd = new RotateToAngleCommand(this, () -> staticTarget.getRotation());
 			CommandScheduler.getInstance().schedule(pathCmd.andThen(rotCmd));
 		}, this);
+	}
+
+	public Distance getHypotToAllianceHub() {
+		Pose2d currentPose = getPose(); // ensure odometry is up-to-date
+		Translation2d robotTranslation = currentPose.getTranslation();
+		Translation2d hub = Constants.isRedAlliance()
+			? Constants.Field.RED_HUB_CENTER
+			: Constants.Field.BLUE_HUB_CENTER;
+		double diffX = hub.getX() - robotTranslation.getX();
+		double diffY = hub.getY() - robotTranslation.getY();
+		double dist = Math.hypot(diffX, diffY);
+		return Units.Meters.of(dist);
 	}
 
 	public Command driveToInitialPosition() {

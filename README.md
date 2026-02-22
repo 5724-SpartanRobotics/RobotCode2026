@@ -82,3 +82,11 @@ found in this repository.
 - Lots of debugging to find out that our LED strips are very strange. See the comments throughout the LedSubsystem.java for more details. Something to do with two different bits per pixel, and not being entirely WPILib compatible, but our hack mostly works. Tested on actual LED strips we have and everything looks good and right, plus no strange color problems.
 	- We do need to think about applying voltage & ground from either end of the strip (bright colors such as white fade to yellow toward the end).
 	- It was suggested to use a voltage divider, but I'm not entirely sure that's necessary if we're using 5V from the VRM (which is what our strip takes). The rio will overvolt it if we use the 6V on the PWM port (I kept almost burning my fingers, that's how hot the connector was getting). rio datasheet says that signal is 5V and this seems to work fine.
+
+## 22 Feb 2026
+- Add YAMS
+- Add indexer subsystem. Runs at 40% for on, or 0% for off.
+- Add shooter flywheel via YAMS. Runs at a max of Neo Vortex max velocity (~710.5 rad/s), max acceleration at 1 rad/s.
+- Flywheel runs at a velocity commanded by the robot's direct distance (xy-hypot) from the alliance's hub.
+- Add feeder from indexer to shooter, runs at 4/1.2=3.3x the flywheel speed.
+- Nothing has been tested, not even in sim!

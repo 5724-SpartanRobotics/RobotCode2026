@@ -18,13 +18,17 @@ import frc.robot.lib.Elastic.Notification;
 import frc.robot.lib.Elastic.NotificationLevel;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LedSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 
 public class RobotContainer {
 	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
 	private final ClimberSubsystem m_climberSubsystem = ClimberSubsystem.getInstance();
-	private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
+	private final IntakeSubsystem m_intakeSubsystem = IntakeSubsystem.getInstance();
+	private final IndexerSubsystem m_indexerSubsystem = IndexerSubsystem.getInstance();
+	private final ShooterSubsystem m_shooterSubsystem = ShooterSubsystem.getInstance();
 
 	private final CommandJoystick m_driverController = new CommandJoystick(0);
 	private final CommandXboxController m_operatorController = new CommandXboxController(1);
@@ -115,18 +119,16 @@ public class RobotContainer {
 		));
 	}
 
-	public void visionPeriodic() {
+	public void robotPeriodic() {
 		if (!hasBeenEnabledYet) {
 			hasBeenEnabledYet = DriverStation.isEnabled();
-			// CommandScheduler.getInstance().schedule(Commands.parallel(
-			// 	_DriveSubsystem.resetOdometryCommand(),
-			// 	Commands.runOnce(_DriveSubsystem::zeroGyro)
-			// ));
 		}
+
+		m_shooterSubsystem.hypotenuseToAllianceHub = m_driveSubsystem.getHypotToAllianceHub();
 	}
 
 	public void setMotorBrake(boolean brake) {
-		// _DriveSubsystem.setMotorBrake(brake);
+		m_driveSubsystem.setMotorBrake(brake);
 	}
 
 	public Command getAutonomousCommand() {
