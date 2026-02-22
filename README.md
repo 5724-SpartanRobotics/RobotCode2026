@@ -86,7 +86,8 @@ found in this repository.
 ## 22 Feb 2026
 - Add YAMS
 - Add indexer subsystem. Runs at 40% for on, or 0% for off.
-- Add shooter flywheel via YAMS. Runs at a max of Neo Vortex max velocity (~710.5 rad/s), max acceleration at 1 rad/s.
+- Add shooter flywheel via YAMS. Runs at a max of Neo Vortex max velocity (~710.5 rad/s), max acceleration at 710.5rad/s/0.5s=1421 rad/s/s.
 - Flywheel runs at a velocity commanded by the robot's direct distance (xy-hypot) from the alliance's hub.
 - Add feeder from indexer to shooter, runs at 4/1.2=3.3x the flywheel speed.
 - Nothing has been tested, not even in sim!
+- had to correct the max accel because it was far too slow (12min to max speed instead of sub-1s).

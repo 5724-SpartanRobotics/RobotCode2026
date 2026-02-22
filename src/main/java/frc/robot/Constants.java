@@ -238,7 +238,7 @@ public final class Constants {
 		public static final AngularVelocity MAX_VELOCITY = Units.RadiansPerSecond.of(
 			DCMotor.getNeoVortex(1).freeSpeedRadPerSec
 		);
-		public static final AngularAcceleration MAX_ACCELERATION = Units.RadiansPerSecondPerSecond.of(1);
+		public static final AngularAcceleration MAX_ACCELERATION = Units.RadiansPerSecondPerSecond.of(1421);
 		public static final Current MAX_CURRENT = Units.Amps.of(40);
 
 		public static final AngularVelocity SOFT_LIMIT_VELOCITY = Units.RPM.of(500);
