@@ -1,0 +1,26 @@
+Robot stuff
+
+Y is front to back (base)
+X is side to side (track)
+Z is from the floor up
+
+base (Y): 25.5 in
+track (X): 28.5 in
+
+X from center: 14.25 in 
+Y from center:  in
+
+FL Y:    9 1/16 in =   .230 m
+FL X:   11 5/32 in =   .283 m
+
+FR Y:  - 9 1/16 in = - .230 m
+FR X:   11 5/32 in =   .283 m
+
+BL Y:   10 1/16 in = - .256 m
+BL X: - 11 5/32 in =   .283 m
+
+BR Y: - 10 1/16 in = - .256 m
+BR X: - 11 5/32 in = - .283 m
+
+
+80 lbs

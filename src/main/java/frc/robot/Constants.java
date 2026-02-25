@@ -97,13 +97,15 @@ public final class Constants {
 
 	public static final class Robot {
 		// TODO: These values will all need updated once the robot is finished.
-		public static final Mass MASS = Units.Pounds.of(110);
+		public static final Mass MASS = Units.Pounds.of(80);
 		public static final MomentOfInertia MOMENT_OF_INERTIA =
-			Units.KilogramSquareMeters.of(16.5);
+			Units.KilogramSquareMeters.of(4);
+		// 0.319 (wheel circumference meters) * ((6784 motor max rpm / 8 gear ratio)/(60 seconds in minute))
+		// = 0.319 * 14.13 = 4.51 m/s
 		public static final LinearVelocity MAX_LINEAR_VELOCITY =
-			Units.FeetPerSecond.of(14.5); // about 4.42m/s
+			Units.MetersPerSecond.of(4.51);
 		public static final LinearAcceleration MAX_LINEAR_ACCELERATION =
-			Units.FeetPerSecondPerSecond.of(13.12); // about 4m/s^2
+			Units.MetersPerSecondPerSecond.of(6);
 
 		public static final double DEFAULT_SPEED_MOD = 0.425;
 	}
@@ -120,25 +122,32 @@ public final class Constants {
 			Units.Millimeters.of(8).in(Units.Meters)
 		), Robot.MASS.in(Units.Kilograms));
 
+		public static final double SWERVE_DRIVE_GEAR_RATIO = 8.14;
+		public static final double SWERVE_TURN_GEAR_RATIO = 150.0 / 7.0;
+
 		public static final class Wheel {
 			public static final Distance RADIUS = Units.Inches.of(2.0);
-			public static final double COF = 1.2;
-			public static final Distance X_FROM_CENTER = Units.Inches.of(11.96);
-			public static final Distance Y_FROM_CENTER = Units.Inches.of(11.016);
+			public static final double COF = 1.19;
+			public static final Distance X_FROM_CENTER = Units.Inches.of(14.25);
+			public static final Distance Y_FROM_CENTER = Units.Inches.of(12.75);
 		}
 
 		public static final class SwerveModuleOffsets {
 			public static final Translation2d FL = new Translation2d(
-				Wheel.X_FROM_CENTER.in(Units.Meters), Wheel.Y_FROM_CENTER.in(Units.Meters)
+				Units.Inches.of(11.0 + 5.0/32.0).in(Units.Meters),
+				Units.Inches.of(9.0 + 1.0/16.0).in(Units.Meters)
 			);
 			public static final Translation2d BL = new Translation2d(
-				-1.0 * Wheel.X_FROM_CENTER.in(Units.Meters), Wheel.Y_FROM_CENTER.in(Units.Meters)
+				Units.Inches.of(11.0 + 5.0/32.0).in(Units.Meters) * -1.0,
+				Units.Inches.of(10.0 + 1.0/16.0).in(Units.Meters)
 			);
 			public static final Translation2d BR = new Translation2d(
-				-1.0 * Wheel.X_FROM_CENTER.in(Units.Meters), -1.0 * Wheel.Y_FROM_CENTER.in(Units.Meters)
+				Units.Inches.of(11.0 + 5.0/32.0).in(Units.Meters) * -1.0,
+				Units.Inches.of(10.0 + 1.0/16.0).in(Units.Meters) * -1.0
 			);
 			public static final Translation2d FR = new Translation2d(
-				Wheel.X_FROM_CENTER.in(Units.Meters), -1.0 * Wheel.Y_FROM_CENTER.in(Units.Meters)
+				Units.Inches.of(11.0 + 5.0/32.0).in(Units.Meters),
+				Units.Inches.of(9.0 + 1.0/16.0).in(Units.Meters) * -1.0
 			);
 		}
 	}
