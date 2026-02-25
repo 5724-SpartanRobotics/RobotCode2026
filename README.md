@@ -95,3 +95,7 @@ found in this repository.
 ## 24 Feb 2026
 - updated the robot constants (wheels, mass, etc.)
 - start writing paths. For now, we will use PathPlanner but I kinda hate it so maybe we'll use Choreo.
+
+## 25 Feb 2026
+- update first path I made, completed it.
+- add the necessary robot code for auto and paths.

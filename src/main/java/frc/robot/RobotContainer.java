@@ -4,9 +4,17 @@
 
 package frc.robot;
 
+import java.util.Map;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -33,13 +41,21 @@ public class RobotContainer {
 	private final CommandJoystick m_driverController = new CommandJoystick(0);
 	private final CommandXboxController m_operatorController = new CommandXboxController(1);
 
+	private final SendableChooser<Command> m_autoChooser;
+
 	private boolean hasBeenEnabledYet = false;
 
 	public RobotContainer() {
 		DriveCommand.initialize(m_driveSubsystem, m_driverController);
 		LedSubsystem.createInstance();
 
+		configureNamedCommands();
 		configureControllerBindings();
+
+		/* configureAutos */ {
+			m_autoChooser = AutoBuilder.buildAutoChooser(); // default auto is Commands.none();
+			SmartDashboard.putData("Auto choices", m_autoChooser);
+		}
 	}
 
 	private void configureControllerBindings() {
@@ -89,6 +105,16 @@ public class RobotContainer {
 
 	private void configureSimAndTestBindings() {}
 
+	private void configureNamedCommands() {
+		NamedCommands.registerCommands(
+			Map.of(
+				"Intake", m_intakeSubsystem.runForCommand(Units.Seconds.of(3)),
+				"Find Pose", m_driveSubsystem.driveToTargetCommand().withTimeout(2),
+				"Shoot", m_shooterSubsystem.runForCommand(Units.Seconds.of(3))
+			)
+		);
+	}
+
 	public void robotFinishedBooting() {
 		// LEDs do their thing automatically.
 
@@ -132,6 +158,6 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
-		return Commands.none();
+		return m_autoChooser.getSelected();
 	}
 }

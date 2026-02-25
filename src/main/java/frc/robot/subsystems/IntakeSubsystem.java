@@ -15,6 +15,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -153,6 +154,14 @@ public class IntakeSubsystem extends SubsystemBase {
             () -> { extendArm(); enableIntake(); },
             () -> { disableIntake(); retractArm(); },
             this 
+        );
+    }
+
+    public Command runForCommand(Time duration) {
+        return Commands.sequence(
+            Commands.run(() -> { extendArm(); enableIntake(); }, this),
+            Commands.waitTime(duration),
+            Commands.run(() -> { disableIntake(); retractArm(); }, this)
         );
     }
 }

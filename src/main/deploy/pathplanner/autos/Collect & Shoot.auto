@@ -7,13 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Auto 1 Path 1"
+            "pathName": "Blue Left of Hub to Center"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Center to Blue Hub"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "Find Pose"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
           }
         }
       ]

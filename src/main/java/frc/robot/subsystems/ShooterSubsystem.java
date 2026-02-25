@@ -6,8 +6,8 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig;
@@ -20,6 +20,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -143,6 +144,14 @@ public class ShooterSubsystem extends SubsystemBase {
             () -> enable(),
             () -> disable(),
             this
+        );
+    }
+
+    public Command runForCommand(Time duration) {
+        return Commands.sequence(
+            Commands.run(this::enable, this),
+            Commands.waitTime(duration),
+            Commands.run(this::disable, this)
         );
     }
 }
