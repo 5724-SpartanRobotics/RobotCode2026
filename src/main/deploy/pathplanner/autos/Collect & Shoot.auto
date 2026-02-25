@@ -1,0 +1,25 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Auto 1 Path 1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Find Pose"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

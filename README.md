@@ -91,3 +91,7 @@ found in this repository.
 - Add feeder from indexer to shooter, runs at 4/1.2=3.3x the flywheel speed.
 - Nothing has been tested, not even in sim!
 - had to correct the max accel because it was far too slow (12min to max speed instead of sub-1s).
+
+## 24 Feb 2026
+- updated the robot constants (wheels, mass, etc.)
+- start writing paths. For now, we will use PathPlanner but I kinda hate it so maybe we'll use Choreo.
