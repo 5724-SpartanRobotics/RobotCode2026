@@ -21,6 +21,7 @@ import swervelib.math.SwerveMath;
 public class DriveCommand {
 	private static DriveSubsystem _DriveSubsystem;
 	private static CommandJoystick _Joystick;
+	private static CommandJoystick _Joystick2;
 	// public static SwerveInputStream DriveAngularVelocity;
 	// public static SwerveInputStream DriveDirectAngle;
 	// public static SwerveInputStream DriveRobotOriented;
@@ -52,6 +53,16 @@ public class DriveCommand {
 		SmartDashboard.putBoolean("DriveCommands Initialized", true);
 	}
 
+	public static void initialize(DriveSubsystem drive, CommandJoystick joystick, CommandJoystick j2) {
+		initialize(drive, joystick);
+		_Joystick2 = j2;
+	}
+
+	public static CommandJoystick getRotationJoystick() {
+		return Constants.Controller.IS_DOUBLE_DRIVE_CONTROLLER ?
+			_Joystick2 : _Joystick;
+	}
+
 	public static SwerveInputStream DriveAngularVelocity() {
 		// System.out.println("RETURNING A DRIVE COMMAND: DAV");
 		return SwerveInputStream.of(
@@ -69,7 +80,7 @@ public class DriveCommand {
 				applyJoystickDeadbandAndScale(
 					// Gonna invert this based on alliance, idk if that's right (we'll see later)
 					// TODO: Test this on the actual robot
-					_Joystick.getRawAxis(2) * (Constants.isRedAlliance() ? -1.0 : 1.0),
+					getRotationJoystick().getRawAxis(2) * (Constants.isRedAlliance() ? -1.0 : 1.0),
 					Constants.Controller.DRIVER_DEADBAND_Z
 				)
 			) // twist / rotation
@@ -104,7 +115,7 @@ public class DriveCommand {
 			() -> _Joystick.getRawAxis(1) * -1.0,
 			() -> _Joystick.getRawAxis(0) * -1.0
 		)
-			.withControllerRotationAxis(() -> _Joystick.getRawAxis(2))
+			.withControllerRotationAxis(() -> getRotationJoystick().getRawAxis(2))
 			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
@@ -113,8 +124,8 @@ public class DriveCommand {
 		// System.out.println("RETURNING A DRIVE COMMAND: DDAK");
 		return DriveAngularVelocity_Keyboard().copy()
 			.withControllerHeadingAxis(
-				() -> Math.sin(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
-				() -> Math.cos(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI
+				() -> Math.sin(getRotationJoystick().getRawAxis(2) * Math.PI) * Constants.TWO_PI,
+				() -> Math.cos(getRotationJoystick().getRawAxis(2) * Math.PI) * Constants.TWO_PI
 			)
 			.headingWhile(true)
 			.translationHeadingOffset(true)

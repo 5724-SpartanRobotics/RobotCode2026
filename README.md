@@ -104,3 +104,6 @@ found in this repository.
 - Clean up LED code
 - Lots more paths for blue side (need few more)
 - Next steps: make same paths for red side
+
+## 27 Feb 2026
+- Add a separate drivestick for rotation (for driver tryouts)
