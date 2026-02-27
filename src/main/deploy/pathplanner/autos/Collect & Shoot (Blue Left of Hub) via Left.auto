@@ -19,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center to Blue Hub"
+            "pathName": "Center to Blue Hub (Left)"
           }
         },
         {
@@ -38,6 +38,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Blue Collect & Shoot via Left",
   "choreoAuto": false
 }

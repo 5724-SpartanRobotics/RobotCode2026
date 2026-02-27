@@ -2,10 +2,20 @@
   "robotWidth": 0.6477,
   "robotLength": 0.7239,
   "holonomicMode": true,
-  "pathFolders": [],
-  "autoFolders": [],
-  "defaultMaxVel": 3.0,
-  "defaultMaxAccel": 3.0,
+  "pathFolders": [
+    "Blue Center via Left",
+    "Blue Center via Right",
+    "Blue Left via Left",
+    "Blue Right via Left",
+    "Blue Right via Right",
+    "Blue Left via Right"
+  ],
+  "autoFolders": [
+    "Blue Collect & Shoot via Left",
+    "Blue Collect & Shoot via Right"
+  ],
+  "defaultMaxVel": 3.75,
+  "defaultMaxAccel": 6.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,

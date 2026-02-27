@@ -99,3 +99,8 @@ found in this repository.
 ## 25 Feb 2026
 - update first path I made, completed it.
 - add the necessary robot code for auto and paths.
+
+## 26 Feb 2026
+- Clean up LED code
+- Lots more paths for blue side (need few more)
+- Next steps: make same paths for red side

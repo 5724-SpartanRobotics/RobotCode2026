@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.592006983754817,
-        "y": 6.180606950176081
+        "x": 6.797560161509181,
+        "y": 6.125935852345428
       },
       "isLocked": false,
       "linkedName": null
@@ -20,12 +20,12 @@
         "y": 7.037042253521126
       },
       "prevControl": {
-        "x": 6.195768917018094,
-        "y": 6.864836441781479
+        "x": 6.19281504843252,
+        "y": 6.865883303355966
       },
       "nextControl": {
-        "x": 5.786239222646237,
-        "y": 7.193524894860521
+        "x": 5.749439344283663,
+        "y": 7.224510535375881
       },
       "isLocked": false,
       "linkedName": null
@@ -36,40 +36,40 @@
         "y": 7.430927230046949
       },
       "prevControl": {
-        "x": 5.438580537365814,
-        "y": 7.381880206229652
+        "x": 5.432570710071008,
+        "y": 7.358016260221163
       },
       "nextControl": {
-        "x": 4.072255498641158,
-        "y": 7.655249495060244
+        "x": 4.082567764199824,
+        "y": 7.769630472718036
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.596607981220658,
-        "y": 7.430927230046949
+        "x": 3.522089201877935,
+        "y": 7.2605985915492965
       },
       "prevControl": {
-        "x": 3.864804428005282,
-        "y": 7.5972360226275
+        "x": 3.720337814577125,
+        "y": 7.412905805964263
       },
       "nextControl": {
-        "x": 2.983915992552709,
-        "y": 7.050996525965057
+        "x": 2.7106049824490936,
+        "y": 6.637164715669188
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.373051643192489,
-        "y": 4.471467136150236
+        "x": 3.404988262910798,
+        "y": 3.438849765258217
       },
       "prevControl": {
-        "x": 3.1295063554306233,
-        "y": 4.582149220547374
+        "x": 3.298849670741618,
+        "y": 3.665200376594578
       },
       "nextControl": null,
       "isLocked": false,
@@ -81,8 +81,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 3.75,
+    "maxAcceleration": 6.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -90,10 +90,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -29.999999999999996
+    "rotation": 29.999999999999996
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Blue Right via Left",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

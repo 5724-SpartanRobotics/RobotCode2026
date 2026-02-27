@@ -106,6 +106,10 @@ public final class Constants {
 			Units.MetersPerSecond.of(4.51);
 		public static final LinearAcceleration MAX_LINEAR_ACCELERATION =
 			Units.MetersPerSecondPerSecond.of(6);
+		public static final AngularVelocity MAX_ANGULAR_VELOCITY =
+			Units.DegreesPerSecond.of(540.000);
+		public static final AngularAcceleration MAX_ANGULAR_ACCELERATION =
+			Units.DegreesPerSecondPerSecond.of(720);
 
 		public static final double DEFAULT_SPEED_MOD = 0.425;
 	}
@@ -188,8 +192,7 @@ public final class Constants {
 		public static final int PORT = 0;
 		public static final int LED_COUNT = 300;
 
-		public static final double STRIP_BITS_PER_PIXEL_0 = 18.0;
-		public static final double STRIP_BITS_PER_PIXEL_1 = 13.0;
+		public static final double STRIP_BITS_PER_PIXEL = 13.0;
 	}
 
 	public static final class Motors {
