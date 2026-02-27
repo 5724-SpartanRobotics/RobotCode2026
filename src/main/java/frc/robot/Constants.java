@@ -161,8 +161,6 @@ public final class Constants {
 		public static final double DRIVER_DEADBAND_Z = 0.35 / 1.5;
 		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
-		public static final boolean IS_DOUBLE_DRIVE_CONTROLLER = true;
-
 		public static final class DriverMap {
 			public static final int SPEEDMOD_MID = 1; // trigger
 			public static final int SPEEDMOD_MAX = 2; // thumb button

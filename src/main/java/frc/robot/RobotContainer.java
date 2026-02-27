@@ -40,21 +40,13 @@ public class RobotContainer {
 
 	private final CommandJoystick m_driverController = new CommandJoystick(0);
 	private final CommandXboxController m_operatorController = new CommandXboxController(1);
-	private final CommandJoystick m_driverController2;
 
 	private final SendableChooser<Command> m_autoChooser;
 
 	private boolean hasBeenEnabledYet = false;
 
 	public RobotContainer() {
-		if (Constants.Controller.IS_DOUBLE_DRIVE_CONTROLLER)
-			m_driverController2 = new CommandJoystick(3);
- 
-		if (Constants.Controller.IS_DOUBLE_DRIVE_CONTROLLER)
-			DriveCommand.initialize(m_driveSubsystem, m_driverController);
-		else 
-			DriveCommand.initialize(m_driveSubsystem, m_driverController, m_driverController2);
-		
+		DriveCommand.initialize(m_driveSubsystem, m_driverController);
 		LedSubsystem.createInstance();
 
 		configureNamedCommands();
