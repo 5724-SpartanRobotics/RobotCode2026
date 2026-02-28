@@ -104,3 +104,11 @@ found in this repository.
 - Clean up LED code
 - Lots more paths for blue side (need few more)
 - Next steps: make same paths for red side
+
+## 28 Feb 2026
+- Tune swerve PIDs
+	- Driving may be inverted, look into this.
+- Tune intake
+- Tune indexer
+- Begin tuning flywheel, will require more tuning
+- Feeder belt wasn't running, look into this.
