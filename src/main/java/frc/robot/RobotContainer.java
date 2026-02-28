@@ -94,13 +94,30 @@ public class RobotContainer {
 			LedSubsystem.getInstance().togglePersistentNotificationCommand(LedSubsystem.kNotification3Color)
 		);
 
-		m_operatorController.axisGreaterThan(XboxController.Axis.kRightY.value, 0.1).whileTrue(
-			Commands.run(m_intakeSubsystem::enableIntake)
-		).onFalse(
-			Commands.run(m_intakeSubsystem::disableIntake)
-		);
-		m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleReverse());
+		final double operatorRightYAxisThreshold = 0.1;
+		m_operatorController.axisMagnitudeGreaterThan(XboxController.Axis.kRightY.value, operatorRightYAxisThreshold).whileTrue(
+			Commands.run(() -> {
+				double axis = m_operatorController.getRawAxis(XboxController.Axis.kRightY.value);
+				if (axis < -operatorRightYAxisThreshold) {
+					m_intakeSubsystem.enableIntake();
+					m_indexerSubsystem.enable();
+				} else if (axis > operatorRightYAxisThreshold) {
+					m_intakeSubsystem.enableSpitout();
+					m_indexerSubsystem.enableReverse();
+				} else {
+					m_intakeSubsystem.disableIntake();
+					m_indexerSubsystem.disable();
+				}
+			},
+			m_intakeSubsystem, m_indexerSubsystem
+			)
+		).onFalse(Commands.run(() -> {
+			m_intakeSubsystem.disableIntake();
+			m_indexerSubsystem.disable();
+		}, m_intakeSubsystem, m_indexerSubsystem));
+		m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
 		m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
+		m_operatorController.y().toggleOnTrue(m_shooterSubsystem.toggle());
 	}
 
 	private void configureSimAndTestBindings() {}

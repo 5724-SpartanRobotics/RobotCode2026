@@ -178,8 +178,6 @@ public class DriveSubsystem extends SubsystemBase {
 	public void setupPhotonVision() {
 		m_visionSubsystem = new VisionSubsystem(m_swerveDrive::getPose, m_swerveDrive.field);
 		m_visionSubsystem.setDriveSubsystem(this);
-
-		SmartDashboard.putString("Tag9Pose", m_visionSubsystem.getTagPose(9).get().toString());
 	}
 
 	public void setupPathPlanner() {
@@ -543,6 +541,12 @@ public class DriveSubsystem extends SubsystemBase {
 		if (_IsVisionDriveTest) {
 		}
 		m_swerveDrive.updateOdometry();
+		for (var m : m_swerveDrive.getModules()) {
+			SmartDashboard.putNumber(
+				"SwerveModule/Module" + m.moduleNumber + "TurnEncoderDeg",
+				m.getAngleMotor().getPosition()
+			);
+		}
 		// 2026-02-02: Disable updating the vision pose estimation for testing
 		// we leave the swerve drive odometry cause it's visionless and is very necessary
 		// This is the old "periodic" function from the YAGSL example

@@ -45,6 +45,14 @@ public class DriveCommand {
 		);
 	}
 
+	public static Command setSpeedModCommand(double s) {
+		return Commands.run(() -> speedMod = s, _DriveSubsystem);
+	}
+
+	public static Command resetSpeedModCommand() {
+		return Commands.run(() -> speedMod = Constants.Robot.DEFAULT_SPEED_MOD, _DriveSubsystem);
+	}
+
 	public static void initialize(DriveSubsystem drive, CommandJoystick joystick) {
 		_DriveSubsystem = drive;
 		_Joystick = joystick;
@@ -142,14 +150,6 @@ public class DriveCommand {
 			case SetpointGenerator -> _DriveSubsystem.driveWithSetpointGeneratorFieldRelative(
 				!isKeyboard ? DriveDirectAngle() : DriveDirectAngle_Keyboard());
 		};
-	}
-
-	public static Command setSpeedModCommand(double s) {
-		return Commands.runOnce(() -> speedMod = s);
-	}
-
-	public static Command resetSpeedModCommand() {
-		return setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD);
 	}
 
 	public class AbsoluteDrive extends Command {
