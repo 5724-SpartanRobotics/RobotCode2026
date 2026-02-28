@@ -97,6 +97,9 @@ public class ShooterFlywheel {
     public void initSendable(SendableBuilder builder) {
         builder.addBooleanProperty("Shooter Enabled", () -> shooterEnabled, null);
 		builder.addDoubleProperty("Shooter Velocity RPM", () -> measuredVelocity, null);
+        builder.addDoubleProperty("Shooter Reference", () -> {
+            return m_motor.getClosedLoopController().getSetpoint();
+        }, null);
     }
 
     public AngularVelocity getVelocity() {

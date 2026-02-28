@@ -104,7 +104,9 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     private AngularVelocity calculateShooterSpeedFromRobotDistance() {
-        double d = hypotenuseToAllianceHub.in(Units.Meters);
+        Distance copy = hypotenuseToAllianceHub.copy();
+        copy = Units.Inches.of(150);
+        double d = copy.in(Units.Meters);
         double g = Constants.g.in(Units.MetersPerSecondPerSecond);
         double v = Math.sqrt(
             ( d * g )
