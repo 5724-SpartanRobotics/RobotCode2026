@@ -67,25 +67,25 @@ public final class Constants {
 	public static final class CanId {
 		// https://docs.google.com/spreadsheets/d/1t8Ids1RzCOn0vlFqbZAr0mgEd12h2sJ_fCfxJkntMR0/edit?gid=0#gid=0
 		public static final int ROBORIO = 0;
-		public static final int PDH = 1;
-		public static final int PIGEON2 = 2;
+		public static final int PDH = 50;
+		public static final int PIGEON2 = 15;
 
-		public static final int FL_DRIVE = 3;
-		public static final int FL_ENCODER = 4;
-		public static final int FL_TURN = 5;
-		public static final int BL_DRIVE = 6;
-		public static final int BL_ENCODER = 7;
-		public static final int BL_TURN = 8;
-		public static final int BR_DRIVE = 9;
-		public static final int BR_ENCODER = 10;
-		public static final int BR_TURN = 11;
-		public static final int FR_DRIVE = 12;
-		public static final int FR_ENCODER = 13;
-		public static final int FR_TURN = 14;
+		public static final int FL_DRIVE = 1;
+		public static final int FL_ENCODER = 13;
+		public static final int FL_TURN = 2;
+		public static final int BL_DRIVE = 8;
+		public static final int BL_ENCODER = 10;
+		public static final int BL_TURN = 7;
+		public static final int BR_DRIVE = 5;
+		public static final int BR_ENCODER = 11;
+		public static final int BR_TURN = 6;
+		public static final int FR_DRIVE = 4;
+		public static final int FR_ENCODER = 12;
+		public static final int FR_TURN = 3;
 
 		public static final int INTAKE_UPPER = 20;
 		public static final int INTAKE_LOWER = 21;
-		public static final int ARM_LEFT_MASTER = 22;
+		public static final int ARM_LEFT_MASTER = 22;//left
 		public static final int ARM_RIGHT_SLAVE = 23;
 
 		public static final int CLIMBER = 25;
@@ -215,7 +215,7 @@ public final class Constants {
 	}
 
 	public static final class Intake {
-		public static final Dimensionless SPEED = Units.Percent.of(50);
+		public static final Dimensionless SPEED = Units.Percent.of(20);
 		public static final double UPPER_GEAR_RATIO = 5; // 5:1
 		public static final Distance UPPER_WHEEL_CURCUMFERENCE = Units.Inches.of(4).times(Math.PI);
 		public static final Distance LOWER_WHEEL_CURCUMFERENCE = Units.Inches.of(2.25).times(Math.PI);
@@ -235,13 +235,14 @@ public final class Constants {
 	}
 
 	public static final class Indexer {
-		public static final double RUN_SETPOINT = 0.4;
+		public static final double RUN_SETPOINT = 0.2;
 	}
 
 	public static final class Shooter {
 		public static final double GEAR_RATIO = 1.0;
 		public static final PIDFfRecord SHOOTER_PIDF = new PIDFfRecord(
-			0.00004, 0.0, 0.0, 0.0002,
+			// TODO: Tune the P
+			0.025, 0.0, 0.0, 0.0002,
 			0.0,
 			Units.VoltsPerRadianPerSecond.of(12.0 /* volts */ * 0.0002 /* kFf */ * (60.0 / TWO_PI) /* radians per second */)
 				.baseUnitMagnitude() /* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
@@ -250,12 +251,12 @@ public final class Constants {
 		public static final AngularVelocity MAX_VELOCITY = Units.RadiansPerSecond.of(
 			DCMotor.getNeoVortex(1).freeSpeedRadPerSec
 		);
-		public static final AngularAcceleration MAX_ACCELERATION = Units.RadiansPerSecondPerSecond.of(1421);
+		public static final AngularAcceleration MAX_ACCELERATION = Units.RadiansPerSecondPerSecond.of(1421).times(2.0);
 		public static final Current MAX_CURRENT = Units.Amps.of(40);
 
-		public static final AngularVelocity SOFT_LIMIT_VELOCITY = Units.RPM.of(500);
+		public static final AngularVelocity SOFT_LIMIT_VELOCITY = MAX_VELOCITY;
 
-		public static final Angle LAUNCH_ANGLE = Units.Degrees.of(45);
+		public static final Angle LAUNCH_ANGLE = Units.Degrees.of(25);
 		public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 1.2; // usually between 1.1 and 1.4;
 
 		public static final Distance FLYWHEEL_DIAMETER = Units.Inches.of(4);

@@ -73,6 +73,11 @@ public class IndexerSubsystem extends SubsystemBase {
         m_motor.set(setpoint);
     }
 
+    public void enableReverse() {
+        setpoint = Constants.Indexer.RUN_SETPOINT * -1.0;
+        m_motor.set(setpoint);
+    }
+
     public void disable() {
         setpoint = 0;
         m_motor.stopMotor();

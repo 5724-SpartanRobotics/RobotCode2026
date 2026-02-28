@@ -100,7 +100,8 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     private static double calculateLowerReferenceInRelationToTop(double setpoint) {
-        AngularVelocity upperVelocity = Constants.Motors.NEO_MAX_VELOCITY.times(setpoint);
+        final double speedMod = 1.0 / 65.0;
+        AngularVelocity upperVelocity = Constants.Motors.VORTEX_MAX_VELOCITY.times(setpoint);
         AngularVelocity otherSide = upperVelocity.div(Constants.Intake.UPPER_GEAR_RATIO);
         double linearSpeedSurfaceSpeedInchesPerMinute = otherSide.in(Units.RPM) * 
             Constants.Intake.UPPER_WHEEL_CURCUMFERENCE.in(Units.Inches);
@@ -108,7 +109,7 @@ public class IntakeSubsystem extends SubsystemBase {
             Constants.Intake.LOWER_WHEEL_CURCUMFERENCE.in(Units.Inches);
         double lowerRpmWithReducer = lowerMotorRpm * Constants.Intake.LOWER_GEAR_RATIO;
         double lowerReference = lowerRpmWithReducer / Constants.Motors.REDLINE_MAX_VELOCITY.in(Units.RPM);
-        return lowerReference;
+        return lowerReference * speedMod;
     }
 
     public void extendArm() {
@@ -121,6 +122,14 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void enableIntake() {
         final double speed = Constants.Intake.SPEED.in(Units.Value); // Value gives n/100
+        upperIntakeSpeedReference = speed;
+        lowerIntakeSpeedReference = calculateLowerReferenceInRelationToTop(speed);
+        m_upperIntake.set(upperIntakeSpeedReference);
+        m_lowerIntake.set(lowerIntakeSpeedReference);
+    }
+
+    public void enableSpitout() {
+        final double speed = Constants.Intake.SPEED.times(-1.0).in(Units.Value); // Value gives n/100
         upperIntakeSpeedReference = speed;
         lowerIntakeSpeedReference = calculateLowerReferenceInRelationToTop(speed);
         m_upperIntake.set(upperIntakeSpeedReference);
