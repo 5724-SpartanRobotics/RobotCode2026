@@ -115,3 +115,6 @@ found in this repository.
 
 ## 1 Mar 2026
 - CRLF to LF
+- Add Spotless to correct writing consistency. Will apply on pre-commit.
+- Remove unused methods from Drive and Vision.
+- Next I'm trying to thread Vision to make it less blocking.

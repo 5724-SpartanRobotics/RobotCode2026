@@ -61,7 +61,7 @@
   ],
   "java.dependency.enableDependencyCheckup": false,
   "task.allowAutomaticTasks": "on",
-  "java.format.settings.url": "file://${workspaceFolder}/eclipse-java-google-style.xml",
+  "java.format.settings.url": "file://${workspaceFolder}/eclipse-java-style.xml",
   "java.format.settings.profile": "Custom",
   "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable"
 }

@@ -1,4 +1,26 @@
+/* VisionSubsystem.java */
+
 package frc.robot.subsystems;
+
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonUtils;
+import org.photonvision.simulation.PhotonCameraSim;
+import org.photonvision.simulation.SimCameraProperties;
+import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.Matrix;
@@ -7,7 +29,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
@@ -18,30 +39,10 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import java.awt.Desktop;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonUtils;
-import org.photonvision.simulation.PhotonCameraSim;
-import org.photonvision.simulation.SimCameraProperties;
-import org.photonvision.simulation.VisionSystemSim;
-import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
-import swervelib.SwerveDrive;
-import swervelib.telemetry.SwerveDriveTelemetry;
 
-public class VisionSubsystem {
-
+public class VisionSubsystem extends SubsystemBase {
 	public static final AprilTagFieldLayout FIELD_LAYOUT = Constants.Vision.FIELD_LAYOUT;
 
 	public VisionSystemSim m_visionSim;
@@ -63,42 +64,6 @@ public class VisionSubsystem {
 			}
 
 			openSimCameraViews();
-		}
-	}
-
-	public static Pose2d getAprilTagPose(int aprilTag, Transform2d robotOffset) {
-		Optional<Pose3d> aprilTagPose3d = FIELD_LAYOUT.getTagPose(aprilTag);
-		if (aprilTagPose3d.isPresent()) {
-			return aprilTagPose3d.get().toPose2d().transformBy(robotOffset);
-		} else {
-			throw new RuntimeException(
-				"Cannot get AprilTag " + aprilTag +
-					" from field " + FIELD_LAYOUT.toString());
-		}
-	}
-
-	public void updatePoseEstimation(SwerveDrive swerveDrive) {
-		// no-op, you’re using periodic() below for pose fusion
-	}
-
-	public void _updatePoseEstimation(SwerveDrive swerveDrive) {
-		if (SwerveDriveTelemetry.isSimulation
-			&& swerveDrive.getSimulationDriveTrainPose().isPresent()) {
-			m_visionSim.update(swerveDrive.getSimulationDriveTrainPose().get());
-		}
-		for (Cameras camera : Cameras.values()) {
-			if (camera == null)
-				continue;
-			Optional<EstimatedRobotPose> poseEst = getEstimatedGlobalPose(camera);
-			if (poseEst != null && poseEst.isPresent()) {
-				var pose = poseEst.get();
-				if (pose == null)
-					continue;
-				swerveDrive.addVisionMeasurement(
-					pose.estimatedPose.toPose2d(),
-					pose.timestampSeconds,
-					camera.curStdDevs);
-			}
 		}
 	}
 
@@ -161,7 +126,8 @@ public class VisionSubsystem {
 		this.m_driveSubsystem = yds;
 	}
 
-	// Main periodic: update results, estimate pose, fuse into drivetrain
+	// Main periodic: update results, estimate pose,
+	@Override
 	public void periodic() {
 		for (var camera : Cameras.values()) {
 			// Pull all unread results
@@ -180,14 +146,16 @@ public class VisionSubsystem {
 					visionEst = camera.poseEstimator.estimateLowestAmbiguityPose(result);
 				}
 
-				SmartDashboard.putString(
-					String.format("VisionSubsystemCameras/%s/EstPose", camera.friendlyName),
-					visionEst.orElse(new EstimatedRobotPose(new Pose3d(), 0,
-						new ArrayList<>())).estimatedPose.toString());
-				SmartDashboard.putNumberArray(
-					String.format("VisionSubsystemCameras/%s/TargetIds", camera.friendlyName),
-					result.getTargets().stream().mapToDouble(PhotonTrackedTarget::getFiducialId)
-						.toArray());
+				if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.Vision)) {
+					SmartDashboard.putString(
+						String.format("VisionSubsystemCameras/%s/EstPose", camera.friendlyName),
+						visionEst.orElse(new EstimatedRobotPose(new Pose3d(), 0,
+							new ArrayList<>())).estimatedPose.toString());
+					SmartDashboard.putNumberArray(
+						String.format("VisionSubsystemCameras/%s/TargetIds", camera.friendlyName),
+						result.getTargets().stream().mapToDouble(PhotonTrackedTarget::getFiducialId)
+							.toArray());
+				}
 
 				updateEstimationStdDevs(camera, visionEst, result.getTargets());
 
@@ -200,6 +168,7 @@ public class VisionSubsystem {
 				visionEst.ifPresent(est -> {
 					var estStdDevs = camera.curStdDevs;
 					if (m_driveSubsystem != null) {
+						// goes directly to the SwerveDrivePoseEstimator from yagsl
 						m_driveSubsystem.addVisionMeasurement(
 							est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
 					}
@@ -216,16 +185,15 @@ public class VisionSubsystem {
 		Cameras camera,
 		Optional<EstimatedRobotPose> estPose,
 		List<PhotonTrackedTarget> targets) {
-
 		final var SingleTagStdDevs = VecBuilder.fill(4, 4, 8);
 		final var MultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
 
 		if (estPose.isEmpty()) {
-			camera.curStdDevs = SingleTagStdDevs;
+			camera.curStdDevs = SingleTagStdDevs.copy();
 			return;
 		}
 
-		var estStdDevs = SingleTagStdDevs;
+		var estStdDevs = SingleTagStdDevs.copy();
 		int numTags = 0;
 		double avgDist = 0;
 
@@ -240,11 +208,11 @@ public class VisionSubsystem {
 		}
 
 		if (numTags == 0) {
-			camera.curStdDevs = SingleTagStdDevs;
+			camera.curStdDevs = SingleTagStdDevs.copy();
 		} else {
 			avgDist /= numTags;
 			if (numTags > 1)
-				estStdDevs = MultiTagStdDevs;
+				estStdDevs = MultiTagStdDevs.copy();
 			if (numTags == 1 && avgDist > 4)
 				estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 			else
@@ -342,23 +310,6 @@ public class VisionSubsystem {
 			if (RobotBase.isSimulation()) {
 				systemSim.addCamera(cameraSim, robotToCamTransform);
 			}
-		}
-
-		public Optional<PhotonPipelineResult> getBestResult() {
-			if (resultsList.isEmpty()) {
-				return Optional.empty();
-			}
-
-			PhotonPipelineResult bestResult = resultsList.get(0);
-			double ambiguity = bestResult.getBestTarget().getPoseAmbiguity();
-			for (PhotonPipelineResult result : resultsList) {
-				double currentAmbiguity = result.getBestTarget().getPoseAmbiguity();
-				if (currentAmbiguity < ambiguity && currentAmbiguity > 0) {
-					bestResult = result;
-					ambiguity = currentAmbiguity;
-				}
-			}
-			return Optional.of(bestResult);
 		}
 
 		public Optional<PhotonPipelineResult> getLatestResult() {

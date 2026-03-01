@@ -110,13 +110,6 @@ tasks.withType(JavaCompile) {
 spotless {
     java {
         eclipse().configFile("$rootDir/eclipse-java-style.xml")
-
-        // removeUnusedImports()
-        // importOrder()
-        // formatAnnotations()
-        // trimTrailingWhitespace()
-        // endWithNewline()
-        // indentWithTabs()
     }
 
     format 'misc', {
@@ -141,6 +134,29 @@ tasks.register('writeWpilibHome') {
         file(".wpilib_home_path").text = wpilibHome
     }
 }
+
+tasks.register("spotlessApplyFile") {
+    group = "formatting"
+    description = "Run Spotless on a single file"
+
+    doFirst {
+        if (!project.hasProperty("spotlessFile")) {
+            throw new GradleException("Must pass -PspotlessFile=/path/to/File.java")
+        }
+
+        def file = file(project.property("spotlessFile")).path.replace('\\', '/')
+        println "Running Spotless on: $file"
+
+        spotless {
+            java {
+                target file
+            }
+        }
+    }
+
+    dependsOn "spotlessApply"
+}
+
 
 tasks.installGitHooks.dependsOn tasks.writeWpilibHome
 tasks.build.dependsOn tasks.installGitHooks

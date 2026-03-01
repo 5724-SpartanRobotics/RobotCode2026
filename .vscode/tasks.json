@@ -5,6 +5,24 @@
       "label": "Setup Git Hooks",
       "type": "shell",
       "command": "git config core.hooksPath .githooks"
+    },
+    {
+      "label": "Run Spotless on current file",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": [
+        "spotlessApplyFile",
+        "-PspotlessFile= ${relativeFile}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
     }
   ]
 }
