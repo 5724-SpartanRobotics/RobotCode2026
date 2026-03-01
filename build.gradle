@@ -1,6 +1,7 @@
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
+    id 'com.diffplug.spotless' version '6.25.0'
 }
 
 java {
@@ -105,3 +106,41 @@ wpi.java.configureTestTasks(test)
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
 }
+
+spotless {
+    java {
+        eclipse().configFile("$rootDir/eclipse-java-style.xml")
+
+        // removeUnusedImports()
+        // importOrder()
+        // formatAnnotations()
+        // trimTrailingWhitespace()
+        // endWithNewline()
+        // indentWithTabs()
+    }
+
+    format 'misc', {
+        target '*.gradle', '.gitignore'
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+tasks.register('installGitHooks') {
+    doLast {
+        exec {
+            commandLine 'git', 'config', 'core.hooksPath', '.githooks'
+        }
+        println "Git hooks path set to .githooks"
+    }
+}
+
+tasks.register('writeWpilibHome') {
+    doLast {
+        def wpilibHome = wpi.frcHome.get().asFile.absolutePath
+        file(".wpilib_home_path").text = wpilibHome
+    }
+}
+
+tasks.installGitHooks.dependsOn tasks.writeWpilibHome
+tasks.build.dependsOn tasks.installGitHooks
