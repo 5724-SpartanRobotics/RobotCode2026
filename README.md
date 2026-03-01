@@ -112,3 +112,6 @@ found in this repository.
 - Tune indexer
 - Begin tuning flywheel, will require more tuning
 - Feeder belt wasn't running, look into this.
+
+## 1 Mar 2026
+- CRLF to LF
