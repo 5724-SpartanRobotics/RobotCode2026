@@ -1,9 +1,5 @@
 package frc.robot.commands;
 
-import java.util.List;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -14,6 +10,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.Constants;
 import frc.robot.subsystems.DriveSubsystem;
+import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import swervelib.SwerveController;
 import swervelib.SwerveInputStream;
 import swervelib.math.SwerveMath;
@@ -30,7 +29,8 @@ public class DriveCommand {
 	public static double speedMod = Constants.Robot.DEFAULT_SPEED_MOD;
 
 	private static double applyJoystickDeadband(double realValue, double deadband) {
-		if (Math.abs(realValue) < deadband) return 0.0;
+		if (Math.abs(realValue) < deadband)
+			return 0.0;
 		return realValue;
 	}
 
@@ -41,8 +41,7 @@ public class DriveCommand {
 	private static double applyJoystickDeadbandAndScale(double realValue, double deadband) {
 		return applyJoystickScale(
 			applyJoystickDeadband(realValue, deadband),
-			speedMod
-		);
+			speedMod);
 	}
 
 	public static Command setSpeedModCommand(double s) {
@@ -65,26 +64,25 @@ public class DriveCommand {
 		return SwerveInputStream.of(
 			_DriveSubsystem.getSwerveDrive(),
 			() -> applyJoystickDeadbandAndScale(
-				_Joystick.getRawAxis(1) * (Constants.isRedAlliance() ? -1.0 : 1.0),
-				Constants.Controller.DRIVER_DEADBAND_XY
-			), // Y axis (forward/back)
+				_Joystick.getRawAxis(1) *
+					(Constants.isRedAlliance() ? -1.0 : 1.0),
+				Constants.Controller.DRIVER_DEADBAND_XY), // Y axis (forward/back)
 			() -> applyJoystickDeadbandAndScale(
-				_Joystick.getRawAxis(0) * (Constants.isRedAlliance() ? -1.0 : 1.0),
-				Constants.Controller.DRIVER_DEADBAND_XY
-			) // X axis (strafe)
+				_Joystick.getRawAxis(0) *
+					(Constants.isRedAlliance() ? -1.0 : 1.0),
+				Constants.Controller.DRIVER_DEADBAND_XY) // X axis (strafe)
 		)
-			.withControllerRotationAxis(() ->
-				applyJoystickDeadbandAndScale(
-					// Gonna invert this based on alliance, idk if that's right (we'll see later)
-					// TODO: Test this on the actual robot
-					_Joystick.getRawAxis(2) * (Constants.isRedAlliance() ? -1.0 : 1.0),
-					Constants.Controller.DRIVER_DEADBAND_Z
-				)
-			) // twist / rotation
+			.withControllerRotationAxis(() -> applyJoystickDeadbandAndScale(
+				// Gonna invert this based on alliance, idk if that's right (we'll see later)
+				// TODO: Test this on the actual robot
+				_Joystick.getRawAxis(2) *
+					(Constants.isRedAlliance() ? -1.0 : 1.0),
+				Constants.Controller.DRIVER_DEADBAND_Z)) // twist / rotation
 			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
 	}
+
 	/**
 	 * @deprecated This function scares me. Don't use it (since 2026-02-02)
 	 */
@@ -94,10 +92,10 @@ public class DriveCommand {
 		return DriveAngularVelocity().copy()
 			.withControllerHeadingAxis(
 				() -> Math.sin(_Joystick.getX() * Math.PI) * Constants.TWO_PI,
-				() -> Math.cos(_Joystick.getY() * Math.PI * -1.0) * Constants.TWO_PI
-			)
+				() -> Math.cos(_Joystick.getY() * Math.PI * -1.0) * Constants.TWO_PI)
 			.headingWhile(true);
 	}
+
 	public static SwerveInputStream DriveRobotOriented() {
 		// System.out.println("RETURNING A DRIVE COMMAND: DRO");
 		return DriveAngularVelocity().copy()
@@ -110,30 +108,26 @@ public class DriveCommand {
 		return SwerveInputStream.of(
 			_DriveSubsystem.getSwerveDrive(),
 			() -> _Joystick.getRawAxis(1) * -1.0,
-			() -> _Joystick.getRawAxis(0) * -1.0
-		)
+			() -> _Joystick.getRawAxis(0) * -1.0)
 			.withControllerRotationAxis(() -> _Joystick.getRawAxis(2))
 			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
 	}
+
 	public static SwerveInputStream DriveDirectAngle_Keyboard() {
 		// System.out.println("RETURNING A DRIVE COMMAND: DDAK");
 		return DriveAngularVelocity_Keyboard().copy()
 			.withControllerHeadingAxis(
 				() -> Math.sin(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI,
-				() -> Math.cos(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI
-			)
+				() -> Math.cos(_Joystick.getRawAxis(2) * Math.PI) * Constants.TWO_PI)
 			.headingWhile(true)
 			.translationHeadingOffset(true)
 			.translationHeadingOffset(Rotation2d.fromDegrees(0));
 	}
 
 	public enum DriveType {
-		FO_AngularVelocity,
-		FO_DirectAngle,
-		RO_AngularVelocity,
-		SetpointGenerator
+		FO_AngularVelocity, FO_DirectAngle, RO_AngularVelocity, SetpointGenerator
 	}
 
 	public static Command getCommand(DriveType t, boolean isKeyboard) {
@@ -142,10 +136,10 @@ public class DriveCommand {
 			return Commands.none();
 		}
 		return switch (t) {
-			case FO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(!isKeyboard ?
-				DriveAngularVelocity() : DriveAngularVelocity_Keyboard());
-			case FO_DirectAngle -> _DriveSubsystem.driveFieldOriented(!isKeyboard ?
-				DriveDirectAngle() : DriveDirectAngle_Keyboard());
+			case FO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(
+				!isKeyboard ? DriveAngularVelocity() : DriveAngularVelocity_Keyboard());
+			case FO_DirectAngle -> _DriveSubsystem.driveFieldOriented(
+				!isKeyboard ? DriveDirectAngle() : DriveDirectAngle_Keyboard());
 			case RO_AngularVelocity -> _DriveSubsystem.driveFieldOriented(DriveRobotOriented());
 			case SetpointGenerator -> _DriveSubsystem.driveWithSetpointGeneratorFieldRelative(
 				!isKeyboard ? DriveDirectAngle() : DriveDirectAngle_Keyboard());
@@ -162,8 +156,7 @@ public class DriveCommand {
 			DoubleSupplier vX,
 			DoubleSupplier vY,
 			DoubleSupplier hdgHorizontal,
-			DoubleSupplier hdgVertical
-		) {
+			DoubleSupplier hdgVertical) {
 			this._DriveSubsystem = DriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
@@ -184,16 +177,14 @@ public class DriveCommand {
 
 			ChassisSpeeds desiredSpeeds = _DriveSubsystem.getTargetSpeeds(
 				_VX.getAsDouble(), _VY.getAsDouble(),
-				_HdgHorizontal.getAsDouble(), _HdgVertical.getAsDouble()
-			);
+				_HdgHorizontal.getAsDouble(), _HdgVertical.getAsDouble());
 
 			if (_initRotation) {
 				if (_HdgHorizontal.getAsDouble() == 0 && _HdgVertical.getAsDouble() == 0) {
 					Rotation2d firstLoopHdg = _DriveSubsystem.getHeading();
 					desiredSpeeds = _DriveSubsystem.getTargetSpeeds(
 						0, 0,
-						firstLoopHdg.getSin(), firstLoopHdg.getCos()
-					);
+						firstLoopHdg.getSin(), firstLoopHdg.getCos());
 				}
 				_initRotation = false;
 			}
@@ -206,8 +197,7 @@ public class DriveCommand {
 				Constants.Drive.SWERVE_LOOP_TIME.in(Units.Seconds),
 				Constants.Robot.MASS.in(Units.Kilograms),
 				List.of(Constants.Drive.CHASSIS),
-				_DriveSubsystem.getSwerveDriveConfiguration()
-			);
+				_DriveSubsystem.getSwerveDriveConfiguration());
 			SmartDashboard.putNumber("LimitedTranslation", tx.getX());
 			SmartDashboard.putString("Translation", tx.toString());
 
@@ -215,7 +205,8 @@ public class DriveCommand {
 		}
 
 		@Override
-		public void end(boolean interrupted) {}
+		public void end(boolean interrupted) {
+		}
 
 		@Override
 		public boolean isFinished() {
@@ -238,8 +229,7 @@ public class DriveCommand {
 			BooleanSupplier lookAway,
 			BooleanSupplier lookTowards,
 			BooleanSupplier lookLeft,
-			BooleanSupplier lookRight
-		) {
+			BooleanSupplier lookRight) {
 			this._DriveSubsystem = DriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
@@ -287,8 +277,7 @@ public class DriveCommand {
 
 			ChassisSpeeds desiredSpeeds = _DriveSubsystem.getTargetSpeeds(
 				_VX.getAsDouble(), _VY.getAsDouble(),
-				hdgX, hdgY
-			);
+				hdgX, hdgY);
 			Translation2d tx = SwerveController.getTranslation2d(desiredSpeeds);
 			tx = SwerveMath.limitVelocity(
 				tx,
@@ -297,8 +286,7 @@ public class DriveCommand {
 				Constants.Drive.SWERVE_LOOP_TIME.in(Units.Seconds),
 				Constants.Robot.MASS.in(Units.Kilograms),
 				List.of(Constants.Drive.CHASSIS),
-				_DriveSubsystem.getSwerveDriveConfiguration()
-			);
+				_DriveSubsystem.getSwerveDriveConfiguration());
 			SmartDashboard.putNumber("LimitedTranslation", tx.getX());
 			SmartDashboard.putString("Translation", tx.toString());
 
@@ -306,16 +294,17 @@ public class DriveCommand {
 				_resetHeading = true;
 				_DriveSubsystem.drive(
 					tx,
-					(Constants.Controller.DRIVER_TURN_CONSTANT * -1.0 * _HdgAdjust.getAsDouble()),
-					true
-				);
+					(Constants.Controller.DRIVER_TURN_CONSTANT * -1.0
+						* _HdgAdjust.getAsDouble()),
+					true);
 			} else {
 				_DriveSubsystem.drive(tx, desiredSpeeds.omegaRadiansPerSecond, true);
 			}
 		}
 
 		@Override
-		public void end(boolean interrupted) {}
+		public void end(boolean interrupted) {
+		}
 
 		@Override
 		public boolean isFinished() {
@@ -331,8 +320,7 @@ public class DriveCommand {
 			DriveSubsystem DriveSubsystem,
 			DoubleSupplier vX,
 			DoubleSupplier vY,
-			DoubleSupplier hdg
-		) {
+			DoubleSupplier hdg) {
 			this._DriveSubsystem = DriveSubsystem;
 			this._VX = vX;
 			this._VY = vY;
@@ -342,7 +330,8 @@ public class DriveCommand {
 		}
 
 		@Override
-		public void initialize() {}
+		public void initialize() {
+		}
 
 		@Override
 		public void execute() {
@@ -350,8 +339,7 @@ public class DriveCommand {
 
 			ChassisSpeeds desiredSpeeds = _DriveSubsystem.getTargetSpeeds(
 				_VX.getAsDouble(), _VY.getAsDouble(),
-				new Rotation2d(_Hdg.getAsDouble() * Math.PI)
-			);
+				new Rotation2d(_Hdg.getAsDouble() * Math.PI));
 			Translation2d tx = SwerveController.getTranslation2d(desiredSpeeds);
 			tx = SwerveMath.limitVelocity(
 				tx,
@@ -360,8 +348,7 @@ public class DriveCommand {
 				Constants.Drive.SWERVE_LOOP_TIME.in(Units.Seconds),
 				Constants.Robot.MASS.in(Units.Kilograms),
 				List.of(Constants.Drive.CHASSIS),
-				_DriveSubsystem.getSwerveDriveConfiguration()
-			);
+				_DriveSubsystem.getSwerveDriveConfiguration());
 			SmartDashboard.putNumber("LimitedTranslation", tx.getX());
 			SmartDashboard.putString("Translation", tx.toString());
 
@@ -369,7 +356,8 @@ public class DriveCommand {
 		}
 
 		@Override
-		public void end(boolean interrupted) {}
+		public void end(boolean interrupted) {
+		}
 
 		@Override
 		public boolean isFinished() {

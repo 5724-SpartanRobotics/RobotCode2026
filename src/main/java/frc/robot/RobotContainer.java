@@ -4,11 +4,8 @@
 
 package frc.robot;
 
-import java.util.Map;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -30,9 +27,11 @@ import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LedSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
+import java.util.Map;
 
 public class RobotContainer {
-	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem(Constants.Drive.SWERVE_CONFIG);
+	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem(
+		Constants.Drive.SWERVE_CONFIG);
 	private final ClimberSubsystem m_climberSubsystem = ClimberSubsystem.getInstance();
 	private final IntakeSubsystem m_intakeSubsystem = IntakeSubsystem.getInstance();
 	private final IndexerSubsystem m_indexerSubsystem = IndexerSubsystem.getInstance();
@@ -60,76 +59,68 @@ public class RobotContainer {
 
 	private void configureControllerBindings() {
 		m_driveSubsystem.setDefaultCommand(
-			DriveCommand.getCommand(DriveCommand.DriveType.FO_AngularVelocity, RobotBase.isSimulation())
-		);
+			DriveCommand.getCommand(DriveCommand.DriveType.FO_AngularVelocity,
+				RobotBase.isSimulation()));
 
 		configureSimAndTestBindings();
 
 		m_driverController.button(Constants.Controller.DriverMap.DRIVE_TO_POSE).whileTrue(
-			m_driveSubsystem.driveToTargetCommand().repeatedly()
-		);
+			m_driveSubsystem.driveToTargetCommand().repeatedly());
 		m_driverController.button(Constants.Controller.DriverMap.ZERO_GYRO).onTrue(Commands.run(
-			m_driveSubsystem::zeroGyro
-		));
+			m_driveSubsystem::zeroGyro));
 		m_driverController.button(Constants.Controller.DriverMap.RESET_ODOMETRY).onTrue(
-			m_driveSubsystem.resetOdometryFlippedCommand()
-		);
+			m_driveSubsystem.resetOdometryFlippedCommand());
 		m_driverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
-			m_driveSubsystem.centerModulesCommand()
-		);
+			m_driveSubsystem.centerModulesCommand());
 		m_driverController.button(Constants.Controller.DriverMap.DRIVE_TO_INITIAL_POSE).whileTrue(
-			m_driveSubsystem.driveToInitialPosition(0.8).repeatedly()
-		);
+			m_driveSubsystem.driveToInitialPosition(0.8).repeatedly());
 		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
-			DriveCommand.setSpeedModCommand(0.9)
-		).onFalse(
-			DriveCommand.resetSpeedModCommand()
-		);
-		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MID).whileTrue(
-			DriveCommand.setSpeedModCommand(0.65)
-		).onFalse(
-			DriveCommand.resetSpeedModCommand()
-		);
+			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_HIGH)).onFalse(
+				DriveCommand.resetSpeedModCommand());
+		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MIN).whileTrue(
+			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_LOW)).onFalse(
+				DriveCommand.resetSpeedModCommand());
 		m_driverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).onTrue(
-			LedSubsystem.getInstance().togglePersistentNotificationCommand(LedSubsystem.kNotification3Color)
-		);
+			LedSubsystem.getInstance()
+				.togglePersistentNotificationCommand(LedSubsystem.kNotification3Color));
 
 		final double operatorRightYAxisThreshold = 0.1;
-		m_operatorController.axisMagnitudeGreaterThan(XboxController.Axis.kRightY.value, operatorRightYAxisThreshold).whileTrue(
-			Commands.run(() -> {
-				double axis = m_operatorController.getRawAxis(XboxController.Axis.kRightY.value);
-				if (axis < -operatorRightYAxisThreshold) {
-					m_intakeSubsystem.enableIntake();
-					m_indexerSubsystem.enable();
-				} else if (axis > operatorRightYAxisThreshold) {
-					m_intakeSubsystem.enableSpitout();
-					m_indexerSubsystem.enableReverse();
-				} else {
-					m_intakeSubsystem.disableIntake();
-					m_indexerSubsystem.disable();
-				}
-			},
-			m_intakeSubsystem, m_indexerSubsystem
-			)
-		).onFalse(Commands.run(() -> {
-			m_intakeSubsystem.disableIntake();
-			m_indexerSubsystem.disable();
-		}, m_intakeSubsystem, m_indexerSubsystem));
+		m_operatorController.axisMagnitudeGreaterThan(
+			XboxController.Axis.kRightY.value, operatorRightYAxisThreshold).whileTrue(
+				Commands.run(() -> {
+					double axis = m_operatorController
+						.getRawAxis(XboxController.Axis.kRightY.value);
+					if (axis < -operatorRightYAxisThreshold) {
+						m_intakeSubsystem.enableIntake();
+						m_indexerSubsystem.enable();
+					} else
+						if (axis > operatorRightYAxisThreshold) {
+							m_intakeSubsystem.enableSpitout();
+							m_indexerSubsystem.enableReverse();
+						} else {
+							m_intakeSubsystem.disableIntake();
+							m_indexerSubsystem.disable();
+						}
+				},
+					m_intakeSubsystem, m_indexerSubsystem))
+			.onFalse(Commands.run(() -> {
+				m_intakeSubsystem.disableIntake();
+				m_indexerSubsystem.disable();
+			}, m_intakeSubsystem, m_indexerSubsystem));
 		m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
 		m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
 		m_operatorController.y().toggleOnTrue(m_shooterSubsystem.toggle());
 	}
 
-	private void configureSimAndTestBindings() {}
+	private void configureSimAndTestBindings() {
+	}
 
 	private void configureNamedCommands() {
 		NamedCommands.registerCommands(
 			Map.of(
 				"Intake", m_intakeSubsystem.runForCommand(Units.Seconds.of(3)),
 				"Find Pose", m_driveSubsystem.driveToTargetCommand().withTimeout(2),
-				"Shoot", m_shooterSubsystem.runForCommand(Units.Seconds.of(3))
-			)
-		);
+				"Shoot", m_shooterSubsystem.runForCommand(Units.Seconds.of(3))));
 	}
 
 	public void robotFinishedBooting() {
@@ -138,28 +129,26 @@ public class RobotContainer {
 		if (Constants.DebugLevel.isAny()) {
 			System.out.println(
 				"[via RobotContainter.robotFinishedBooting] " +
-				"[via DebugLevel] Robot Code Debugging is ON. " +
-				"The \"Debug Mode\" is available in SmartDashboard."
-			);
+					"[via DebugLevel] Robot Code Debugging is ON. " +
+					"The \"Debug Mode\" is available in SmartDashboard.");
 		}
 
 		if (DriverStation.isDSAttached() && Robot.isFirstConnection.compareAndSet(true, false)) {
 			Elastic.selectTab("Auto");
 			CommandScheduler.getInstance().schedule(Commands.parallel(
 				m_driveSubsystem.resetOdometryCommand(),
-				Commands.runOnce(m_driveSubsystem::zeroGyro)
-			));
+				Commands.runOnce(m_driveSubsystem::zeroGyro)));
 		}
 	}
 
-	public void teleopInit() {}
+	public void teleopInit() {
+	}
 
 	public void indicateWheelsUnlocked() {
 		Elastic.sendNotification(new Notification(
 			NotificationLevel.INFO,
 			"Robot Brake State Changed",
-			"The wheel brake has been disabled and the robot can move freely."
-		));
+			"The wheel brake has been disabled and the robot can move freely."));
 	}
 
 	public void robotPeriodic() {

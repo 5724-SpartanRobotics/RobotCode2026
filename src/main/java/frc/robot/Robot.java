@@ -4,9 +4,6 @@
 
 package frc.robot;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -15,6 +12,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.DebugLevel;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Robot extends TimedRobot {
 	public static AtomicBoolean isFirstConnection = new AtomicBoolean(true);
@@ -64,7 +63,8 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void disabledExit() {}
+	public void disabledExit() {
+	}
 
 	@Override
 	public void autonomousInit() {
@@ -72,10 +72,12 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void autonomousPeriodic() {}
+	public void autonomousPeriodic() {
+	}
 
 	@Override
-	public void autonomousExit() {}
+	public void autonomousExit() {
+	}
 
 	@Override
 	public void teleopInit() {
@@ -84,10 +86,12 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void teleopPeriodic() {}
+	public void teleopPeriodic() {
+	}
 
 	@Override
-	public void teleopExit() {}
+	public void teleopExit() {
+	}
 
 	@Override
 	public void testInit() {
@@ -95,8 +99,10 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void testPeriodic() {}
+	public void testPeriodic() {
+	}
 
 	@Override
-	public void testExit() {}
+	public void testExit() {
+	}
 }

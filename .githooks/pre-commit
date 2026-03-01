@@ -1,0 +1,25 @@
+#!/bin/sh
+
+WPILIB_HOME=$(cat .wpilib_home_path)
+# Convert to Windows path for Git Bash
+WIN_WPILIB_HOME=$(cygpath -w "$WPILIB_HOME")
+# Point JAVA_HOME to WPILib's JDK
+export JAVA_HOME="$WIN_WPILIB_HOME/jdk"
+export PATH="$JAVA_HOME/bin:$PATH"
+
+echo "Running Spotless..."
+./gradlew spotlessCheck
+if [ $? -ne 0 ]; then
+  echo "Spotless failed. Fix formatting issues before committing."
+  exit 1
+fi
+
+echo "Running build..."
+./gradlew build -x test
+if [ $? -ne 0 ]; then
+  echo "Build failed. Fix errors before committing."
+  exit 1
+fi
+
+echo "All checks passed."
+exit 0
