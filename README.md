@@ -118,3 +118,4 @@ found in this repository.
 - Add Spotless to correct writing consistency. Will apply on pre-commit.
 - Remove unused methods from Drive and Vision.
 - Next I'm trying to thread Vision to make it less blocking.
+- Schemas for YAGSL.

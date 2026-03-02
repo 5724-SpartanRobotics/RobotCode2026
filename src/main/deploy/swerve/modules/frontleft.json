@@ -1,4 +1,5 @@
 {
+  "$schema": "https://github.com/alanmburr/YAGSL_Schemas/raw/refs/heads/main/module.schema.json",
   "location": {
     "front": 11.15625,
     "left": 9.0625
