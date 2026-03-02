@@ -21,6 +21,8 @@ public class Robot extends TimedRobot {
 	private static final AtomicReference<Timer> _DisabledTimer = new AtomicReference<>(new Timer());
 	private final RobotContainer _RobotContainer;
 
+	public final double kPeriod = Constants.setPeriod(getPeriod());
+
 	public Robot() {
 		if (!Constants.isBeanDebug()) {
 			// Trying to start a DataLogManager on a debug session crashes for some reason

@@ -36,6 +36,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -133,8 +134,6 @@ public class DriveSubsystem extends SubsystemBase {
 
 		setupPhotonVision();
 		setupPathPlanner();
-
-		SmartDashboard.putString("VisSubSysMsg", "<empty string>");
 	}
 
 	/**
@@ -330,24 +329,23 @@ public class DriveSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		for (var m : m_swerveDrive.getModules()) {
-			SmartDashboard.putNumber(
-				"SwerveModule/Module" + m.moduleNumber + "TurnEncoderDeg",
-				m.getAngleMotor().getPosition());
-		}
-		// 2026-02-02: Disable updating the vision pose estimation for testing
-		// we leave the swerve drive odometry cause it's visionless and is very
-		// necessary
-		// This is the old "periodic" function from the YAGSL example
-		// m_visionSubsystem.updatePoseEstimation(m_swerveDrive);
-		// This is the "new" periodic function from the Photon example.
-		// I'm going to leave this in cause it will only update NT, not add to the Drive
-		// pose estimate
+		SmartDashboard.putData(this);
 		m_visionSubsystem.periodic();
 	}
 
 	@Override
 	public void simulationPeriodic() {
+	}
+
+	@Override
+	public void initSendable(SendableBuilder builder) {
+		builder.setSmartDashboardType(this.getClass().getName());
+		for (var m : m_swerveDrive.getModules()) {
+			builder.addDoubleProperty(
+				"Module " + m.moduleNumber + " Turn Encoder Degrees",
+				() -> m.getAngleMotor().getPosition(),
+				null);
+		}
 	}
 
 	public void addVisionMeasurement(Pose2d pose, double timestamp) {
@@ -537,10 +535,12 @@ public class DriveSubsystem extends SubsystemBase {
 	 *            Velocity according to the field.
 	 */
 	public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity) {
+		if (velocity == null) {
+			return Commands.none();
+		}
 		return run(() -> {
 			ChassisSpeeds v = velocity.get();
-			// System.out.println("!!! This should make the robot go\n\t" + v.toString());
-			SmartDashboard.putString("DRIVE VELOCITIES", v.toString());
+			SmartDashboard.putString("Drive Velovities", v.toString());
 
 			m_swerveDrive.driveFieldOriented(v);
 		});

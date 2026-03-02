@@ -27,6 +27,7 @@ import swervelib.math.Matter;
 
 public final class Constants {
 	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
+	protected static double PERIOD;
 
 	public static final double TWO_PI = Math.PI * 2.0;
 	public static final double HALF_PI = Math.PI / 2.0;
@@ -324,6 +325,15 @@ public final class Constants {
 		public static DebugLevel get() {
 			return DEBUG_TRACE_LEVEL;
 		}
+	}
+
+	public static long setPeriod(double period) {
+		PERIOD = period;
+		return getPeriod();
+	}
+
+	public static long getPeriod() {
+		return Double.valueOf(PERIOD).longValue();
 	}
 
 	public static boolean isBeanDebug() {

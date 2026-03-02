@@ -119,3 +119,5 @@ found in this repository.
 - Remove unused methods from Drive and Vision.
 - Next I'm trying to thread Vision to make it less blocking.
 - Schemas for YAGSL.
+- Remove old & unused code.
+- Thread-ize vision, we'll see if it works (it did in sim, to the extent that sim "works").
