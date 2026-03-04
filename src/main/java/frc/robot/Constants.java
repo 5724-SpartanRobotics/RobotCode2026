@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.util.Color;
+import frc.robot.lib.CtrMotionMagicRecord;
 import frc.robot.lib.PIDFfRecord;
 import java.io.File;
 import swervelib.math.Matter;
@@ -229,8 +230,22 @@ public final class Constants {
 	}
 
 	public static final class Climber {
+		private static final double kFf = 0.0002;
 		public static final double GEAR_RATIO = 12;
 		public static final Current MAX_CURRENT = Units.Amps.of(40);
+		public static final PIDFfRecord PIDF = new PIDFfRecord(
+			// TODO: Tune the P
+			0.025, 0.0, 0.0, kFf,
+			0.0,
+			Units.VoltsPerRadianPerSecond
+				.of(12.0 /* volts */ * kFf /* kFf */ * (60.0 / TWO_PI) /* rad/s */)
+				.baseUnitMagnitude()
+				/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
+			0.0);
+		public static final CtrMotionMagicRecord MOTION_MAGIC = new CtrMotionMagicRecord(
+			Units.RadiansPerSecond.of(0),
+			Units.RadiansPerSecondPerSecond.of(6 * TWO_PI),
+			Units.RotationsPerSecondPerSecond.of(15).per(Units.Seconds));
 	}
 
 	public static final class Indexer {
@@ -238,13 +253,14 @@ public final class Constants {
 	}
 
 	public static final class Shooter {
+		private static final double SHOOTER_kFf = 0.0002;
 		public static final double GEAR_RATIO = 1.0;
 		public static final PIDFfRecord SHOOTER_PIDF = new PIDFfRecord(
 			// TODO: Tune the P
-			0.025, 0.0, 0.0, 0.0002,
+			0.025, 0.0, 0.0, SHOOTER_kFf,
 			0.0,
 			Units.VoltsPerRadianPerSecond
-				.of(12.0 /* volts */ * 0.0002 /* kFf */ * (60.0 / TWO_PI) /* rad/s */)
+				.of(12.0 /* volts */ * SHOOTER_kFf /* kFf */ * (60.0 / TWO_PI) /* rad/s */)
 				.baseUnitMagnitude()
 				/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
 			0.0);

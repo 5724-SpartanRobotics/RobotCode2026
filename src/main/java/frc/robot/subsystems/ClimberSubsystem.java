@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -26,13 +27,10 @@ public class ClimberSubsystem extends SubsystemBase {
 			.withConfiguration(new TalonFXConfiguration()
 				.withCurrentLimits(new CurrentLimitsConfigs()
 					.withStatorCurrentLimit(Constants.Climber.MAX_CURRENT)
-					.withStatorCurrentLimitEnable(true))
-			// Do we invert?
-			// .withMotorOutput(new MotorOutputConfigs()
-			// .withInverted(InvertedValue.Clockwise_Positive)
-			// )
-			)
-			.withNeutralMode(NeutralModeValue.Brake);
+					.withStatorCurrentLimitEnable(true)))
+			.withNeutralMode(NeutralModeValue.Brake)
+			.withSlot0Pidf(Constants.Climber.PIDF)
+			.withMotionMagicConfig(Constants.Climber.MOTION_MAGIC);
 	}
 
 	public static ClimberSubsystem getInstance() {
@@ -43,8 +41,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		isEnabled = setpoint.gt(Units.Volts.of(0)) ||
-			(int) (m_motor.getMotor().getMotorVoltage().getValueAsDouble()) == 0;
+		isEnabled = (int) (m_motor.getMotor().getMotorVoltage().getValueAsDouble()) == 0;
 
 		if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.Climb))
 			SmartDashboard.putData(this);
@@ -69,11 +66,15 @@ public class ClimberSubsystem extends SubsystemBase {
 		// TODO: Instead of using a nominal voltage, should we grab the real voltage of
 		// the battery
 		// double realVoltage = Units.Volts.of(RobotController.getBatteryVoltage());
-		Voltage nominalBusVoltage = Units.Volts.of(12);
-		setpoint = nominalBusVoltage.times(
-			Constants.Climber.MAX_CURRENT.div(Constants.Motors.KRAKENX60_STALL_CURRENT))
-			.times(invert ? -1.0 : 1.0);
-		m_motor.set(setpoint);
+		/*
+		 * I'm going to get rid of voltage setting because the Kraken has a nice encoder, and what
+		 * this does isn't "dangerous", but it isn't the best way to do it either. Voltage
+		 * nominalBusVoltage = Units.Volts.of(12); setpoint = nominalBusVoltage.times(
+		 * Constants.Climber.MAX_CURRENT.div(Constants.Motors.KRAKENX60_STALL_CURRENT))
+		 * .times(invert ? -1.0 : 1.0); m_motor.set(setpoint);
+		 */
+		var spoolRotationsPerSecond = Units.RotationsPerSecond.of(0.5);
+		m_motor.set(spoolRotationsPerSecond.times(Constants.Climber.GEAR_RATIO));
 	}
 
 	public void enableForward() {

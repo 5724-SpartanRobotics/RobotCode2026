@@ -121,3 +121,6 @@ found in this repository.
 - Schemas for YAGSL.
 - Remove old & unused code.
 - Thread-ize vision, we'll see if it works (it did in sim, to the extent that sim "works").
+
+## 4 Mar 2026
+- Climber uses closed-loop velocity setpoint instead of open-loop voltage setpoint. This should mean that the motor will continue to setpoint while stalling (?).

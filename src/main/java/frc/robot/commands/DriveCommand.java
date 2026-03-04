@@ -68,7 +68,6 @@ public final class DriveCommand {
 		)
 			.withControllerRotationAxis(() -> applyJoystickDeadbandAndScale(
 				// Gonna invert this based on alliance, idk if that's right (we'll see later)
-				// TODO: Test this on the actual robot
 				m_joystick.getRawAxis(2) *
 					(Constants.isRedAlliance() ? -1.0 : 1.0),
 				Constants.Controller.DRIVER_DEADBAND_Z)) // twist / rotation
