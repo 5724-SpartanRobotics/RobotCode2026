@@ -127,3 +127,5 @@ found in this repository.
 
 ## 5-6 Mar 2026
 - Invert swerve drive motors
+- PIDs
+- Closed-loop for indexer

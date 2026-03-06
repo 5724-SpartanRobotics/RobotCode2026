@@ -254,6 +254,8 @@ public final class Constants {
 
 	public static final class Shooter {
 		private static final double SHOOTER_kFf = 0.0002;
+		private static final double FEEDER_kFf = 0.00;
+
 		public static final double GEAR_RATIO = 1.0;
 		public static final PIDFfRecord SHOOTER_PIDF = new PIDFfRecord(
 			// TODO: Tune the P
@@ -272,9 +274,19 @@ public final class Constants {
 
 		public static final AngularVelocity SOFT_LIMIT_VELOCITY = MAX_VELOCITY;
 
+		public static final PIDFfRecord FEEDER_PIDF = new PIDFfRecord(
+			// TODO: Tune the P
+			0.0001, 0.0, 0.0, FEEDER_kFf,
+			0.0,
+			Units.VoltsPerRadianPerSecond
+				.of(12.0 /* volts */ * FEEDER_kFf /* kFf */ * (60.0 / TWO_PI) /* rad/s */)
+				.baseUnitMagnitude()
+				/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
+			0.0);
+
 		public static final Angle LAUNCH_ANGLE = Units.Degrees.of(25);
-		public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 1.2; // usually between 1.1 and
-																		// 1.4;
+		public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 5; // usually between 1.1 and
+																	// 1.4;
 
 		public static final Distance FLYWHEEL_DIAMETER = Units.Inches.of(4);
 		public static final Distance FEEDER_PULLEY_DIAMETER = Units.Inches.of(1.2);

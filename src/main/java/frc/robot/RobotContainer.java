@@ -110,6 +110,7 @@ public class RobotContainer {
 		m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
 		m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
 		m_operatorController.y().toggleOnTrue(m_shooterSubsystem.toggle());
+		m_operatorController.x().toggleOnTrue(m_shooterSubsystem.toggleFeederReverse());
 	}
 
 	private void configureSimAndTestBindings() {

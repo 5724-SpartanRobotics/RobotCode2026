@@ -38,6 +38,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	private final RelativeEncoder m_feederEncoder;
 
 	private AtomicBoolean m_enable = new AtomicBoolean(false);
+	private AtomicBoolean m_reverse = new AtomicBoolean(false);
 
 	public Distance hypotenuseToAllianceHub = Units.Meters.of(0);
 
@@ -52,9 +53,15 @@ public class ShooterSubsystem extends SubsystemBase {
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
 				.apply(new ClosedLoopConfig()
 					// TODO: Tune PIDs and Feedforward
-					.pid(0, 0, 0)
+					.pid(
+						Constants.Shooter.FEEDER_PIDF.kP(),
+						Constants.Shooter.FEEDER_PIDF.kI(),
+						Constants.Shooter.FEEDER_PIDF.kD())
 					.apply(new FeedForwardConfig()
-						.sva(0, 0, 0))
+						.sva(
+							Constants.Shooter.FEEDER_PIDF.kFfS(),
+							Constants.Shooter.FEEDER_PIDF.kFfV(),
+							Constants.Shooter.FEEDER_PIDF.kFfA()))
 					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
 				.idleMode(IdleMode.kBrake),
 			ResetMode.kResetSafeParameters,
@@ -125,12 +132,21 @@ public class ShooterSubsystem extends SubsystemBase {
 		var velocity = calculateShooterSpeedFromRobotDistance();
 		m_flywheel.enable(velocity);
 		AngularVelocity feederSetpoint = velocity.times(
-			Constants.Shooter.FLYWHEEL_DIAMETER.div(Constants.Shooter.FEEDER_PULLEY_DIAMETER));
+			Constants.Shooter.FLYWHEEL_DIAMETER.div(Constants.Shooter.FEEDER_PULLEY_DIAMETER))
+			.div(3).times(m_reverse.get() ? -1.0 : 1.0);
+		if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.Shooter))
+			SmartDashboard.putNumber("Feeder Setpoint RPM", feederSetpoint.in(Units.RPM));
 		m_feederPid.setSetpoint(feederSetpoint.in(Units.RPM), ControlType.kVelocity);
 	}
 
 	public void enable() {
+		m_reverse.set(false);
 		m_enable.set(true);
+	}
+
+	public void enableReverse() {
+		m_enable.set(true);
+		m_reverse.set(true);
 	}
 
 	public void disable() {
@@ -140,6 +156,13 @@ public class ShooterSubsystem extends SubsystemBase {
 	public Command toggle() {
 		return Commands.startEnd(
 			() -> enable(),
+			() -> disable(),
+			this);
+	}
+
+	public Command toggleFeederReverse() {
+		return Commands.startEnd(
+			() -> enableReverse(),
 			() -> disable(),
 			this);
 	}
