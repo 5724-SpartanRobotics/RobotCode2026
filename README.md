@@ -124,3 +124,6 @@ found in this repository.
 
 ## 4 Mar 2026
 - Climber uses closed-loop velocity setpoint instead of open-loop voltage setpoint. This should mean that the motor will continue to setpoint while stalling (?).
+
+## 5-6 Mar 2026
+- Invert swerve drive motors
