@@ -133,6 +133,10 @@ public final class Constants {
 		public static final double SWERVE_DRIVE_GEAR_RATIO = 8.14;
 		public static final double SWERVE_TURN_GEAR_RATIO = 150.0 / 7.0;
 
+		public static final PIDFfRecord ROTATE_TO_ANGLE_PID = new PIDFfRecord(
+			3.0, 0.0, 0.0,
+			0.0, 0.0, 0.0, 0.0);
+
 		public static final class Wheel {
 			public static final Distance RADIUS = Units.Inches.of(2.0);
 			public static final double COF = 1.19;

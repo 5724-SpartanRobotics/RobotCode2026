@@ -121,6 +121,9 @@ public class TalonFXWrapper {
 	 * @param v
 	 *            Velocity
 	 * @return The set velocity of the motor
+	 * @throws IllegalStateException
+	 *             Throw if the wrapper is not configured with closed-loop. See
+	 *             {@link#withSlot0Pidf} and/or {@link#withMotionMagicConfig}.
 	 */
 	public void set(AngularVelocity v) {
 		if (!isClosedLoop)

@@ -129,3 +129,4 @@ found in this repository.
 - Invert swerve drive motors
 - PIDs
 - Closed-loop for indexer
+- TalonFXWrapper javadoc updates

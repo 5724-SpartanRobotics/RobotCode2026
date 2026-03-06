@@ -6,6 +6,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.subsystems.DriveSubsystem;
 import java.util.function.Supplier;
 
@@ -20,16 +21,16 @@ public class RotateToAngleCommand extends Command {
 		this.drive = drive;
 		this.targetRotationSupplier = targetRotationSupplier;
 
-		// Tunable gains and constraints
-		double kP = 3.0;
-		double kI = 0.0;
-		double kD = 0.0;
 		TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(
 			drive.getSwerveDrive().getMaximumChassisAngularVelocity(), // rad/s
-			Units.Degrees.of(720).in(Units.Radians) // rad/s^2
+			Constants.Robot.MAX_ANGULAR_ACCELERATION.in(Units.RadiansPerSecondPerSecond) // rad/s^2
 		);
 
-		thetaController = new ProfiledPIDController(kP, kI, kD, constraints);
+		thetaController = new ProfiledPIDController(
+			Constants.Drive.ROTATE_TO_ANGLE_PID.kP(),
+			Constants.Drive.ROTATE_TO_ANGLE_PID.kI(),
+			Constants.Drive.ROTATE_TO_ANGLE_PID.kD(),
+			constraints);
 		thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
 		addRequirements(drive);
