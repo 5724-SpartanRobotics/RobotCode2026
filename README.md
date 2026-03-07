@@ -130,3 +130,6 @@ found in this repository.
 - PIDs
 - Closed-loop for indexer
 - TalonFXWrapper javadoc updates
+
+## 7 Mar 2026
+- Vision refactoring that does I don't know what.

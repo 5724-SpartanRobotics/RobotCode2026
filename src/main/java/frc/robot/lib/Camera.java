@@ -34,12 +34,12 @@ public class Camera {
 	public final Alert latencyAlert;
 	public final PhotonCamera camera;
 	public final PhotonPoseEstimator poseEstimator;
-	// private final Matrix<N3, N1> singleTagStdDevs;
-	// private final Matrix<N3, N1> multiTagStdDevs;
 	private final Transform3d robotToCamTransform;
 	public Matrix<N3, N1> curStdDevs;
 	public PhotonCameraSim cameraSim;
 	public final String friendlyName;
+	public Matrix<N3, N1> singleTagStdDevs;
+	public Matrix<N3, N1> multiTagStdDevs;
 
 	public final Object lock = new Object();
 	private volatile Optional<EstimatedRobotPose> latestThreadedEstimate = Optional.empty();
@@ -74,9 +74,8 @@ public class Camera {
 			Constants.Vision.FIELD_LAYOUT,
 			robotToCamTransform);
 
-		// this.singleTagStdDevs = singleTagStdDevs;
-		// this.multiTagStdDevs = multiTagStdDevsMatrix;
-		this.curStdDevs = singleTagStdDevs;
+		this.singleTagStdDevs = this.curStdDevs = singleTagStdDevs;
+		this.multiTagStdDevs = multiTagStdDevsMatrix;
 
 		if (RobotBase.isSimulation()) {
 			SimCameraProperties cameraProp = new SimCameraProperties();

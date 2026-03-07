@@ -113,7 +113,8 @@ public class VisionSubsystem extends SubsystemBase {
 				.setPose(est.get().estimatedPose.toPose2d());
 
 			if (m_driveSubsystem != null) {
-				m_driveSubsystem.addVisionMeasurement(est.get().estimatedPose.toPose2d(),
+				m_driveSubsystem.addVisionMeasurement(
+					est.get().estimatedPose.toPose2d(),
 					est.get().timestampSeconds, std);
 			}
 		}
@@ -124,7 +125,7 @@ public class VisionSubsystem extends SubsystemBase {
 		Optional<EstimatedRobotPose> estPose,
 		List<PhotonTrackedTarget> targets) {
 		if (estPose.isEmpty()) {
-			camera.curStdDevs = kSingleTagStdDevs;
+			camera.singleTagStdDevs = camera.curStdDevs = kSingleTagStdDevs;
 			return kSingleTagStdDevs;
 		}
 
@@ -143,7 +144,7 @@ public class VisionSubsystem extends SubsystemBase {
 		}
 
 		if (numTags == 0) {
-			camera.curStdDevs = kSingleTagStdDevs;
+			camera.singleTagStdDevs = camera.multiTagStdDevs = camera.curStdDevs = kSingleTagStdDevs;
 		} else {
 			avgDist /= numTags;
 			if (numTags > 1)
@@ -152,23 +153,23 @@ public class VisionSubsystem extends SubsystemBase {
 				estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 			else
 				estStdDevs = estStdDevs.times(1.0 + (avgDist * avgDist / 30.0));
-			camera.curStdDevs = estStdDevs;
+			camera.multiTagStdDevs = camera.curStdDevs = estStdDevs;
 		}
 		return camera.curStdDevs;
 	}
 
 	public enum Cameras {
-
+		// All rotations are CCW positive in radians
 		FRONT(
 			// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
 			"front",
 			// Camera rotation relative to robot (tune as needed)
-			new Rotation3d(0, Units.degreesToRadians(15), 0),
+			new Rotation3d(0, 0, 0),
 			// Camera translation relative to robot center (tune as needed)
 			new Translation3d(
-				Units.inchesToMeters(-8),
-				Units.inchesToMeters(0),
-				Units.inchesToMeters(21)),
+				Units.inchesToMeters(2.0 + 7.0 / 8.0),
+				Units.inchesToMeters(14.5),
+				Units.inchesToMeters(12.75)),
 			// Single-tag std devs
 			VecBuilder.fill(1.0, 1.0, 3.0),
 			// Multi-tag std devs
@@ -178,12 +179,13 @@ public class VisionSubsystem extends SubsystemBase {
 			// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
 			"back",
 			// Camera rotation relative to robot (tune as needed)
-			new Rotation3d(0, 0, 0),
+			// This one might have a roll of 180deg.
+			new Rotation3d(0, 0, Units.degreesToRadians(180)),
 			// Camera translation relative to robot center (tune as needed)
 			new Translation3d(
-				Units.inchesToMeters(-14.5),
-				Units.inchesToMeters(3.75),
-				Units.inchesToMeters(26.5)),
+				Units.inchesToMeters(-11.0),
+				Units.inchesToMeters(8.0 + 1.0 / 8.0),
+				Units.inchesToMeters(13.0)),
 			// Single-tag std devs
 			VecBuilder.fill(1.0, 1.0, 3.0),
 			// Multi-tag std devs
@@ -193,12 +195,12 @@ public class VisionSubsystem extends SubsystemBase {
 			// 🔴 CHANGE THIS STRING to match the camera name in PhotonVision exactly
 			"right",
 			// Camera rotation relative to robot (tune as needed)
-			new Rotation3d(0, 0, 0),
+			new Rotation3d(0, 0, Constants.THREE_HALVES_PI),
 			// Camera translation relative to robot center (tune as needed)
 			new Translation3d(
-				Units.inchesToMeters(-14.5),
-				Units.inchesToMeters(3.75),
-				Units.inchesToMeters(26.5)),
+				Units.inchesToMeters(1.0 / 8.0),
+				Units.inchesToMeters(-11.5),
+				Units.inchesToMeters(19.0 + 1.0 / 8.0)),
 			// Single-tag std devs
 			VecBuilder.fill(1.0, 1.0, 3.0),
 			// Multi-tag std devs
