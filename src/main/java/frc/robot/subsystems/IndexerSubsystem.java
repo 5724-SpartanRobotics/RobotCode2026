@@ -72,16 +72,24 @@ public class IndexerSubsystem extends SubsystemBase {
 	public void enable() {
 		setpoint = Constants.Indexer.RUN_SETPOINT;
 		m_pid.setSetpoint(setpoint, ControlType.kDutyCycle);
+		LedSubsystem.getInstance().setPersistentNotify(
+			LedSubsystem.kNotification2Color);
 	}
 
 	public void enableReverse() {
 		setpoint = Constants.Indexer.RUN_SETPOINT * -1.0;
 		m_pid.setSetpoint(setpoint, ControlType.kDutyCycle);
+		LedSubsystem.getInstance().setPersistentNotify(
+			LedSubsystem.kNotification3Color);
 	}
 
 	public void disable() {
 		setpoint = 0;
 		m_motor.stopMotor();
+		LedSubsystem.getInstance().clearPersistentNotify(
+			LedSubsystem.kNotification2Color);
+		LedSubsystem.getInstance().clearPersistentNotify(
+			LedSubsystem.kNotification3Color);
 	}
 
 	public Command toggle() {

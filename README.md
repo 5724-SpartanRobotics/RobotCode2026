@@ -133,3 +133,14 @@ found in this repository.
 
 ## 7 Mar 2026
 - Vision refactoring that does I don't know what.
+- Add new motor on the intake (was initially passive but we discovered it needed to be active). UNTESTED!
+- Disable climber (bad electrical connection causing it to create CAN errors)
+- LED system wasn't properly scaling colors (too bright)
+- New LED alerting for flywheel (green only within 10RPM of setpoint during enable. Green when velocity is >0 when disabled.)
+- New LED alerting for indexer/intake (yellow for in; purple for out)
+- Tune flywheel velocity
+- Add operator control (right trigger) to increase flywheel veloctiy
+- Add SmartDashboard control to manually adjust flywheel velocity
+- Fix button being bound to two controls
+- Add port forwarders for the limelights so they're accessible when connected via USB
+

@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -14,22 +16,20 @@ import com.revrobotics.spark.config.LimitSwitchConfig;
 import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ShooterSubsystem extends SubsystemBase {
-	private static final boolean kIsDebug = Constants.DebugLevel
-		.isOrAll(Constants.DebugLevel.Shooter);
-
 	private static ShooterSubsystem instance = null;
 
 	private final ShooterFlywheel m_flywheel;
@@ -41,6 +41,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	private AtomicBoolean m_reverse = new AtomicBoolean(false);
 
 	public Distance hypotenuseToAllianceHub = Units.Meters.of(0);
+	public double flywheelSpeedMod = 1.0;
 
 	private ShooterSubsystem() {
 		m_flywheel = new ShooterFlywheel(this);
@@ -86,8 +87,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 		setMotorVelocities();
 
-		if (kIsDebug)
-			SmartDashboard.putData(this);
+		SmartDashboard.putData(this);
 	}
 
 	@Override
@@ -103,6 +103,8 @@ public class ShooterSubsystem extends SubsystemBase {
 			return Math.abs((int) m_feederEncoder.getVelocity()) > 0;
 		}, null);
 		builder.addDoubleProperty("Feeder Velocity RPM", () -> m_feederEncoder.getVelocity(), null);
+		builder.addDoubleProperty("Flywheel SpeedMod", () -> flywheelSpeedMod,
+			(newMod) -> flywheelSpeedMod = newMod);
 	}
 
 	private AngularVelocity calculateShooterSpeedFromRobotDistance() {
@@ -118,7 +120,13 @@ public class ShooterSubsystem extends SubsystemBase {
 																					// equation
 		AngularVelocity omega = Units.RadiansPerSecond.of(
 			v / Constants.Shooter.FLYWHEEL_DIAMETER.div(2.0).in(Units.Meters)); // v/r
-		return omega.times(Constants.Shooter.LAUNCH_VELOCITY_FUDGE_COEFF);
+		double lowVoltageMultiplier = RobotController.getBatteryVoltage()
+			/ Units.Volts.of(13.1).in(Units.Volts);
+		lowVoltageMultiplier = 1.01 * (1.0 / lowVoltageMultiplier);
+		return omega
+			.times(lowVoltageMultiplier)
+			.times(Math.min(1.0, flywheelSpeedMod))
+			.times(Constants.Shooter.LAUNCH_VELOCITY_FUDGE_COEFF);
 	}
 
 	private void setMotorVelocities() {
@@ -133,7 +141,7 @@ public class ShooterSubsystem extends SubsystemBase {
 		m_flywheel.enable(velocity);
 		AngularVelocity feederSetpoint = velocity.times(
 			Constants.Shooter.FLYWHEEL_DIAMETER.div(Constants.Shooter.FEEDER_PULLEY_DIAMETER))
-			.div(3).times(m_reverse.get() ? -1.0 : 1.0);
+			.div(2.75).times(m_reverse.get() ? -1.0 : 1.0);
 		if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.Shooter))
 			SmartDashboard.putNumber("Feeder Setpoint RPM", feederSetpoint.in(Units.RPM));
 		m_feederPid.setSetpoint(feederSetpoint.in(Units.RPM), ControlType.kVelocity);

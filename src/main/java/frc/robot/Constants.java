@@ -27,7 +27,7 @@ import java.io.File;
 import swervelib.math.Matter;
 
 public final class Constants {
-	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
+	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.Shooter;
 	protected static double PERIOD;
 
 	public static final double TWO_PI = Math.PI * 2.0;
@@ -86,8 +86,9 @@ public final class Constants {
 		public static final int FR_ENCODER = 12;
 		public static final int FR_TURN = 3;
 
-		public static final int INTAKE_UPPER = 20;
-		public static final int INTAKE_LOWER = 21;
+		public static final int INTAKE_ON_ARM = 20;
+		public static final int INTAKE_LOWER_FIXED = 21;
+		public static final int INTAKE_UPPER_FIXED = 999;
 		public static final int ARM_LEFT_MASTER = 22;// left
 		public static final int ARM_RIGHT_SLAVE = 23;
 
@@ -219,11 +220,12 @@ public final class Constants {
 
 	public static final class Intake {
 		public static final Dimensionless SPEED = Units.Percent.of(20);
-		public static final double UPPER_GEAR_RATIO = 5; // 5:1
+		public static final double ON_ARM_GEAR_RATIO = 5; // 5:1
 		public static final Distance UPPER_WHEEL_CURCUMFERENCE = Units.Inches.of(4).times(Math.PI);
 		public static final Distance LOWER_WHEEL_CURCUMFERENCE = Units.Inches.of(2.25)
 			.times(Math.PI);
-		public static final double LOWER_GEAR_RATIO = 4; // 4:1
+		public static final double LOWER_FIXED_GEAR_RATIO = 4; // 4:1
+		public static final double UPPER_FIXED_GEAR_RATIO = 1;
 
 		public static final class Arm {
 			public static final double GEAR_RATIO = 5; // 5:1
@@ -289,8 +291,8 @@ public final class Constants {
 			0.0);
 
 		public static final Angle LAUNCH_ANGLE = Units.Degrees.of(25);
-		public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 5; // usually between 1.1 and
-																	// 1.4;
+		public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 3.33; // usually between 1.1 and
+																		// 1.4;
 
 		public static final Distance FLYWHEEL_DIAMETER = Units.Inches.of(4);
 		public static final Distance FEEDER_PULLEY_DIAMETER = Units.Inches.of(1.2);

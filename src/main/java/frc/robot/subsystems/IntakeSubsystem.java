@@ -26,17 +26,20 @@ public class IntakeSubsystem extends SubsystemBase {
 	private static IntakeSubsystem instance = null;
 
 	/** NEO Vortex on SparkFlex */
-	private final SparkFlex m_upperIntake;
-	private double upperIntakeSpeedReference = 0;
+	private final SparkFlex m_onArmIntake;
+	private double onArmIntakeSpeedReference = 0;
 	/** Redline on SparkMax */
-	private final SparkMax m_lowerIntake;
+	private final SparkMax m_lowerFixedIntake;
 	private double lowerIntakeSpeedReference = 0;
+	/** NEO Vortex on SparkFlex */
+	private final SparkFlex m_upperFixedIntake;
+	private double upperIntakeSpeedReference = 0;
 
 	private final IntakeArm m_arm = IntakeArm.getInstance();
 
 	private IntakeSubsystem() {
-		m_upperIntake = new SparkFlex(Constants.CanId.INTAKE_UPPER, MotorType.kBrushless);
-		m_upperIntake.configure(
+		m_onArmIntake = new SparkFlex(Constants.CanId.INTAKE_ON_ARM, MotorType.kBrushless);
+		m_onArmIntake.configure(
 			new SparkFlexConfig()
 				.apply(new LimitSwitchConfig()
 					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
@@ -51,9 +54,8 @@ public class IntakeSubsystem extends SubsystemBase {
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
 
-		// Do we need PID for redline?
-		m_lowerIntake = new SparkMax(Constants.CanId.INTAKE_LOWER, MotorType.kBrushed);
-		m_lowerIntake.configure(
+		m_lowerFixedIntake = new SparkMax(Constants.CanId.INTAKE_LOWER_FIXED, MotorType.kBrushed);
+		m_lowerFixedIntake.configure(
 			new SparkFlexConfig()
 				.apply(new LimitSwitchConfig()
 					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
@@ -61,6 +63,23 @@ public class IntakeSubsystem extends SubsystemBase {
 				// I don't think we need a Closed Loop controller because this
 				// is just movement, no setpoints.
 				.inverted(true)
+				.idleMode(IdleMode.kBrake),
+			ResetMode.kResetSafeParameters,
+			PersistMode.kNoPersistParameters);
+
+		m_upperFixedIntake = new SparkFlex(Constants.CanId.INTAKE_UPPER_FIXED,
+			MotorType.kBrushless);
+		m_upperFixedIntake.configure(
+			new SparkFlexConfig()
+				.apply(new LimitSwitchConfig()
+					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
+					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
+				.apply(new ClosedLoopConfig()
+					// TODO: Tune PIDs and Feedforward
+					.pid(0, 0, 0)
+					.apply(new FeedForwardConfig()
+						.sva(0, 0, 0))
+					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
 				.idleMode(IdleMode.kBrake),
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
@@ -98,25 +117,32 @@ public class IntakeSubsystem extends SubsystemBase {
 			"ArmRightCurrentAmps",
 			() -> m_arm.getSlaveOutputCurrent().in(Units.Amps), null);
 		builder.addDoubleProperty(
-			"IntakeUpperSpeedPercent",
-			() -> upperIntakeSpeedReference, null);
+			"IntakeOnArmSpeedPercent",
+			() -> onArmIntakeSpeedReference, null);
 		builder.addDoubleProperty(
-			"IntakeLowerSpeedPercent",
+			"IntakeLowerFixedSpeedPercent",
 			() -> lowerIntakeSpeedReference, null);
+		builder.addDoubleProperty(
+			"IntakeUpperFixedSpeedPercent",
+			() -> upperIntakeSpeedReference, null);
 	}
 
-	private static double calculateLowerReferenceInRelationToTop(double setpoint) {
+	private static double calculateLowerReferenceInRelationToArmIntake(double setpoint) {
 		final double speedMod = 1.0 / 65.0;
 		AngularVelocity upperVelocity = Constants.Motors.VORTEX_MAX_VELOCITY.times(setpoint);
-		AngularVelocity otherSide = upperVelocity.div(Constants.Intake.UPPER_GEAR_RATIO);
+		AngularVelocity otherSide = upperVelocity.div(Constants.Intake.ON_ARM_GEAR_RATIO);
 		double linearSpeedSurfaceSpeedInchesPerMinute = otherSide.in(Units.RPM) *
 			Constants.Intake.UPPER_WHEEL_CURCUMFERENCE.in(Units.Inches);
 		double lowerMotorRpm = linearSpeedSurfaceSpeedInchesPerMinute *
 			Constants.Intake.LOWER_WHEEL_CURCUMFERENCE.in(Units.Inches);
-		double lowerRpmWithReducer = lowerMotorRpm * Constants.Intake.LOWER_GEAR_RATIO;
+		double lowerRpmWithReducer = lowerMotorRpm * Constants.Intake.LOWER_FIXED_GEAR_RATIO;
 		double lowerReference = lowerRpmWithReducer /
 			Constants.Motors.REDLINE_MAX_VELOCITY.in(Units.RPM);
 		return lowerReference * speedMod;
+	}
+
+	private static double calculateUpperReferenceInRelationToArmIntake(double setpoint) {
+		return setpoint / Constants.Intake.UPPER_FIXED_GEAR_RATIO;
 	}
 
 	public void extendArm() {
@@ -129,32 +155,39 @@ public class IntakeSubsystem extends SubsystemBase {
 
 	public void enableIntake() {
 		final double speed = Constants.Intake.SPEED.in(Units.Value); // Value gives n/100
-		upperIntakeSpeedReference = speed;
-		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToTop(speed);
-		m_upperIntake.set(upperIntakeSpeedReference);
-		m_lowerIntake.set(lowerIntakeSpeedReference);
+		onArmIntakeSpeedReference = speed;
+		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
+		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
+		m_onArmIntake.set(onArmIntakeSpeedReference);
+		m_upperFixedIntake.set(upperIntakeSpeedReference);
+		m_lowerFixedIntake.set(lowerIntakeSpeedReference);
 	}
 
 	public void enableSpitout() {
 		final double speed = Constants.Intake.SPEED.times(-1.0).in(Units.Value); // of 100, not 1
-		upperIntakeSpeedReference = speed;
-		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToTop(speed);
-		m_upperIntake.set(upperIntakeSpeedReference);
-		m_lowerIntake.set(lowerIntakeSpeedReference);
+		onArmIntakeSpeedReference = speed;
+		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
+		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
+		m_onArmIntake.set(onArmIntakeSpeedReference);
+		m_upperFixedIntake.set(upperIntakeSpeedReference);
+		m_lowerFixedIntake.set(lowerIntakeSpeedReference);
 	}
 
 	public void enableReverse() {
 		final double speed = Constants.Intake.SPEED.times(-1.0).in(Units.Value);
-		upperIntakeSpeedReference = speed;
-		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToTop(speed);
-		m_upperIntake.set(upperIntakeSpeedReference);
-		m_lowerIntake.set(lowerIntakeSpeedReference);
+		onArmIntakeSpeedReference = speed;
+		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
+		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
+		m_onArmIntake.set(onArmIntakeSpeedReference);
+		m_upperFixedIntake.set(upperIntakeSpeedReference);
+		m_lowerFixedIntake.set(lowerIntakeSpeedReference);
 	}
 
 	public void disableIntake() {
-		upperIntakeSpeedReference = lowerIntakeSpeedReference = 0;
-		m_upperIntake.set(upperIntakeSpeedReference);
-		m_lowerIntake.set(lowerIntakeSpeedReference);
+		onArmIntakeSpeedReference = lowerIntakeSpeedReference = upperIntakeSpeedReference = 0;
+		m_onArmIntake.set(onArmIntakeSpeedReference);
+		m_upperFixedIntake.set(upperIntakeSpeedReference);
+		m_lowerFixedIntake.set(lowerIntakeSpeedReference);
 	}
 
 	public Command toggleIntake() {

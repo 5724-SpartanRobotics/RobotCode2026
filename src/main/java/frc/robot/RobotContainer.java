@@ -6,12 +6,15 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -32,10 +35,11 @@ import java.util.Map;
 public class RobotContainer {
 	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem(
 		Constants.Drive.SWERVE_CONFIG);
-	private final ClimberSubsystem m_climberSubsystem = ClimberSubsystem.getInstance();
+	// private final ClimberSubsystem m_climberSubsystem = ClimberSubsystem.getInstance();
 	private final IntakeSubsystem m_intakeSubsystem = IntakeSubsystem.getInstance();
 	private final IndexerSubsystem m_indexerSubsystem = IndexerSubsystem.getInstance();
 	private final ShooterSubsystem m_shooterSubsystem = ShooterSubsystem.getInstance();
+	private final LedSubsystem m_ledSubsystem = LedSubsystem.getInstance();
 
 	private final CommandJoystick m_driverController = new CommandJoystick(0);
 	private final CommandXboxController m_operatorController = new CommandXboxController(1);
@@ -45,8 +49,15 @@ public class RobotContainer {
 	private boolean hasBeenEnabledYet = false;
 
 	public RobotContainer() {
+		PortForwarder.add(5800, "photonvision-front.local", 5800);
+		PortForwarder.add(5801, "photonvision-back.local", 5800);
+		PortForwarder.add(5802, "photonvision-right.local", 5800);
+
+		ClimberSubsystem.nop();
+
 		DriveCommand.initialize(m_driveSubsystem, m_driverController);
-		LedSubsystem.createInstance();
+
+		LedSubsystem.kInactiveColor = Color.kGreen;
 
 		configureNamedCommands();
 		configureControllerBindings();
@@ -81,20 +92,19 @@ public class RobotContainer {
 			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_LOW)).onFalse(
 				DriveCommand.resetSpeedModCommand());
 		m_driverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).onTrue(
-			LedSubsystem.getInstance()
-				.togglePersistentNotificationCommand(LedSubsystem.kNotification3Color));
+			m_ledSubsystem.togglePersistentNotificationCommand(LedSubsystem.kNotification3Color));
 
-		final double operatorRightYAxisThreshold = 0.1;
+		final double operatorAxisThreshold = 0.1;
 		m_operatorController.axisMagnitudeGreaterThan(
-			XboxController.Axis.kRightY.value, operatorRightYAxisThreshold).whileTrue(
+			XboxController.Axis.kRightY.value, operatorAxisThreshold).whileTrue(
 				Commands.run(() -> {
 					double axis = m_operatorController
 						.getRawAxis(XboxController.Axis.kRightY.value);
-					if (axis < -operatorRightYAxisThreshold) {
+					if (axis < -operatorAxisThreshold) {
 						m_intakeSubsystem.enableIntake();
 						m_indexerSubsystem.enable();
 					} else
-						if (axis > operatorRightYAxisThreshold) {
+						if (axis > operatorAxisThreshold) {
 							m_intakeSubsystem.enableSpitout();
 							m_indexerSubsystem.enableReverse();
 						} else {
@@ -107,10 +117,20 @@ public class RobotContainer {
 				m_intakeSubsystem.disableIntake();
 				m_indexerSubsystem.disable();
 			}, m_intakeSubsystem, m_indexerSubsystem));
-		m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
-		m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
+		// m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
+		// m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
 		m_operatorController.y().toggleOnTrue(m_shooterSubsystem.toggle());
-		m_operatorController.x().toggleOnTrue(m_shooterSubsystem.toggleFeederReverse());
+		m_operatorController.b().toggleOnTrue(m_shooterSubsystem.toggleFeederReverse());
+		m_operatorController.axisGreaterThan(
+			XboxController.Axis.kRightTrigger.value,
+			operatorAxisThreshold).toggleOnTrue(
+				Commands.run(() -> {
+					double axis = m_operatorController
+						.getRawAxis(XboxController.Axis.kRightTrigger.value);
+					double flywheelSpeedMod = 1.0 + (axis / 2.0);
+					m_shooterSubsystem.flywheelSpeedMod = flywheelSpeedMod;
+				},
+					m_intakeSubsystem, m_indexerSubsystem));
 	}
 
 	private void configureSimAndTestBindings() {

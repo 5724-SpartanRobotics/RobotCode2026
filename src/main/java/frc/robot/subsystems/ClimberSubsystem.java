@@ -59,6 +59,9 @@ public class ClimberSubsystem extends SubsystemBase {
 		builder.addDoubleProperty("SetpointVolts", () -> setpoint.in(Units.Volts), null);
 	}
 
+	public static void nop() {
+	}
+
 	private void enable(boolean invert) {
 		// TODO: See if a reducer affects the setpoint voltage (I don't see why it
 		// would)

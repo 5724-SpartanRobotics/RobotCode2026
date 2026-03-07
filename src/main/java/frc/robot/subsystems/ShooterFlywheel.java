@@ -2,12 +2,16 @@ package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import java.util.function.Supplier;
@@ -34,6 +38,7 @@ public class ShooterFlywheel {
 
 	private boolean shooterEnabled = false;
 	private double measuredVelocity = 0;
+	private AngularVelocity setpointVelocity = Units.RPM.of(0);
 
 	public ShooterFlywheel(ShooterSubsystem shooterSubsystem) {
 		m_subsystem = shooterSubsystem;
@@ -94,13 +99,16 @@ public class ShooterFlywheel {
 	public void periodic() {
 		m_flywheel.updateTelemetry();
 
-		if (shooterEnabled)
-			LedSubsystem.getInstance().setPersistentNotify(LedSubsystem.kNotification1Color);
-		else
-			LedSubsystem.getInstance().clearPersistentNotify(LedSubsystem.kNotification1Color);
-
+		double setpointVelocityRPM = setpointVelocity.in(Units.RPM);
 		measuredVelocity = getVelocity().abs(Units.RPM);
-		shooterEnabled = (int) measuredVelocity > 0;
+		shooterEnabled = measuredVelocity > 0.05;
+
+		if ((shooterEnabled && DriverStation.isDisabled()) ||
+			(shooterEnabled && DriverStation.isEnabled()
+				&& MathUtil.isNear(setpointVelocityRPM, measuredVelocity, 10.0)))
+			LedSubsystem.kInactiveColor = LedSubsystem.kNotification1Color;
+		else
+			LedSubsystem.kInactiveColor = Color.kBlack;
 	}
 
 	public void simulationPeriodic() {
@@ -109,10 +117,12 @@ public class ShooterFlywheel {
 
 	public void initSendable(SendableBuilder builder) {
 		builder.addBooleanProperty("Shooter Enabled", () -> shooterEnabled, null);
-		builder.addDoubleProperty("Shooter Velocity RPM", () -> measuredVelocity, null);
-		builder.addDoubleProperty("Shooter Reference", () -> {
-			return m_motor.getClosedLoopController().getSetpoint();
-		}, null);
+		if (kIsDebug) {
+			builder.addDoubleProperty("Shooter Velocity RPM", () -> measuredVelocity, null);
+			builder.addDoubleProperty("Shooter Reference", () -> {
+				return m_motor.getClosedLoopController().getSetpoint();
+			}, null);
+		}
 	}
 
 	public AngularVelocity getVelocity() {
@@ -150,11 +160,13 @@ public class ShooterFlywheel {
 	}
 
 	public void enable(AngularVelocity velocity) {
+		setpointVelocity = velocity;
 		m_smc.setVelocity(velocity);
 	}
 
 	public void disable() {
-		m_smc.setVelocity(Units.RPM.of(0));
+		setpointVelocity = Units.RPM.of(0);
+		m_smc.setVelocity(setpointVelocity);
 		m_motor.stopMotor();
 	}
 }
