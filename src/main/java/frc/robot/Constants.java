@@ -88,7 +88,7 @@ public final class Constants {
 
 		public static final int INTAKE_ON_ARM = 20;
 		public static final int INTAKE_LOWER_FIXED = 21;
-		public static final int INTAKE_UPPER_FIXED = 999;
+		public static final int INTAKE_UPPER_FIXED = 30;
 		public static final int ARM_LEFT_MASTER = 22;// left
 		public static final int ARM_RIGHT_SLAVE = 23;
 
