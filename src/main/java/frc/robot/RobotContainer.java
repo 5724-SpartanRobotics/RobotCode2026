@@ -35,7 +35,7 @@ import java.util.Map;
 public class RobotContainer {
 	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem(
 		Constants.Drive.SWERVE_CONFIG);
-	// private final ClimberSubsystem m_climberSubsystem = ClimberSubsystem.getInstance();
+	private final ClimberSubsystem m_climberSubsystem = ClimberSubsystem.getInstance();
 	private final IntakeSubsystem m_intakeSubsystem = IntakeSubsystem.getInstance();
 	private final IndexerSubsystem m_indexerSubsystem = IndexerSubsystem.getInstance();
 	private final ShooterSubsystem m_shooterSubsystem = ShooterSubsystem.getInstance();
@@ -117,8 +117,8 @@ public class RobotContainer {
 				m_intakeSubsystem.disableIntake();
 				m_indexerSubsystem.disable();
 			}, m_intakeSubsystem, m_indexerSubsystem));
-		// m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
-		// m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
+		m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
+		m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
 		m_operatorController.y().toggleOnTrue(m_shooterSubsystem.toggle());
 		m_operatorController.b().toggleOnTrue(m_shooterSubsystem.toggleFeederReverse());
 		m_operatorController.axisGreaterThan(
@@ -131,6 +131,10 @@ public class RobotContainer {
 					m_shooterSubsystem.flywheelSpeedMod = flywheelSpeedMod;
 				},
 					m_intakeSubsystem, m_indexerSubsystem));
+		m_operatorController.povUp().onTrue(m_intakeSubsystem.extendArmCommand());
+		m_operatorController.povDown().onTrue(m_intakeSubsystem.retractArmCommand());
+		m_operatorController.povRight().onTrue(m_intakeSubsystem.incrementArmCommand());
+		m_operatorController.povLeft().onTrue(m_intakeSubsystem.decrementArmCommand());
 	}
 
 	private void configureSimAndTestBindings() {

@@ -144,3 +144,8 @@ found in this repository.
 - Fix button being bound to two controls
 - Add port forwarders for the limelights so they're accessible when connected via USB
 
+## 10 Mar 2026
+- D-pad (pov) controls for intake arm up/down
+- Tune PID for arm
+- Add back climber (can lift, but mechanically slips)
+- LEDs have magically stopped working

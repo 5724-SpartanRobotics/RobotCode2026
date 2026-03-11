@@ -77,7 +77,8 @@ public class ClimberSubsystem extends SubsystemBase {
 		 * .times(invert ? -1.0 : 1.0); m_motor.set(setpoint);
 		 */
 		var spoolRotationsPerSecond = Units.RotationsPerSecond.of(0.5);
-		m_motor.set(spoolRotationsPerSecond.times(Constants.Climber.GEAR_RATIO));
+		m_motor.set(
+			spoolRotationsPerSecond.times(Constants.Climber.GEAR_RATIO).times(invert ? -1.0 : 1.0));
 	}
 
 	public void enableForward() {

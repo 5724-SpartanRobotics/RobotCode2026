@@ -12,6 +12,7 @@ import com.revrobotics.spark.config.LimitSwitchConfig;
 import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
@@ -97,6 +98,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
+		m_arm.periodic();
+
 		if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.Intake))
 			SmartDashboard.putData(this);
 	}
@@ -104,6 +107,7 @@ public class IntakeSubsystem extends SubsystemBase {
 	@Override
 	public void initSendable(SendableBuilder builder) {
 		builder.setSmartDashboardType(this.getClass().getName());
+		m_arm.initSendable(builder);
 		builder.addDoubleProperty(
 			"ArmPositionDeg",
 			() -> m_arm.getAngle().in(Units.Degrees), null);
@@ -196,6 +200,26 @@ public class IntakeSubsystem extends SubsystemBase {
 
 	public Command toggleArm() {
 		return Commands.startEnd(this::extendArm, this::retractArm, this);
+	}
+
+	public Command extendArmCommand() {
+		return Commands.run(this::extendArm, this);
+	}
+
+	public Command retractArmCommand() {
+		return Commands.run(this::retractArm, this);
+	}
+
+	public Command incrementArmCommand() {
+		return Commands.runOnce(m_arm::increment, this);
+	}
+
+	public Command decrementArmCommand() {
+		return Commands.runOnce(m_arm::decrement, this);
+	}
+
+	public Command stopArm() {
+		return Commands.run(m_arm::stop, this);
 	}
 
 	public Command toggleAll() {

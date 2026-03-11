@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.PersistMode;
-import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
@@ -15,13 +14,18 @@ import com.revrobotics.spark.config.LimitSwitchConfig;
 import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.Constants;
 
 public class IntakeArm {
+	private static final double kIMaxAccum = 0.1;
+	private static final Current kMaxCurrent = Units.Amps.of(60);
 	private static IntakeArm instance = null;
 
 	public static Angle kRotateBy = Units.Degrees.of(5.0);
@@ -29,12 +33,15 @@ public class IntakeArm {
 	/** NEO Vortex on SparkFlex */
 	private final SparkFlex m_masterLeft;
 	/** NEO Vortex on SparkFlex */
-	private final SparkFlex m_masterRight;
+	private final SparkFlex m_slaveRight;
 	private final SparkClosedLoopController m_masterLeftPID;
 	private final RelativeEncoder m_masterLeftEncoder;
 	private final RelativeEncoder m_slaveRightEncoder;
+	private final SlewRateLimiter m_ramp;
 
 	private Angle setpoint = Units.Degrees.of(0);
+	private double rampedSetpointDegrees = 0;
+	private double motorSetpointRotations = 0;
 
 	private IntakeArm() {
 		m_masterLeft = new SparkFlex(Constants.CanId.ARM_LEFT_MASTER, MotorType.kBrushless);
@@ -45,39 +52,59 @@ public class IntakeArm {
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
 				.apply(new ClosedLoopConfig()
 					// TODO: Tune PIDs and Feedforward
-					.pid(0, 0, 0).iMaxAccum(0.1)
+					.pidf(
+						Constants.Intake.Arm.PIDF.kP(),
+						Constants.Intake.Arm.PIDF.kI(),
+						Constants.Intake.Arm.PIDF.kD(),
+						Constants.Intake.Arm.PIDF.kFf())
+					.iMaxAccum(kIMaxAccum)
 					.apply(new FeedForwardConfig()
 						// There's no good way to convert a Feedforward constant to
 						// a kS or kA, you can do kV with some math, though.
-						.sva(0, 0, 0))
+						.sva(
+							Constants.Intake.Arm.PIDF.kFfS(),
+							Constants.Intake.Arm.PIDF.kFfV(),
+							Constants.Intake.Arm.PIDF.kFfA()))
 					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
 				.inverted(false)
-				.idleMode(IdleMode.kBrake),
+				.idleMode(IdleMode.kBrake)
+				.smartCurrentLimit((int) kMaxCurrent.in(Units.Amps)),
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
 		m_masterLeftPID = m_masterLeft.getClosedLoopController();
 		m_masterLeftEncoder = m_masterLeft.getEncoder();
 
-		m_masterRight = new SparkFlex(Constants.CanId.ARM_RIGHT_SLAVE, MotorType.kBrushless);
-		m_masterRight.configure(
+		m_slaveRight = new SparkFlex(Constants.CanId.ARM_RIGHT_SLAVE, MotorType.kBrushless);
+		m_slaveRight.configure(
 			new SparkFlexConfig()
 				.apply(new LimitSwitchConfig()
 					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
 				.apply(new ClosedLoopConfig()
 					// TODO: Tune PIDs and Feedforward
-					.pid(0, 0, 0).iMaxAccum(0.1)
+					.pidf(
+						Constants.Intake.Arm.PIDF.kP(),
+						Constants.Intake.Arm.PIDF.kI(),
+						Constants.Intake.Arm.PIDF.kD(),
+						Constants.Intake.Arm.PIDF.kFf())
+					.iMaxAccum(kIMaxAccum)
 					.apply(new FeedForwardConfig()
 						// There's no good way to convert a Feedforward constant to
 						// a kS or kA, you can do kV with some math, though.
-						.sva(0, 0, 0))
+						.sva(
+							Constants.Intake.Arm.PIDF.kFfS(),
+							Constants.Intake.Arm.PIDF.kFfV(),
+							Constants.Intake.Arm.PIDF.kFfA()))
 					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
 				.idleMode(IdleMode.kBrake)
 				// TODO: IDK if this is correct
-				.follow(m_masterLeft, true),
+				.follow(m_masterLeft, true)
+				.smartCurrentLimit((int) kMaxCurrent.in(Units.Amps)),
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
-		m_slaveRightEncoder = m_masterRight.getEncoder();
+		m_slaveRightEncoder = m_slaveRight.getEncoder();
+
+		m_ramp = new SlewRateLimiter(Units.DegreesPerSecond.of(45).in(Units.DegreesPerSecond));
 	}
 
 	public static IntakeArm getInstance() {
@@ -86,36 +113,37 @@ public class IntakeArm {
 		return instance;
 	}
 
-	public boolean rotateIn() {
+	public void initSendable(SendableBuilder builder) {
+		builder.addDoubleProperty("Arm Setpoint Degrees", () -> setpoint.in(Units.Degrees), null);
+		builder.addDoubleProperty("Arm Ramped Setpoint Degrees", () -> rampedSetpointDegrees, null);
+		builder.addDoubleProperty("Arm Ramped Setpoint Motor Rotations",
+			() -> motorSetpointRotations, null);
+	}
+
+	public void periodic() {
+		double limitedDegrees = m_ramp.calculate(setpoint.in(Units.Degrees));
+		rampedSetpointDegrees = limitedDegrees;
+		double reference = limitedDegrees *
+			Constants.Motors.NEO_COUNTS_PER_REVOLUTION *
+			Constants.Intake.Arm.GEAR_RATIO / 360.0;
+		motorSetpointRotations = reference;
+		m_masterLeftPID.setSetpoint(reference, ControlType.kPosition);
+	}
+
+	public void rotateIn() {
 		setpoint = Constants.Intake.Arm.MIN_ROTATION;
-		double reference = setpoint.in(Units.Degrees) *
-			Constants.Motors.NEO_COUNTS_PER_REVOLUTION *
-			Constants.Intake.Arm.GEAR_RATIO / 360.0;
-		return m_masterLeftPID.setSetpoint(
-			reference,
-			ControlType.kMAXMotionPositionControl).equals(REVLibError.kOk);
 	}
 
-	public boolean rotateOut() {
+	public void rotateOut() {
 		setpoint = Constants.Intake.Arm.MAX_ROTATION;
-		double reference = setpoint.in(Units.Degrees) *
-			Constants.Motors.NEO_COUNTS_PER_REVOLUTION *
-			Constants.Intake.Arm.GEAR_RATIO / 360.0;
-		return m_masterLeftPID.setSetpoint(
-			reference,
-			ControlType.kMAXMotionPositionControl).equals(REVLibError.kOk);
 	}
 
-	public boolean rotateTo(Angle setpoint) {
+	public void rotateTo(Angle setpoint) {
 		double setpointDeg = clampAngle(
 			setpoint,
 			Constants.Intake.Arm.MIN_ROTATION,
 			Constants.Intake.Arm.MAX_ROTATION).in(Units.Degrees);
-		double reference = setpointDeg * Constants.Motors.NEO_COUNTS_PER_REVOLUTION *
-			Constants.Intake.Arm.GEAR_RATIO / 360.0;
-		return m_masterLeftPID.setSetpoint(
-			reference,
-			ControlType.kMAXMotionPositionControl).equals(REVLibError.kOk);
+		setpoint = Units.Degrees.of(setpointDeg);
 	}
 
 	public void rotateAt(double speed) {
@@ -123,39 +151,24 @@ public class IntakeArm {
 		m_masterLeft.set(MathUtil.clamp(speed, -1.0, 1.0));
 	}
 
-	public boolean increment() {
+	public void increment() {
 		Angle newSetpoint = clampAngle(
 			setpoint.plus(kRotateBy),
 			Constants.Intake.Arm.MIN_ROTATION,
 			Constants.Intake.Arm.MAX_ROTATION);
 		setpoint = newSetpoint;
-		double reference = setpoint.in(Units.Degrees) *
-			Constants.Motors.NEO_COUNTS_PER_REVOLUTION *
-			Constants.Intake.Arm.GEAR_RATIO / 360.0;
-		return m_masterLeftPID.setSetpoint(
-			reference,
-			ControlType.kMAXMotionPositionControl).equals(REVLibError.kOk);
 	}
 
-	public boolean decrement() {
+	public void decrement() {
 		Angle newSetpoint = clampAngle(
 			setpoint.minus(kRotateBy),
 			Constants.Intake.Arm.MIN_ROTATION,
 			Constants.Intake.Arm.MAX_ROTATION);
 		setpoint = newSetpoint;
-		double reference = setpoint.in(Units.Degrees) *
-			Constants.Motors.NEO_COUNTS_PER_REVOLUTION *
-			Constants.Intake.Arm.GEAR_RATIO / 360.0;
-		return m_masterLeftPID.setSetpoint(
-			reference,
-			ControlType.kMAXMotionPositionControl).equals(REVLibError.kOk);
 	}
 
-	public boolean stop() {
-		double reference = m_masterLeftPID.getSetpoint();
-		return m_masterLeftPID.setSetpoint(
-			reference,
-			ControlType.kMAXMotionPositionControl).equals(REVLibError.kOk);
+	public void stop() {
+		m_masterLeft.stopMotor();
 	}
 
 	/** Get the actual angle of the master (left) motor. */
@@ -178,7 +191,7 @@ public class IntakeArm {
 	}
 
 	public Current getSlaveOutputCurrent() {
-		return Units.Amps.of(m_masterRight.getOutputCurrent());
+		return Units.Amps.of(m_slaveRight.getOutputCurrent());
 	}
 
 	public Angle getSetpoint() {

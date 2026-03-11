@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.io.File;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -18,22 +20,24 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.lib.CtrMotionMagicRecord;
 import frc.robot.lib.PIDFfRecord;
-import java.io.File;
 import swervelib.math.Matter;
 
 public final class Constants {
-	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.Shooter;
+	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.Intake;
 	protected static double PERIOD;
 
 	public static final double TWO_PI = Math.PI * 2.0;
 	public static final double HALF_PI = Math.PI / 2.0;
 	public static final double THREE_HALVES_PI = (3.0 * Math.PI) / 2.0;
 	public static final LinearAcceleration g = Units.MetersPerSecondPerSecond.of(9.80665);
+
+	public static final Voltage NOMINAL_BATTERY_VOLTAGE = Units.Volts.of(13.1);
 
 	/**
 	 * Checks if the alliance is red, defaults to false if alliance isn't available.
@@ -162,8 +166,8 @@ public final class Constants {
 	}
 
 	public static final class Controller {
-		public static final double DRIVER_DEADBAND_XY = 0.025;
-		public static final double DRIVER_DEADBAND_Z = 0.35 / 1.5;
+		public static final double DRIVER_DEADBAND_XY = 0.15;
+		public static final double DRIVER_DEADBAND_Z = 0.2;
 		public static final double DRIVER_TURN_CONSTANT = TWO_PI;
 
 		public static final class DriverMap {
@@ -228,10 +232,21 @@ public final class Constants {
 		public static final double UPPER_FIXED_GEAR_RATIO = 1;
 
 		public static final class Arm {
-			public static final double GEAR_RATIO = 5; // 5:1
+			public static final double GEAR_RATIO = 5 * 5; // 5:1 -> 5:1 = 25:1
 			public static final AngularVelocity SETPOINT_RAMP_RATE = Units.DegreesPerSecond.of(60);
 			public static final Angle MIN_ROTATION = Units.Degrees.of(0);
-			public static final Angle MAX_ROTATION = Units.Degrees.of(100);
+			public static final Angle MAX_ROTATION = Units.Degrees.of(92.5);
+
+			private static final double kFf = 0.024;
+			public static final PIDFfRecord PIDF = new PIDFfRecord(
+				0.3, 0.001, 0.0000, kFf,
+				0,
+				Units.VoltsPerRadianPerSecond
+					.of(NOMINAL_BATTERY_VOLTAGE.in(Units.Volts) /* volts */ * kFf /* kFf */
+						* (60.0 / TWO_PI) /* rad/s */)
+					.baseUnitMagnitude()
+					/* motor V/rad/s */ * GEAR_RATIO /* V/rad/s */,
+				0);
 		}
 	}
 
@@ -244,7 +259,8 @@ public final class Constants {
 			0.025, 0.0, 0.0, kFf,
 			0.0,
 			Units.VoltsPerRadianPerSecond
-				.of(12.0 /* volts */ * kFf /* kFf */ * (60.0 / TWO_PI) /* rad/s */)
+				.of(NOMINAL_BATTERY_VOLTAGE.in(Units.Volts) /* volts */ * kFf /* kFf */
+					* (60.0 / TWO_PI) /* rad/s */)
 				.baseUnitMagnitude()
 				/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
 			0.0);
@@ -268,7 +284,8 @@ public final class Constants {
 			0.025, 0.0, 0.0, SHOOTER_kFf,
 			0.0,
 			Units.VoltsPerRadianPerSecond
-				.of(12.0 /* volts */ * SHOOTER_kFf /* kFf */ * (60.0 / TWO_PI) /* rad/s */)
+				.of(NOMINAL_BATTERY_VOLTAGE.in(Units.Volts) /* volts */ * SHOOTER_kFf /* kFf */
+					* (60.0 / TWO_PI) /* rad/s */)
 				.baseUnitMagnitude()
 				/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
 			0.0);
@@ -285,7 +302,8 @@ public final class Constants {
 			0.0001, 0.0, 0.0, FEEDER_kFf,
 			0.0,
 			Units.VoltsPerRadianPerSecond
-				.of(12.0 /* volts */ * FEEDER_kFf /* kFf */ * (60.0 / TWO_PI) /* rad/s */)
+				.of(NOMINAL_BATTERY_VOLTAGE.in(Units.Volts) /* volts */ * FEEDER_kFf /* kFf */
+					* (60.0 / TWO_PI) /* rad/s */)
 				.baseUnitMagnitude()
 				/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
 			0.0);

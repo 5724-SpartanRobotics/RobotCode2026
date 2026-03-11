@@ -71,7 +71,7 @@ public final class DriveCommand {
 				m_joystick.getRawAxis(2) *
 					(Constants.isRedAlliance() ? -1.0 : 1.0),
 				Constants.Controller.DRIVER_DEADBAND_Z)) // twist / rotation
-			.deadband(Constants.Controller.DRIVER_DEADBAND_XY)
+			.deadband(Constants.Controller.DRIVER_DEADBAND_Z)
 			.scaleTranslation(0.8)
 			.allianceRelativeControl(true);
 	}
