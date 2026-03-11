@@ -216,7 +216,7 @@ public class DriveSubsystem extends SubsystemBase {
 
 			double x_new = hub.getX() - 2.0 * ux;
 			double y_new = hub.getY() - 2.0 * uy;
-			Rotation2d heading = new Rotation2d(Math.atan2(diffY, diffX));
+			Rotation2d heading = new Rotation2d(Math.atan2(diffY, diffX)).plus(Rotation2d.k180deg);
 
 			Pose2d staticTarget = new Pose2d(new Translation2d(x_new, y_new), heading);
 

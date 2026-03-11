@@ -149,3 +149,13 @@ found in this repository.
 - Tune PID for arm
 - Add back climber (can lift, but mechanically slips)
 - LEDs have magically stopped working
+
+## 11 Mar 2026
+- Shooter adjusts velocity from fixed distance
+- LEDs work (bad connection on signal)
+- Up drive PIDs
+- Add some P gain to the intake upper roller (star wheels)
+- Vision is no longer threaded (didn't work for whatever reason)
+- Cameras were called the wrong thing, fixed that
+- Flywheel setpoint velocity and actual velocity are misaligned for checking to see if the shooter is at the setpoint.
+- Some problems with the driver control, need to look into these but don't have time.

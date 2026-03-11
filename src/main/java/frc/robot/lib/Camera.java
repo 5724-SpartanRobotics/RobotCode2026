@@ -29,7 +29,7 @@ public class Camera {
 	// should be about 20ms, we should be faster (hence /3)
 	private static final long kNominalSleepMs = RobotBase.isSimulation()
 		? (1)
-		: (Constants.getPeriod() / 3);
+		: (Constants.getPeriod() / 2);
 
 	public final Alert latencyAlert;
 	public final PhotonCamera camera;
@@ -97,37 +97,39 @@ public class Camera {
 		configureThread();
 	}
 
-	private void configureThread() {
-		workerThread = new Thread(() -> {
-			while (true) {
-				for (var result : camera.getAllUnreadResults()) {
-					if (result.getTimestampSeconds() <= lastTimestamp)
-						continue;
-					lastTimestamp = result.getTimestampSeconds();
+	public void periodic() {
+		for (var result : camera.getAllUnreadResults()) {
+			// if (result.getTimestampSeconds() <= lastTimestamp)
+			// continue;
+			// lastTimestamp = result.getTimestampSeconds();
 
-					Optional<EstimatedRobotPose> est = poseEstimator
-						.estimateCoprocMultiTagPose(result);
-					if (est.isEmpty()) {
-						est = poseEstimator.estimateLowestAmbiguityPose(result);
-					}
-
-					Matrix<N3, N1> std = VisionSubsystem.updateEstimationStdDevs(this, est,
-						result.getTargets());
-
-					synchronized (lock) {
-						latestThreadedEstimate = est;
-						latestStdDevs = std;
-					}
-				}
-
-				try {
-					Thread.sleep(kNominalSleepMs);
-				} catch (InterruptedException e) {
-				}
+			Optional<EstimatedRobotPose> est = poseEstimator
+				.estimateCoprocMultiTagPose(result);
+			if (est.isEmpty()) {
+				est = poseEstimator.estimateLowestAmbiguityPose(result);
 			}
-		});
-		workerThread.setDaemon(true);
-		workerThread.start();
+
+			Matrix<N3, N1> std = VisionSubsystem.updateEstimationStdDevs(this, est,
+				result.getTargets());
+
+			latestThreadedEstimate = est;
+			latestStdDevs = std;
+
+		}
+	}
+
+	private void configureThread() {
+		// workerThread = new Thread(() -> {
+		// while (true) {
+
+		// try {
+		// Thread.sleep(kNominalSleepMs);
+		// } catch (InterruptedException e) {
+		// }
+		// }
+		// });
+		// workerThread.setDaemon(true);
+		// workerThread.start();
 	}
 
 	public void addToVisionSim(VisionSystemSim systemSim) {

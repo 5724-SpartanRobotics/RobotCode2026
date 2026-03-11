@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.Map;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
@@ -14,7 +16,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -30,7 +31,6 @@ import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LedSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
-import java.util.Map;
 
 public class RobotContainer {
 	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem(
@@ -53,11 +53,10 @@ public class RobotContainer {
 		PortForwarder.add(5801, "photonvision-back.local", 5800);
 		PortForwarder.add(5802, "photonvision-right.local", 5800);
 
-		ClimberSubsystem.nop();
-
 		DriveCommand.initialize(m_driveSubsystem, m_driverController);
 
-		LedSubsystem.kInactiveColor = Color.kGreen;
+		LedSubsystem.createInstance();
+		ClimberSubsystem.nop();
 
 		configureNamedCommands();
 		configureControllerBindings();
@@ -85,14 +84,14 @@ public class RobotContainer {
 			m_driveSubsystem.centerModulesCommand());
 		m_driverController.button(Constants.Controller.DriverMap.DRIVE_TO_INITIAL_POSE).whileTrue(
 			m_driveSubsystem.driveToInitialPosition(0.8).repeatedly());
-		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).whileTrue(
-			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_HIGH)).onFalse(
+
+		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).onTrue(
+			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_HIGH))
+			.onFalse(DriveCommand.resetSpeedModCommand());
+		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MIN).onTrue(
+			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_LOW))
+			.onFalse(
 				DriveCommand.resetSpeedModCommand());
-		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MIN).whileTrue(
-			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_LOW)).onFalse(
-				DriveCommand.resetSpeedModCommand());
-		m_driverController.button(Constants.Controller.DriverMap.TOGGLE_NOTIFICATION).onTrue(
-			m_ledSubsystem.togglePersistentNotificationCommand(LedSubsystem.kNotification3Color));
 
 		final double operatorAxisThreshold = 0.1;
 		m_operatorController.axisMagnitudeGreaterThan(

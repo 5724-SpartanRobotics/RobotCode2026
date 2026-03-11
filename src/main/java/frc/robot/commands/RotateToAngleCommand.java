@@ -61,7 +61,7 @@ public class RotateToAngleCommand extends Command {
 		double currentTheta = drive.getPose().getRotation().getRadians();
 		double error = Math.abs(normalizeRadians(
 			thetaController.getGoal().position - currentTheta));
-		return error < Math.toRadians(2.0); // epsilon: 2 degrees
+		return error < Math.toRadians(4.0); // epsilon: 2 degrees
 	}
 
 	@Override

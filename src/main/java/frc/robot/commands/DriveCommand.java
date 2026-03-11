@@ -47,11 +47,12 @@ public final class DriveCommand {
 	}
 
 	public static Command setSpeedModCommand(double s) {
-		return Commands.run(() -> speedMod = s, m_driveSubsystem);
+		return Commands.runOnce(() -> speedMod = s, m_driveSubsystem);
 	}
 
 	public static Command resetSpeedModCommand() {
-		return Commands.run(() -> speedMod = Constants.Robot.DEFAULT_SPEED_MOD, m_driveSubsystem);
+		return Commands.runOnce(() -> speedMod = Constants.Robot.DEFAULT_SPEED_MOD,
+			m_driveSubsystem);
 	}
 
 	public static SwerveInputStream DriveAngularVelocity() {
@@ -72,7 +73,7 @@ public final class DriveCommand {
 					(Constants.isRedAlliance() ? -1.0 : 1.0),
 				Constants.Controller.DRIVER_DEADBAND_Z)) // twist / rotation
 			.deadband(Constants.Controller.DRIVER_DEADBAND_Z)
-			.scaleTranslation(0.8)
+			.scaleTranslation(0.95)
 			.allianceRelativeControl(true);
 	}
 

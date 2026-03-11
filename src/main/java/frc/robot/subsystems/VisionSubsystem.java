@@ -98,24 +98,26 @@ public class VisionSubsystem extends SubsystemBase {
 		for (var camera : Cameras.values()) {
 			var c = camera.getCamera();
 
+			c.periodic();
+
 			Optional<EstimatedRobotPose> est;
 			Matrix<N3, N1> std;
 
 			synchronized (c.lock) {
 				est = c.getLatestThreadedEstimate();
 				std = c.getLatestStdDevs();
-			}
 
-			if (est.isEmpty())
-				continue;
+				if (est.isEmpty())
+					continue;
 
-			m_field2d.getObject("VisionEstimation")
-				.setPose(est.get().estimatedPose.toPose2d());
+				m_field2d.getObject("VisionEstimation")
+					.setPose(est.get().estimatedPose.toPose2d());
 
-			if (m_driveSubsystem != null) {
-				m_driveSubsystem.addVisionMeasurement(
-					est.get().estimatedPose.toPose2d(),
-					est.get().timestampSeconds, std);
+				if (m_driveSubsystem != null) {
+					m_driveSubsystem.addVisionMeasurement(
+						est.get().estimatedPose.toPose2d(),
+						est.get().timestampSeconds, std);
+				}
 			}
 		}
 	}

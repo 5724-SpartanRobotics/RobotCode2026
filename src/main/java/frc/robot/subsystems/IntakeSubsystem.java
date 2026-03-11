@@ -77,7 +77,7 @@ public class IntakeSubsystem extends SubsystemBase {
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
 				.apply(new ClosedLoopConfig()
 					// TODO: Tune PIDs and Feedforward
-					.pid(0, 0, 0)
+					.pid(0.1, 0, 0)
 					.apply(new FeedForwardConfig()
 						.sva(0, 0, 0))
 					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
@@ -146,7 +146,7 @@ public class IntakeSubsystem extends SubsystemBase {
 	}
 
 	private static double calculateUpperReferenceInRelationToArmIntake(double setpoint) {
-		return setpoint / Constants.Intake.UPPER_FIXED_GEAR_RATIO;
+		return setpoint / Constants.Intake.UPPER_FIXED_GEAR_RATIO * 1.01;
 	}
 
 	public void extendArm() {

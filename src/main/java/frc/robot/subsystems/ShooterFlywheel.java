@@ -12,9 +12,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import java.util.function.Supplier;
 import yams.mechanisms.config.FlyWheelConfig;
 import yams.mechanisms.velocity.FlyWheel;
 import yams.motorcontrollers.SmartMotorController;
@@ -105,7 +103,7 @@ public class ShooterFlywheel {
 
 		if ((shooterEnabled && DriverStation.isDisabled()) ||
 			(shooterEnabled && DriverStation.isEnabled()
-				&& MathUtil.isNear(setpointVelocityRPM, measuredVelocity, 10.0)))
+				&& MathUtil.isNear(setpointVelocityRPM, measuredVelocity, 20.0)))
 			LedSubsystem.kInactiveColor = LedSubsystem.kNotification1Color;
 		else
 			LedSubsystem.kInactiveColor = Color.kBlack;
@@ -118,8 +116,10 @@ public class ShooterFlywheel {
 	public void initSendable(SendableBuilder builder) {
 		builder.addBooleanProperty("Shooter Enabled", () -> shooterEnabled, null);
 		if (kIsDebug) {
+			builder.addDoubleProperty("Shooter Setpoint RPM", () -> setpointVelocity.in(Units.RPM),
+				null);
 			builder.addDoubleProperty("Shooter Velocity RPM", () -> measuredVelocity, null);
-			builder.addDoubleProperty("Shooter Reference", () -> {
+			builder.addDoubleProperty("Shooter Internal Reference", () -> {
 				return m_motor.getClosedLoopController().getSetpoint();
 			}, null);
 		}
@@ -133,30 +133,6 @@ public class ShooterFlywheel {
 		AngularVelocityUnit u = Units.RPM;
 		double l = m_flywheel.getSpeed().abs(u);
 		return u.of(l);
-	}
-
-	public Command setVelocity(AngularVelocity speed) {
-		m_smc.setDutyCycle(0);
-		return m_flywheel.setSpeed(speed);
-	}
-
-	public Command setDutyCycle(double dutyCycle) {
-		return m_flywheel.set(dutyCycle);
-	}
-
-	public Command setVelocity(Supplier<AngularVelocity> speed) {
-		return m_flywheel.setSpeed(speed);
-	}
-
-	public Command setDutyCycle(Supplier<Double> dutyCycle) {
-		return m_flywheel.set(dutyCycle);
-	}
-
-	public Command sysId() {
-		var maxVolts = Units.Volts.of(10);
-		var step = Units.Volts.of(1).per(Units.Seconds);
-		var time = Units.Seconds.of(5);
-		return m_flywheel.sysId(maxVolts, step, time);
 	}
 
 	public void enable(AngularVelocity velocity) {

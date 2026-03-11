@@ -29,7 +29,7 @@ import frc.robot.lib.PIDFfRecord;
 import swervelib.math.Matter;
 
 public final class Constants {
-	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.Intake;
+	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
 	protected static double PERIOD;
 
 	public static final double TWO_PI = Math.PI * 2.0;
@@ -201,7 +201,7 @@ public final class Constants {
 	}
 
 	public static final class LED {
-		public static final int PORT = 0;
+		public static final int PORT = 1;
 		public static final int LED_COUNT = 300;
 
 		public static final double STRIP_BITS_PER_PIXEL = 13.0;
