@@ -1,7 +1,7 @@
 {
   "$schema": "https://github.com/alanmburr/YAGSL_Schemas/raw/refs/heads/main/physicalproperties.schema.json",
   "optimalVoltage": 12,
-  "robotMass": 80,
+  "robotMass": 95,
   "wheelGripCoefficientOfFriction": 1.19,
   "currentLimit": {
     "drive": 40,
@@ -19,7 +19,7 @@
     }
   },
   "rampRate": {
-    "drive": 0.25,
-    "angle": 0.25
+    "drive": 0.01,
+    "angle": 0.01
   }
 }
