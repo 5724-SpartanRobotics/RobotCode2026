@@ -76,7 +76,7 @@ public final class DriveCommand {
 												 */,
 				Constants.Controller.DRIVER_DEADBAND_Z)) // twist / rotation
 			.deadband(Constants.Controller.DRIVER_DEADBAND_Z)
-			.scaleTranslation(0.95)
+			.scaleTranslation(1.05)
 			.allianceRelativeControl(true);
 	}
 

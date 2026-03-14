@@ -45,7 +45,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	private AtomicBoolean m_reverse = new AtomicBoolean(false);
 
 	public Distance hypotenuseToAllianceHub = Units.Meters.of(0);
-	public double flywheelSpeedMod = 1.0;
+	public double flywheelSpeedMod = 1.1;
 
 	private ShooterSubsystem() {
 		m_flywheel = new ShooterFlywheel(this);
@@ -116,7 +116,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 	private AngularVelocity calculateShooterSpeedFromRobotDistance() {
 		Distance copy = hypotenuseToAllianceHub;
-		copy = Units.Meters.of(1);
+		// copy = Units.Meters.of(1);
 		double d = copy.in(Units.Meters);
 		double g = Constants.g.in(Units.MetersPerSecondPerSecond);
 		double v = Math.sqrt(
@@ -148,7 +148,7 @@ public class ShooterSubsystem extends SubsystemBase {
 		m_flywheel.enable(velocity);
 		AngularVelocity feederSetpoint = velocity.times(
 			Constants.Shooter.FLYWHEEL_DIAMETER.div(Constants.Shooter.FEEDER_PULLEY_DIAMETER))
-			.div(2.75).times(m_reverse.get() ? -1.0 : 1.0);
+			.div(2.7).times(m_reverse.get() ? -1.0 : 1.0);
 		if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.Shooter))
 			SmartDashboard.putNumber("Feeder Setpoint RPM", feederSetpoint.in(Units.RPM));
 		m_feederPid.setSetpoint(feederSetpoint.in(Units.RPM), ControlType.kVelocity);

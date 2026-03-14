@@ -162,7 +162,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
 	public void enableIntake() {
 		final double speed = Constants.Intake.SPEED.in(Units.Value); // Value gives n/100
-		onArmIntakeSpeedReference = speed;
+		onArmIntakeSpeedReference = speed * 1.1;
 		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
 		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
 		m_onArmIntake.set(onArmIntakeSpeedReference);

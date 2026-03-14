@@ -9,9 +9,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.littletonrobotics.junction.LoggedRobot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-
-import choreo.auto.AutoChooser;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -19,8 +16,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.DebugLevel;
+import frc.robot.subsystems.LedSubsystem;
 
 public class Robot extends LoggedRobot {
 	public static AtomicBoolean isFirstConnection = new AtomicBoolean(true);
@@ -82,7 +79,7 @@ public class Robot extends LoggedRobot {
 		if (selectedAuto != null) {
 			CommandScheduler.getInstance().schedule(selectedAuto);
 		}
-
+		LedSubsystem.getInstance().clearAllPersistentNotify();
 	}
 
 	@Override
@@ -97,6 +94,7 @@ public class Robot extends LoggedRobot {
 	public void teleopInit() {
 		CommandScheduler.getInstance().cancelAll();
 		_RobotContainer.teleopInit();
+		LedSubsystem.getInstance().clearAllPersistentNotify();
 	}
 
 	@Override
@@ -105,6 +103,7 @@ public class Robot extends LoggedRobot {
 
 	@Override
 	public void teleopExit() {
+		LedSubsystem.getInstance().clearAllPersistentNotify();
 	}
 
 	@Override

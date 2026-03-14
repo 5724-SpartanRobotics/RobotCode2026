@@ -299,7 +299,7 @@ public final class Constants {
 
 		public static final PIDFfRecord FEEDER_PIDF = new PIDFfRecord(
 			// TODO: Tune the P
-			0.0001, 0.0, 0.0, FEEDER_kFf,
+			0.0002, 0.0, 0.0, FEEDER_kFf,
 			0.0,
 			Units.VoltsPerRadianPerSecond
 				.of(NOMINAL_BATTERY_VOLTAGE.in(Units.Volts) /* volts */ * FEEDER_kFf /* kFf */
