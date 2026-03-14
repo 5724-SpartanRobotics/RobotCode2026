@@ -116,8 +116,8 @@ public class RobotContainer {
 				m_intakeSubsystem.disableIntake();
 				m_indexerSubsystem.disable();
 			}, m_intakeSubsystem, m_indexerSubsystem));
-		m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
-		m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
+		// m_operatorController.a().toggleOnTrue(m_climberSubsystem.toggleForward());
+		// m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
 		m_operatorController.y().toggleOnTrue(m_shooterSubsystem.toggle());
 		m_operatorController.b().toggleOnTrue(m_shooterSubsystem.toggleFeederReverse());
 		m_operatorController.axisGreaterThan(
