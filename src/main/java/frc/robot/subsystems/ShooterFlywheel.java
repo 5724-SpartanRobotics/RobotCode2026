@@ -97,13 +97,13 @@ public class ShooterFlywheel {
 	public void periodic() {
 		m_flywheel.updateTelemetry();
 
-		double setpointVelocityRPM = setpointVelocity.in(Units.RPM);
+		double setpointVelocityPercent = m_motor.getClosedLoopController().getSetpoint();
 		measuredVelocity = getVelocity().abs(Units.RPM);
 		shooterEnabled = measuredVelocity > 0.05;
 
 		if ((shooterEnabled && DriverStation.isDisabled()) ||
 			(shooterEnabled && DriverStation.isEnabled()
-				&& MathUtil.isNear(setpointVelocityRPM, measuredVelocity, 20.0)))
+				&& MathUtil.isNear(setpointVelocityPercent, measuredVelocity, 10.0)))
 			LedSubsystem.kInactiveColor = LedSubsystem.kNotification1Color;
 		else
 			LedSubsystem.kInactiveColor = Color.kBlack;

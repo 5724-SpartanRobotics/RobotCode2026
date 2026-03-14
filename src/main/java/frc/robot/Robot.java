@@ -4,18 +4,25 @@
 
 package frc.robot;
 
-import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.Constants.DebugLevel;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class Robot extends TimedRobot {
+import org.littletonrobotics.junction.LoggedRobot;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+
+import choreo.auto.AutoChooser;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants.DebugLevel;
+
+public class Robot extends LoggedRobot {
 	public static AtomicBoolean isFirstConnection = new AtomicBoolean(true);
 
 	private static final AtomicReference<Timer> _DisabledTimer = new AtomicReference<>(new Timer());
@@ -71,6 +78,11 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		_RobotContainer.setMotorBrake(true);
+		Command selectedAuto = _RobotContainer.getAutonomousCommand();
+		if (selectedAuto != null) {
+			CommandScheduler.getInstance().schedule(selectedAuto);
+		}
+
 	}
 
 	@Override

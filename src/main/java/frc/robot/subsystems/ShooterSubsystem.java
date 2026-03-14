@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.littletonrobotics.junction.AutoLog;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -30,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
+@AutoLog
 public class ShooterSubsystem extends SubsystemBase {
 	private static ShooterSubsystem instance = null;
 
@@ -113,7 +116,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 	private AngularVelocity calculateShooterSpeedFromRobotDistance() {
 		Distance copy = hypotenuseToAllianceHub;
-		// copy = Units.Inches.of(150);
+		copy = Units.Meters.of(1);
 		double d = copy.in(Units.Meters);
 		double g = Constants.g.in(Units.MetersPerSecondPerSecond);
 		double v = Math.sqrt(

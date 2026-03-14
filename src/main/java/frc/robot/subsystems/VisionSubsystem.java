@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.AutoLog;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonUtils;
 import org.photonvision.simulation.VisionSystemSim;
@@ -31,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.Camera;
 
+@AutoLog
 public class VisionSubsystem extends SubsystemBase {
 	public static final AprilTagFieldLayout FIELD_LAYOUT = Constants.Vision.FIELD_LAYOUT;
 
