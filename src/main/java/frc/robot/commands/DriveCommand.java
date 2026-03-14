@@ -59,18 +59,21 @@ public final class DriveCommand {
 		return SwerveInputStream.of(
 			m_driveSubsystem.getSwerveDrive(),
 			() -> applyJoystickDeadbandAndScale(
-				m_joystick.getRawAxis(1) * -1.0 /* *
-					(Constants.isRedAlliance() ? -1.0 : 1.0) */,
+				m_joystick.getRawAxis(1) * -1.0 /*
+												 * * (Constants.isRedAlliance() ? -1.0 : 1.0)
+												 */,
 				Constants.Controller.DRIVER_DEADBAND_XY), // Y axis (forward/back)
 			() -> applyJoystickDeadbandAndScale(
-				m_joystick.getRawAxis(0) * -1.0 /* *
-					(Constants.isRedAlliance() ? -1.0 : 1.0) */,
+				m_joystick.getRawAxis(0) * -1.0 /*
+												 * * (Constants.isRedAlliance() ? -1.0 : 1.0)
+												 */,
 				Constants.Controller.DRIVER_DEADBAND_XY) // X axis (strafe)
 		)
 			.withControllerRotationAxis(() -> applyJoystickDeadbandAndScale(
 				// Gonna invert this based on alliance, idk if that's right (we'll see later)
-				m_joystick.getRawAxis(2) * -1.0 /* *
-					(Constants.isRedAlliance() ? -1.0 : 1.0) */,
+				m_joystick.getRawAxis(2) * -1.0 /*
+												 * * (Constants.isRedAlliance() ? -1.0 : 1.0)
+												 */,
 				Constants.Controller.DRIVER_DEADBAND_Z)) // twist / rotation
 			.deadband(Constants.Controller.DRIVER_DEADBAND_Z)
 			.scaleTranslation(0.95)
