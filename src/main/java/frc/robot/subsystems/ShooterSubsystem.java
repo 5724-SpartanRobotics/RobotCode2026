@@ -17,6 +17,7 @@ import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -86,6 +87,9 @@ public class ShooterSubsystem extends SubsystemBase {
 		m_flywheel.periodic();
 
 		setMotorVelocities();
+
+		NetworkTableInstance.getDefault().getEntry("/Shooter Enabled").setBoolean(m_enable.get());
+		NetworkTableInstance.getDefault().getEntry("/Belt Reversed").setBoolean(m_reverse.get());
 
 		SmartDashboard.putData(this);
 	}

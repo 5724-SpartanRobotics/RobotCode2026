@@ -10,9 +10,11 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.net.PortForwarder;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -158,7 +160,7 @@ public class RobotContainer {
 		}
 
 		if (DriverStation.isDSAttached() && Robot.isFirstConnection.compareAndSet(true, false)) {
-			Elastic.selectTab("Auto");
+			Elastic.selectTab("Autonomous");
 			CommandScheduler.getInstance().schedule(Commands.parallel(
 				m_driveSubsystem.resetOdometryCommand(),
 				Commands.runOnce(m_driveSubsystem::zeroGyro)));
@@ -166,6 +168,7 @@ public class RobotContainer {
 	}
 
 	public void teleopInit() {
+		Elastic.selectTab("Teleoperated");
 	}
 
 	public void indicateWheelsUnlocked() {
@@ -176,6 +179,13 @@ public class RobotContainer {
 	}
 
 	public void robotPeriodic() {
+		NetworkTableInstance.getDefault().getEntry("/Match Time")
+			.setDouble(DriverStation.getMatchTime());
+		NetworkTableInstance.getDefault().getEntry("/Voltage")
+			.setDouble(RobotController.getBatteryVoltage());
+		NetworkTableInstance.getDefault().getEntry("/DS Attached")
+			.setBoolean(DriverStation.isDSAttached());
+
 		if (!hasBeenEnabledYet) {
 			hasBeenEnabledYet = DriverStation.isEnabled();
 		}
