@@ -112,11 +112,11 @@ public final class Constants {
 		// = 0.319 * 14.13 = 4.51 m/s
 		public static final LinearVelocity MAX_LINEAR_VELOCITY = Units.MetersPerSecond.of(5);
 		public static final LinearAcceleration MAX_LINEAR_ACCELERATION = Units.MetersPerSecondPerSecond
-			.of(9.6);
+			.of(10.2);
 		public static final AngularVelocity MAX_ANGULAR_VELOCITY = Units.DegreesPerSecond
 			.of(540.000);
 		public static final AngularAcceleration MAX_ANGULAR_ACCELERATION = Units.DegreesPerSecondPerSecond
-			.of(2221);
+			.of(2338);
 
 		public static final double DEFAULT_SPEED_MOD = 0.7;
 		public static final double DEFAULT_SPEED_MOD_HIGH = 1;
