@@ -26,11 +26,6 @@ import frc.robot.Constants;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class Camera {
-	// should be about 20ms, we should be faster (hence /3)
-	private static final long kNominalSleepMs = RobotBase.isSimulation()
-		? (1)
-		: (Constants.getPeriod() / 2);
-
 	public final Alert latencyAlert;
 	public final PhotonCamera camera;
 	public final PhotonPoseEstimator poseEstimator;
@@ -44,8 +39,6 @@ public class Camera {
 	public final Object lock = new Object();
 	private volatile Optional<EstimatedRobotPose> latestThreadedEstimate = Optional.empty();
 	private volatile Matrix<N3, N1> latestStdDevs;
-	private Thread workerThread;
-	private double lastTimestamp = -1;
 
 	public Camera(
 		String name,

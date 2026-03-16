@@ -111,7 +111,7 @@ public final class DriveCommand {
 	}
 
 	public enum DriveType {
-		FO_AngularVelocity, FO_DirectAngle, RO_AngularVelocity, SetpointGenerator
+		FO_AngularVelocity, FO_DirectAngle, RO_AngularVelocity
 	}
 
 	public static Command getCommand(DriveType t, boolean isKeyboard) {
@@ -124,8 +124,6 @@ public final class DriveCommand {
 			case FO_DirectAngle -> m_driveSubsystem.driveFieldOriented(
 				!isKeyboard ? null : DriveDirectAngle_Keyboard());
 			case RO_AngularVelocity -> m_driveSubsystem.driveFieldOriented(DriveRobotOriented());
-			case SetpointGenerator -> m_driveSubsystem.driveWithSetpointGeneratorFieldRelative(
-				!isKeyboard ? null : DriveDirectAngle_Keyboard());
 		};
 	}
 
