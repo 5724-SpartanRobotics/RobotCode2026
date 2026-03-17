@@ -7,31 +7,26 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Blue Center of Hub to Center"
+            "pathName": "Center via Left"
           }
         },
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "Intake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Center to Blue Hub (Center)"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Find Pose"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 10.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot"
+                }
+              }
+            ]
           }
         }
       ]

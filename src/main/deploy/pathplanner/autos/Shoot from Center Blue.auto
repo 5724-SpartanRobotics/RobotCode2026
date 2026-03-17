@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Shoot from Center Blue"
+            "pathName": "Shoot from Center"
           }
         },
         {
@@ -17,9 +17,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "Shoot"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot"
+                }
+              }
+            ]
           }
         }
       ]
