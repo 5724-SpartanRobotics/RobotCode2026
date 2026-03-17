@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.Meter;
 
@@ -37,9 +37,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.commands.RotateToAngleCommand;
+import frc.robot.lib.NopSubsystemBase;
+import frc.robot.subsystems.vision.VisionSubsystem;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
@@ -53,7 +54,7 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
  * {@link https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_with_PhotonVision/src/main/java/frc/robot/subsystems/swervedrive/SwerveSubsystem.java}
  */
 @AutoLog
-public class DriveSubsystem extends SubsystemBase {
+public class DriveSubsystem extends NopSubsystemBase {
 	private final Pose2d kInitialPose;
 
 	private final Pose2d kInitialPoseRed = new Pose2d(

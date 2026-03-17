@@ -11,7 +11,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
@@ -27,12 +26,13 @@ import frc.robot.commands.DriveCommand;
 import frc.robot.lib.Elastic;
 import frc.robot.lib.Elastic.Notification;
 import frc.robot.lib.Elastic.NotificationLevel;
-import frc.robot.subsystems.ClimberSubsystem;
-import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.IndexerSubsystem;
-import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LedSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.PdhSubsystem;
+import frc.robot.subsystems.climber.ClimberSubsystem;
+import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.shooter.IndexerSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 
 public class RobotContainer {
 	private final DriveSubsystem m_driveSubsystem = new DriveSubsystem(
@@ -42,6 +42,7 @@ public class RobotContainer {
 	private final IndexerSubsystem m_indexerSubsystem = IndexerSubsystem.getInstance();
 	private final ShooterSubsystem m_shooterSubsystem = ShooterSubsystem.getInstance();
 	private final LedSubsystem m_ledSubsystem = LedSubsystem.getInstance();
+	private final PdhSubsystem m_pdhSubsystem = PdhSubsystem.getInstance();
 
 	private final CommandJoystick m_driverController = new CommandJoystick(0);
 	private final CommandXboxController m_operatorController = new CommandXboxController(1);
@@ -57,8 +58,12 @@ public class RobotContainer {
 
 		DriveCommand.initialize(m_driveSubsystem, m_driverController);
 
-		LedSubsystem.createInstance();
-		ClimberSubsystem.nop();
+		m_climberSubsystem.nop();
+		m_intakeSubsystem.nop();
+		m_indexerSubsystem.nop();
+		m_shooterSubsystem.nop();
+		m_pdhSubsystem.nop();
+		m_ledSubsystem.nop();
 
 		configureNamedCommands();
 		configureControllerBindings();
@@ -144,9 +149,11 @@ public class RobotContainer {
 	private void configureNamedCommands() {
 		NamedCommands.registerCommands(
 			Map.of(
-				"Intake", m_intakeSubsystem.runForCommand(Units.Seconds.of(3)),
+				"Extend Arm", m_intakeSubsystem.extendArmCommand(),
+				"Retract Arm", m_intakeSubsystem.retractArmCommand(),
+				"Intake", m_intakeSubsystem.enableIntakeForeverCommand(),
 				"Find Pose", m_driveSubsystem.driveToTargetCommand().withTimeout(2),
-				"Shoot", m_shooterSubsystem.runForCommand(Units.Seconds.of(3))));
+				"Shoot", m_shooterSubsystem.enableForeverCommand()));
 	}
 
 	public void robotFinishedBooting() {
