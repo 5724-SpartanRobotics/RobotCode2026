@@ -85,15 +85,37 @@ public class RobotContainer {
 		m_driverController.button(Constants.Controller.DriverMap.CENTER_SWERVES).whileTrue(
 			m_driveSubsystem.centerModulesCommand());
 		m_driverController.button(Constants.Controller.DriverMap.DRIVE_TO_INITIAL_POSE).whileTrue(
-			m_driveSubsystem.driveToInitialPosition(0.8).repeatedly());
+			m_driveSubsystem.driveToInitialPosition(1.0).repeatedly());
+		m_driverController.povUp().onTrue(m_intakeSubsystem.extendArmCommand());
+		m_driverController.povDown().onTrue(m_intakeSubsystem.retractArmCommand());
+		m_driverController.povRight().onTrue(m_intakeSubsystem.incrementArmCommand());
+		m_driverController.povLeft().onTrue(m_intakeSubsystem.decrementArmCommand());
+		m_driverController.button(3).toggleOnTrue(m_shooterSubsystem.toggle());
 
-		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).onTrue(
-			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_HIGH))
-			.onFalse(DriveCommand.resetSpeedModCommand());
-		m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MIN).onTrue(
-			DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_LOW))
-			.onFalse(
-				DriveCommand.resetSpeedModCommand());
+		m_driverController.button(2).whileTrue(Commands.run(() -> {
+			m_intakeSubsystem.enableIntake();
+			m_indexerSubsystem.enable();
+		}, m_intakeSubsystem, m_indexerSubsystem))
+			.onFalse(Commands.run(() -> {
+				m_intakeSubsystem.disableIntake();
+				m_indexerSubsystem.disable();
+			}, m_intakeSubsystem, m_indexerSubsystem));
+		m_driverController.button(1).whileTrue(Commands.run(() -> {
+			m_intakeSubsystem.enableSpitout();
+			m_indexerSubsystem.enableReverse();
+		}, m_intakeSubsystem, m_indexerSubsystem))
+			.onFalse(Commands.run(() -> {
+				m_intakeSubsystem.disableIntake();
+				m_indexerSubsystem.disable();
+			}, m_intakeSubsystem, m_indexerSubsystem));
+
+		// m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MAX).onTrue(
+		// DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_HIGH))
+		// .onFalse(DriveCommand.resetSpeedModCommand());
+		// m_driverController.button(Constants.Controller.DriverMap.SPEEDMOD_MIN).onTrue(
+		// DriveCommand.setSpeedModCommand(Constants.Robot.DEFAULT_SPEED_MOD_LOW))
+		// .onFalse(
+		// DriveCommand.resetSpeedModCommand());
 
 		final double operatorAxisThreshold = 0.1;
 		m_operatorController.axisMagnitudeGreaterThan(

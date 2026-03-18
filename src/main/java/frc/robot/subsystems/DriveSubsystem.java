@@ -223,7 +223,7 @@ public class DriveSubsystem extends SubsystemBase {
 
 			Pose2d staticTarget = new Pose2d(new Translation2d(x_new, y_new), heading);
 
-			Command pathCmd = this.driveToPose(staticTarget, 0.8);
+			Command pathCmd = this.driveToPose(staticTarget, 1.0);
 			Command rotCmd = new RotateToAngleCommand(this, () -> staticTarget.getRotation());
 			CommandScheduler.getInstance().schedule(
 				pathCmd.andThen(
