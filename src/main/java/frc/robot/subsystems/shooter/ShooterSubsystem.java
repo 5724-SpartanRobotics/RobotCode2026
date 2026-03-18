@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.shooter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,11 +29,11 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.lib.NopSubsystemBase;
 
 @AutoLog
-public class ShooterSubsystem extends SubsystemBase {
+public class ShooterSubsystem extends NopSubsystemBase {
 	private static ShooterSubsystem instance = null;
 
 	private final ShooterFlywheel m_flywheel;
@@ -187,5 +187,31 @@ public class ShooterSubsystem extends SubsystemBase {
 			Commands.run(this::enable, this),
 			Commands.waitTime(duration),
 			Commands.run(this::disable, this));
+	}
+
+	public Command enableForeverCommand() {
+		var subsystem = this;
+		return new Command() {
+			private final ShooterSubsystem s;
+
+			{
+				s = subsystem;
+			}
+
+			@Override
+			public void execute() {
+				s.enable();
+			}
+
+			@Override
+			public boolean isFinished() {
+				return false;
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				s.disable();
+			}
+		}.withName("ShootCommand");
 	}
 }

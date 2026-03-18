@@ -7,7 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center via Left"
+            "pathName": "Shoot from Center"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
           }
         },
         {
@@ -17,7 +23,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 10.0
+                  "waitTime": 3.0
                 }
               },
               {
@@ -33,6 +39,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Blue Collect & Shoot via Left",
+  "folder": null,
   "choreoAuto": false
 }

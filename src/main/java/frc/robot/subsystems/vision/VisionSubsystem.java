@@ -1,6 +1,6 @@
 /* VisionSubsystem.java */
 
-package frc.robot.subsystems;
+package frc.robot.subsystems.vision;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -28,12 +28,13 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.lib.Camera;
+import frc.robot.lib.NopSubsystemBase;
+import frc.robot.subsystems.drive.DriveSubsystem;
 
 @AutoLog
-public class VisionSubsystem extends SubsystemBase {
+public class VisionSubsystem extends NopSubsystemBase {
 	public static final AprilTagFieldLayout FIELD_LAYOUT = Constants.Vision.FIELD_LAYOUT;
 
 	public VisionSystemSim m_visionSim;

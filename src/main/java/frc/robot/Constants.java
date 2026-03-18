@@ -110,17 +110,17 @@ public final class Constants {
 		// 0.319 (wheel circumference meters) *
 		// ((6784 motor max rpm / 8 gear ratio)/(60 seconds in minute))
 		// = 0.319 * 14.13 = 4.51 m/s
-		public static final LinearVelocity MAX_LINEAR_VELOCITY = Units.MetersPerSecond.of(4.51);
+		public static final LinearVelocity MAX_LINEAR_VELOCITY = Units.MetersPerSecond.of(5);
 		public static final LinearAcceleration MAX_LINEAR_ACCELERATION = Units.MetersPerSecondPerSecond
-			.of(6);
+			.of(10.2);
 		public static final AngularVelocity MAX_ANGULAR_VELOCITY = Units.DegreesPerSecond
 			.of(540.000);
 		public static final AngularAcceleration MAX_ANGULAR_ACCELERATION = Units.DegreesPerSecondPerSecond
-			.of(720);
+			.of(2338);
 
-		public static final double DEFAULT_SPEED_MOD = 0.550;
-		public static final double DEFAULT_SPEED_MOD_HIGH = 0.700;
-		public static final double DEFAULT_SPEED_MOD_LOW = 0.200;
+		public static final double DEFAULT_SPEED_MOD = 0.7;
+		public static final double DEFAULT_SPEED_MOD_HIGH = 1;
+		public static final double DEFAULT_SPEED_MOD_LOW = 0.4;
 	}
 
 	public static final class Drive {
@@ -128,7 +128,7 @@ public final class Constants {
 			"swerve");
 		public static final Time SWERVE_LOOP_TIME = Units.Milliseconds.of(20)
 			.plus(Units.Milliseconds.of(110));
-		public static final Time WHEEL_LOCK_TIME = Units.Seconds.of(10);
+		public static final Time WHEEL_LOCK_TIME = Units.Seconds.of(6);
 		// TODO: Calculate the CoM of the robot once it's finished
 		public static final Matter CHASSIS = new Matter(new Translation3d(
 			Units.Millimeters.of(0).in(Units.Meters),

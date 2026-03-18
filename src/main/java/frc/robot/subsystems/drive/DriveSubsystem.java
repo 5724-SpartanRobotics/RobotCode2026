@@ -2,32 +2,24 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.Meter;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.AutoLog;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.util.DriveFeedforwards;
-import com.pathplanner.lib.util.swerve.SwerveSetpoint;
-import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -40,19 +32,17 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.commands.RotateToAngleCommand;
+import frc.robot.lib.NopSubsystemBase;
+import frc.robot.subsystems.vision.VisionSubsystem;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
-import swervelib.SwerveDriveTest;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveControllerConfiguration;
 import swervelib.parser.SwerveDriveConfiguration;
@@ -64,7 +54,7 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
  * {@link https://github.com/Yet-Another-Software-Suite/YAGSL/blob/main/examples/drivebase_with_PhotonVision/src/main/java/frc/robot/subsystems/swervedrive/SwerveSubsystem.java}
  */
 @AutoLog
-public class DriveSubsystem extends SubsystemBase {
+public class DriveSubsystem extends NopSubsystemBase {
 	private final Pose2d kInitialPose;
 
 	private final Pose2d kInitialPoseRed = new Pose2d(
@@ -80,7 +70,9 @@ public class DriveSubsystem extends SubsystemBase {
 	private VisionSubsystem m_visionSubsystem;
 
 	private static void configureTelemetry() {
-		SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+		SwerveDriveTelemetry.verbosity = Constants.DebugLevel.isOrAll(Constants.DebugLevel.Drive)
+			? TelemetryVerbosity.HIGH
+			: TelemetryVerbosity.POSE;
 	}
 
 	/**
@@ -243,10 +235,6 @@ public class DriveSubsystem extends SubsystemBase {
 		return Units.Meters.of(dist);
 	}
 
-	public Command driveToInitialPosition() {
-		return this.driveToInitialPosition(1.0);
-	}
-
 	public Command driveToInitialPosition(double maxSpeedMultiplier) {
 		// THIS METHOD WORKS SO WELL
 		// but only when the robot is about >1 meter from the inital pose
@@ -254,10 +242,6 @@ public class DriveSubsystem extends SubsystemBase {
 			.andThen(new RotateToAngleCommand(this, () -> kInitialPose.getRotation())
 				.withName("RotateToInitialPosition"))
 			.withName("DriveToInitialPosition");
-	}
-
-	public Command getAutonomousCommand(String pathName) {
-		return new PathPlannerAuto(pathName);
 	}
 
 	public Command driveToPose(Pose2d pose) {
@@ -287,53 +271,10 @@ public class DriveSubsystem extends SubsystemBase {
 		this.drive(new ChassisSpeeds());
 	}
 
-	private Command driveWithSetpointGenerator(Supplier<ChassisSpeeds> robotRelativeChassisSpeeds)
-		throws IOException, org.json.simple.parser.ParseException {
-		SwerveSetpointGenerator setpointGenerator = new SwerveSetpointGenerator(
-			RobotConfig.fromGUISettings(),
-			m_swerveDrive.getMaximumChassisAngularVelocity());
-		AtomicReference<SwerveSetpoint> prevSetpoint = new AtomicReference<>(
-			new SwerveSetpoint(
-				m_swerveDrive.getRobotVelocity(),
-				m_swerveDrive.getStates(),
-				DriveFeedforwards.zeros(m_swerveDrive.getModules().length)));
-		AtomicReference<Double> previousTime = new AtomicReference<>();
-
-		return startRun(
-			() -> previousTime.set(Timer.getFPGATimestamp()),
-			() -> {
-				double newTime = Timer.getFPGATimestamp();
-				SwerveSetpoint newSetpoint = setpointGenerator.generateSetpoint(
-					prevSetpoint.get(),
-					robotRelativeChassisSpeeds.get(),
-					newTime - previousTime.get());
-
-				m_swerveDrive.drive(
-					newSetpoint.robotRelativeSpeeds(),
-					newSetpoint.moduleStates(),
-					newSetpoint.feedforwards().linearForces());
-				prevSetpoint.getAndSet(newSetpoint);
-				previousTime.set(newTime);
-			});
-	}
-
-	public Command driveWithSetpointGeneratorFieldRelative(
-		Supplier<ChassisSpeeds> fieldRelativeSpeeds) {
-		try {
-			return driveWithSetpointGenerator(() -> {
-				return ChassisSpeeds.fromFieldRelativeSpeeds(
-					fieldRelativeSpeeds.get(), getHeading());
-			});
-		} catch (Exception e) {
-			DriverStation.reportError(e.toString(), true);
-		}
-		return Commands.none();
-	}
-
 	@Override
 	public void periodic() {
-		SmartDashboard.putData(this);
-		m_visionSubsystem.periodic();
+		if (Constants.DebugLevel.isOrAll(Constants.DebugLevel.Drive))
+			SmartDashboard.putData(this);
 	}
 
 	@Override
@@ -360,40 +301,6 @@ public class DriveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Command to characterize the robot drive motors using SysId
-	 *
-	 * @return SysId Drive Command
-	 */
-	public Command sysIdDriveMotorCommand() {
-		return SwerveDriveTest.generateSysIdCommand(
-			SwerveDriveTest.setDriveSysIdRoutine(
-				new Config(),
-				this,
-				m_swerveDrive,
-				12,
-				true),
-			3.0,
-			5.0,
-			3.0);
-	}
-
-	/**
-	 * Command to characterize the robot angle motors using SysId
-	 *
-	 * @return SysId Angle Command
-	 */
-	public Command sysIdAngleMotorCommand() {
-		return SwerveDriveTest.generateSysIdCommand(
-			SwerveDriveTest.setAngleSysIdRoutine(
-				new Config(),
-				this,
-				m_swerveDrive),
-			3.0,
-			5.0,
-			3.0);
-	}
-
-	/**
 	 * Returns a Command that centers the modules of the SwerveDrive subsystem.
 	 *
 	 * @return a Command that centers the modules of the SwerveDrive subsystem
@@ -412,87 +319,6 @@ public class DriveSubsystem extends SubsystemBase {
 		return run(() -> {
 			m_swerveDrive.drive(new Translation2d(1, 0), 0, false, false);
 		}).finallyDo(() -> m_swerveDrive.drive(new Translation2d(0, 0), 0, false, false));
-	}
-
-	/**
-	 * Replaces the swerve module feedforward with a new SimpleMotorFeedforward object.
-	 *
-	 * @param kS
-	 *            the static gain of the feedforward
-	 * @param kV
-	 *            the velocity gain of the feedforward
-	 * @param kA
-	 *            the acceleration gain of the feedforward
-	 */
-	public void replaceSwerveModuleFeedforward(double kS, double kV, double kA) {
-		m_swerveDrive.replaceSwerveModuleFeedforward(new SimpleMotorFeedforward(kS, kV, kA));
-	}
-
-	/**
-	 * Command to drive the robot using translative values and heading as angular velocity.
-	 *
-	 * @param translationX
-	 *            Translation in the X direction. Cubed for smoother controls.
-	 * @param translationY
-	 *            Translation in the Y direction. Cubed for smoother controls.
-	 * @param angularRotationX
-	 *            Angular velocity of the robot to set. Cubed for smoother controls.
-	 * @return Drive command.
-	 */
-	public Command driveCommand(
-		DoubleSupplier translationX,
-		DoubleSupplier translationY,
-		DoubleSupplier angularRotationX) {
-		return run(() -> {
-			// Make the robot move
-			m_swerveDrive.drive(
-				SwerveMath.scaleTranslation(
-					new Translation2d(
-						translationX.getAsDouble()
-							* m_swerveDrive.getMaximumChassisVelocity(),
-						translationY.getAsDouble()
-							* m_swerveDrive.getMaximumChassisVelocity()),
-					0.8),
-				Math.pow(angularRotationX.getAsDouble(), 3) *
-					m_swerveDrive.getMaximumChassisAngularVelocity(),
-				true,
-				false);
-		});
-	}
-
-	/**
-	 * Command to drive the robot using translative values and heading as a setpoint.
-	 *
-	 * @param translationX
-	 *            Translation in the X direction. Cubed for smoother controls.
-	 * @param translationY
-	 *            Translation in the Y direction. Cubed for smoother controls.
-	 * @param headingX
-	 *            Heading X to calculate angle of the joystick.
-	 * @param headingY
-	 *            Heading Y to calculate angle of the joystick.
-	 * @return Drive command.
-	 */
-	public Command driveCommand(
-		DoubleSupplier translationX,
-		DoubleSupplier translationY,
-		DoubleSupplier headingX,
-		DoubleSupplier headingY) {
-		return run(() -> {
-			Translation2d scaledInputs = SwerveMath.scaleTranslation(
-				new Translation2d(
-					translationX.getAsDouble(),
-					translationY.getAsDouble()),
-				0.8);
-
-			// Make the robot move
-			driveFieldOriented(
-				m_swerveDrive.swerveController.getTargetSpeeds(
-					scaledInputs.getX(), scaledInputs.getY(),
-					headingX.getAsDouble(), headingY.getAsDouble(),
-					m_swerveDrive.getOdometryHeading().getRadians(),
-					m_swerveDrive.getMaximumChassisVelocity()));
-		});
 	}
 
 	/**
@@ -519,16 +345,6 @@ public class DriveSubsystem extends SubsystemBase {
 			rotation,
 			fieldRelative,
 			false); // Open loop is disabled since it shouldn't be used most of the time.
-	}
-
-	/**
-	 * Drive the robot given a chassis field oriented velocity.
-	 *
-	 * @param velocity
-	 *            Velocity according to the field.
-	 */
-	public void driveFieldOriented(ChassisSpeeds velocity) {
-		m_swerveDrive.driveFieldOriented(velocity);
 	}
 
 	/**

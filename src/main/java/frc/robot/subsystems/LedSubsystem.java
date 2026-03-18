@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -13,12 +16,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import frc.robot.lib.NopSubsystemBase;
 
-public class LedSubsystem extends SubsystemBase {
+public class LedSubsystem extends NopSubsystemBase {
 	// Bing AI told me that WPILib uses 24 bits/pixel for LEDs (cannot corroborate
 	// this).
 	private static final double WPILIB_BITS_PER_PIXEL = 24.0;

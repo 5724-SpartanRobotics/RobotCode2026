@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -20,11 +20,12 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.lib.NopSubsystemBase;
+import frc.robot.subsystems.LedSubsystem;
 
 @AutoLog
-public class IndexerSubsystem extends SubsystemBase {
+public class IndexerSubsystem extends NopSubsystemBase {
 	private static IndexerSubsystem instance = null;
 
 	private final SparkFlex m_motor;
