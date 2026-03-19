@@ -41,8 +41,13 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	private final SparkClosedLoopController m_feederPid;
 	private final RelativeEncoder m_feederEncoder;
 
+	private final SparkFlex m_lowerFeederMotor;
+	private final SparkClosedLoopController m_lowerFeederPid;
+
 	private AtomicBoolean m_enable = new AtomicBoolean(false);
 	private AtomicBoolean m_reverse = new AtomicBoolean(false);
+	private boolean m_lowerFeederEnable = false;
+	private boolean m_lowerFeederReversed = false;
 
 	public Distance hypotenuseToAllianceHub = Units.Meters.of(0);
 	public double flywheelSpeedMod = 1.1;
@@ -73,6 +78,30 @@ public class ShooterSubsystem extends NopSubsystemBase {
 			PersistMode.kNoPersistParameters);
 		m_feederPid = m_feederMotor.getClosedLoopController();
 		m_feederEncoder = m_feederMotor.getEncoder();
+
+		m_lowerFeederMotor = new SparkFlex(Constants.CanId.SHOOTER_LOWER_FEED,
+			MotorType.kBrushless);
+		m_lowerFeederMotor.configure(
+			new SparkFlexConfig()
+				.apply(new LimitSwitchConfig()
+					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
+					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
+				.apply(new ClosedLoopConfig()
+					// TODO: Tune PIDs and Feedforward
+					.pid(
+						Constants.Shooter.LOWER_FEEDER_PIDF.kP(),
+						Constants.Shooter.LOWER_FEEDER_PIDF.kI(),
+						Constants.Shooter.LOWER_FEEDER_PIDF.kD())
+					.apply(new FeedForwardConfig()
+						.sva(
+							Constants.Shooter.LOWER_FEEDER_PIDF.kFfS(),
+							Constants.Shooter.LOWER_FEEDER_PIDF.kFfV(),
+							Constants.Shooter.LOWER_FEEDER_PIDF.kFfA()))
+					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
+				.idleMode(IdleMode.kCoast),
+			ResetMode.kResetSafeParameters,
+			PersistMode.kNoPersistParameters);
+		m_lowerFeederPid = m_lowerFeederMotor.getClosedLoopController();
 	}
 
 	public static void createInstance() {
@@ -90,6 +119,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		m_flywheel.periodic();
 
 		setMotorVelocities();
+		setLowerFeederVelocity();
 
 		NetworkTableInstance.getDefault().getEntry("/Shooter Enabled").setBoolean(m_enable.get());
 		NetworkTableInstance.getDefault().getEntry("/Belt Reversed").setBoolean(m_reverse.get());
@@ -154,6 +184,19 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		m_feederPid.setSetpoint(feederSetpoint.in(Units.RPM), ControlType.kVelocity);
 	}
 
+	private void setLowerFeederVelocity() {
+		if (!m_lowerFeederEnable) {
+			m_lowerFeederMotor.set(0);
+			m_lowerFeederMotor.stopMotor();
+			return;
+		}
+
+		AngularVelocity setpoint = Constants.Shooter.LOWER_FEEDER_VELOCITY
+			.times(m_lowerFeederReversed ? -1.0 : 1.0);
+
+		m_lowerFeederPid.setSetpoint(setpoint.in(Units.RPM), ControlType.kVelocity);
+	}
+
 	public void enable() {
 		m_reverse.set(false);
 		m_enable.set(true);
@@ -162,6 +205,23 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	public void enableReverse() {
 		m_enable.set(true);
 		m_reverse.set(true);
+	}
+
+	public void enableLowerFeeder(boolean reversed) {
+		m_lowerFeederEnable = true;
+		m_lowerFeederReversed = reversed;
+	}
+
+	public void disableLowerFeeder() {
+		m_lowerFeederEnable = false;
+		m_lowerFeederReversed = false;
+	}
+
+	public Command toggleLowerFeeder(boolean reversed) {
+		return Commands.startEnd(
+			() -> enableLowerFeeder(reversed),
+			() -> disableLowerFeeder(),
+			this);
 	}
 
 	public void disable() {

@@ -149,6 +149,8 @@ public class RobotContainer {
 		// m_operatorController.x().toggleOnTrue(m_climberSubsystem.toggleReverse());
 		m_operatorController.y().toggleOnTrue(m_shooterSubsystem.toggle());
 		m_operatorController.b().toggleOnTrue(m_shooterSubsystem.toggleFeederReverse());
+		m_operatorController.rightBumper().toggleOnTrue(m_shooterSubsystem.toggleLowerFeeder(true));
+		m_operatorController.leftBumper().toggleOnTrue(m_shooterSubsystem.toggleLowerFeeder(false));
 		m_operatorController.axisGreaterThan(
 			XboxController.Axis.kRightTrigger.value,
 			operatorAxisThreshold).toggleOnTrue(

@@ -101,6 +101,7 @@ public final class Constants {
 		public static final int INDEXER = 27;
 		public static final int SHOOTER = 28;
 		public static final int SHOOTER_UPPER_FEED = 29;
+		public static final int SHOOTER_LOWER_FEED = 31;
 	}
 
 	public static final class Robot {
@@ -277,8 +278,10 @@ public final class Constants {
 	public static final class Shooter {
 		private static final double SHOOTER_kFf = 0.0002;
 		private static final double FEEDER_kFf = 0.00;
+		private static final double LOWER_FEEDER_kFf = 0.00;
 
 		public static final double GEAR_RATIO = 1.0;
+		public static final double LOWER_GEAR_RATIO = 1.0;
 		public static final PIDFfRecord SHOOTER_PIDF = new PIDFfRecord(
 			// TODO: Tune the P
 			0.025, 0.0, 0.0, SHOOTER_kFf,
@@ -308,12 +311,24 @@ public final class Constants {
 				/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
 			0.0);
 
+		public static final PIDFfRecord LOWER_FEEDER_PIDF = new PIDFfRecord(
+			// TODO: Tune the P
+			0.0002, 0.0, 0.0, LOWER_FEEDER_kFf,
+			0.0,
+			Units.VoltsPerRadianPerSecond
+				.of(NOMINAL_BATTERY_VOLTAGE.in(Units.Volts) /* volts */ * LOWER_FEEDER_kFf /* kFf */
+					* (60.0 / TWO_PI) /* rad/s */)
+				.baseUnitMagnitude()
+				/* motor V/rad/s */ * LOWER_GEAR_RATIO /* flywheel V/rad/s */,
+			0.0);
+
 		public static final Angle LAUNCH_ANGLE = Units.Degrees.of(25);
 		public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 3.33; // usually between 1.1 and
 																		// 1.4;
 
 		public static final Distance FLYWHEEL_DIAMETER = Units.Inches.of(4);
 		public static final Distance FEEDER_PULLEY_DIAMETER = Units.Inches.of(1.2);
+		public static final AngularVelocity LOWER_FEEDER_VELOCITY = Units.RPM.of(2000);
 	}
 
 	public static enum DebugLevel {
