@@ -1,0 +1,9 @@
+{
+  "$schema": "https://github.com/alanmburr/YAGSL_Schemas/raw/refs/heads/main/controllerproperties.schema.json",
+  "angleJoystickRadiusDeadband": 0.1,
+  "heading": {
+    "p": 0.6,
+    "i": 0,
+    "d": 0
+  }
+}

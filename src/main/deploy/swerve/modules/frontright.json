@@ -1,0 +1,28 @@
+{
+  "$schema": "https://github.com/alanmburr/YAGSL_Schemas/raw/refs/heads/main/module.schema.json",
+  "location": {
+    "front": 11.15625,
+    "left": -9.0625
+  },
+  "absoluteEncoderOffset": 44.29692,
+  "drive": {
+    "type": "sparkflex_vortex",
+    "id": 4,
+    "canbus": null
+  },
+  "angle": {
+    "type": "sparkflex_vortex",
+    "id": 3,
+    "canbus": null
+  },
+  "inverted": {
+    "angle": true,
+    "drive": false
+  },
+  "encoder": {
+    "type": "cancoder",
+    "id": 12,
+    "canbus": null
+  },
+  "absoluteEncoderInverted": false
+}
