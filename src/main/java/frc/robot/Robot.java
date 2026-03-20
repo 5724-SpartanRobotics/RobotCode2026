@@ -88,7 +88,7 @@ public class Robot extends CustomPeriodLoggedRobot {
 
 		io = new RobotIO_Real();
 
-		m_robotContainer = new RobotContainer();
+		m_robotContainer = RobotContainer.getInstance();
 		CommandScheduler.getInstance().schedule(m_selectAutoTabOnBootCommand);
 	}
 

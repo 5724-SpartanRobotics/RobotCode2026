@@ -13,8 +13,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.lib.ClassFieldMapStringToInt;
+import frc.robot.commands.DriveCommands;
 import frc.robot.info.constants.CanIdConstants;
+import frc.robot.info.constants.ControllerConstants;
 import frc.robot.info.constants.PdhChannelConstants;
 import frc.robot.subsystems.AlertSubsystem;
 import frc.robot.subsystems.PdhSubsystem;
@@ -29,18 +33,33 @@ import frc.robot.subsystems.vision.VisionSubsystem;
 public class RobotContainer {
 	private final SendableChooser<Command> m_autoChooser;
 
-	public RobotContainer() {
+	private final CommandJoystick m_driverController;
+	private final CommandXboxController m_operatorController;
+
+	private RobotContainer() {
 		ClassFieldMapStringToInt.invalidateDuplicates(CanIdConstants.class);
 		ClassFieldMapStringToInt.invalidateDuplicates(PdhChannelConstants.class);
+		ClassFieldMapStringToInt.invalidateDuplicates(ControllerConstants.DriverMap.class);
+		ClassFieldMapStringToInt.invalidateDuplicates(ControllerConstants.OperatorMap.class);
 
 		nops();
 		createInstances();
 
+		m_driverController = new CommandJoystick(0);
+		m_operatorController = new CommandXboxController(1);
 		configureBindings();
 		configureNamedCommands();
 
 		m_autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto choices", m_autoChooser);
+	}
+
+	private static final class Holder {
+		private static final RobotContainer INSTANCE = new RobotContainer();
+	}
+
+	public static RobotContainer getInstance() {
+		return Holder.INSTANCE;
 	}
 
 	public void nops() {
@@ -67,10 +86,13 @@ public class RobotContainer {
 		IntakeSubsystem.getInstance();
 		ShooterSubsystem.getInstance();
 		VisionSubsystem.getInstance();
+
+		DriveCommands.initialize(m_driverController);
 	}
 
 	public void configureBindings() {
-
+		DriveSubsystem.getInstance().setDefaultCommand(
+			DriveCommands.getCommand(DriveCommands.DriveType.FO_AngularVelocity));
 	}
 
 	public void configureNamedCommands() {
