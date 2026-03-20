@@ -1,7 +1,10 @@
 package frc.robot.subsystems.indexer;
 
+import java.util.function.BooleanSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.NopSubsystemBase;
 import frc.robot.info.Debug;
@@ -16,7 +19,7 @@ public class IndexerSubsystem extends NopSubsystemBase {
 	private double setpoint = 0;
 
 	private IndexerSubsystem() {
-		io = new IndexerIO_RealAndSim(CanIdConstants.INDEXER, CanIdConstants.INDEXER_UPPER);
+		io = new IndexerIO_RealAndSim(CanIdConstants.INDEXER, CanIdConstants.COORDINATOR);
 	}
 
 	private static final class Holder {
@@ -25,6 +28,16 @@ public class IndexerSubsystem extends NopSubsystemBase {
 
 	public static IndexerSubsystem getInstance() {
 		return Holder.INSTANCE;
+	}
+
+	@Override
+	public void initSendable(SendableBuilder builder) {
+		BooleanSupplier enabled = () -> Math.abs((int) setpoint) > 0;
+
+		builder.setSmartDashboardType(this.getClass().getName());
+		builder.addDoubleProperty("Duty Cycle Setpoint", () -> setpoint, null);
+		builder.addBooleanProperty("Enabled", enabled, null);
+		builder.addBooleanProperty("Reversed", () -> enabled.getAsBoolean() && setpoint < 0, null);
 	}
 
 	@Override
@@ -45,7 +58,7 @@ public class IndexerSubsystem extends NopSubsystemBase {
 	}
 
 	public void enableReverse() {
-		setpoint = -IndexerConstants.RUN_SETPOINT;
+		setpoint = IndexerConstants.RUN_SETPOINT * -1.0;
 		io.setDutyCycle(setpoint);
 
 		LedSubsystem.getInstance().setPersistentNotify(

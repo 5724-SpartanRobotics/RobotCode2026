@@ -1,19 +1,20 @@
-package frc.robot.subsystems.indexer;
+package frc.robot.subsystems.coordinator;
 
-import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-public interface IndexerIO {
-	@AutoLog
-	public static class IndexerIOInputs implements LoggableInputs {
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
+
+public interface CoordinatorIO {
+	public static class CoordinatorIOInputs implements LoggableInputs {
 		public double positionRotations = 0.0;
 		public double velocityRPS = 0.0;
 		public double appliedVolts = 0.0;
 		public double busVoltage = 0.0;
 		public double outputCurrentAmps = 0.0;
 		public double tempCelsius = 0.0;
-		public double dutyCycle = 0.0;
+		public AngularVelocity velocitySetpoint = Units.RPM.of(0);
 
 		@Override
 		public void toLog(LogTable table) {
@@ -22,8 +23,8 @@ public interface IndexerIO {
 			table.put("AppliedVolts", appliedVolts);
 			table.put("BusVoltage", busVoltage);
 			table.put("Current", outputCurrentAmps);
-			table.put("Temp", tempCelsius);
-			table.put("DutyCycle", dutyCycle);
+			table.put("TempCelcius", tempCelsius);
+			table.put("VelocitySetpointRPM", velocitySetpoint.in(Units.RPM));
 		}
 
 		@Override
@@ -33,15 +34,15 @@ public interface IndexerIO {
 			appliedVolts = table.get("AppliedVolts", 0.0);
 			busVoltage = table.get("BusVoltage", 0.0);
 			outputCurrentAmps = table.get("Current", 0.0);
-			tempCelsius = table.get("Temp", 0.0);
-			dutyCycle = table.get("DutyCycle", 0.0);
+			tempCelsius = table.get("TempCelcius", 0.0);
+			velocitySetpoint = Units.RPM.of(table.get("VelocitySetpointRPM", 0.0));
 		}
 	}
 
-	default void updateInputs(IndexerIOInputs inputs) {
+	default void updateInputs(CoordinatorIOInputs inputs) {
 	}
 
-	default void setDutyCycle(double output) {
+	default void setVelocity(AngularVelocity output) {
 	}
 
 	default void stop() {

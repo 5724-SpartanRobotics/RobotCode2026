@@ -16,6 +16,7 @@ package frc.robot.subsystems.vision;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -27,6 +28,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Frequency;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Notifier;
@@ -47,6 +49,14 @@ public class VisionSubsystem extends NopSubsystemBase {
 	private final Alert[] disconnectedAlerts;
 
 	private final AtomicReference<VisionFrame[]> latestFrames = new AtomicReference<>();
+	private final AtomicReference<List<Pose3d>> _allTagPoses = new AtomicReference<>(
+		new LinkedList<>());
+	private final AtomicReference<List<Pose3d>> _allRobotPoses = new AtomicReference<>(
+		new LinkedList<>());
+	private final AtomicReference<List<Pose3d>> _allRobotPosesAccepted = new AtomicReference<>(
+		new LinkedList<>());
+	private final AtomicReference<List<Pose3d>> _allRobotPosesRejected = new AtomicReference<>(
+		new LinkedList<>());
 
 	private VisionSubsystem(VisionConsumer consumer, VisionIO... io) {
 		this.consumer = consumer;
@@ -110,6 +120,24 @@ public class VisionSubsystem extends NopSubsystemBase {
 
 	public static VisionSubsystem getInstance() {
 		return Holder.INSTANCE;
+	}
+
+	@Override
+	public void initSendable(SendableBuilder builder) {
+		builder.addStringProperty("TagPoses", () -> _allTagPoses.get().stream()
+			.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(), null);
+		builder.addStringProperty("RobotPoses", () -> _allRobotPoses.get().stream()
+			.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(), null);
+		builder
+			.addStringProperty(
+				"AcceptedRobotPoses", () -> _allRobotPosesAccepted.get().stream()
+					.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(),
+				null);
+		builder
+			.addStringProperty(
+				"RejectedRobotPoses", () -> _allRobotPosesRejected.get().stream()
+					.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(),
+				null);
 	}
 
 	@Override
@@ -255,6 +283,11 @@ public class VisionSubsystem extends NopSubsystemBase {
 		Logger.recordOutput(
 			"Vision/Summary/RobotPosesRejected",
 			allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
+
+		_allTagPoses.set(allTagPoses);
+		_allRobotPoses.set(allRobotPoses);
+		_allRobotPosesAccepted.set(allRobotPosesAccepted);
+		_allRobotPosesRejected.set(allRobotPosesRejected);
 	}
 
 	@FunctionalInterface

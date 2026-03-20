@@ -19,7 +19,6 @@ import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -43,6 +42,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 
 	private AtomicBoolean m_enable = new AtomicBoolean(false);
 	private AtomicBoolean m_reverse = new AtomicBoolean(false);
+	private AngularVelocity _feederSetpoint = Units.RPM.of(0);
 
 	public Distance hypotenuseToAllianceHub = Units.Meters.of(0);
 	public double flywheelSpeedMod = 1.1;
@@ -91,9 +91,6 @@ public class ShooterSubsystem extends NopSubsystemBase {
 
 		var setpointVelocity = setMotorVelocities();
 
-		NetworkTableInstance.getDefault().getEntry("/Shooter Enabled").setBoolean(m_enable.get());
-		NetworkTableInstance.getDefault().getEntry("/Belt Reversed").setBoolean(m_reverse.get());
-
 		log(setpointVelocity);
 
 		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Shooter))
@@ -138,8 +135,11 @@ public class ShooterSubsystem extends NopSubsystemBase {
 			return Math.abs((int) m_feederEncoder.getVelocity()) > 0;
 		}, null);
 		builder.addDoubleProperty("Feeder Velocity RPM", () -> m_feederEncoder.getVelocity(), null);
+		builder.addDoubleProperty("Feeder Setpoint RPM", () -> _feederSetpoint.in(Units.RPM), null);
 		builder.addDoubleProperty("Flywheel SpeedMod", () -> flywheelSpeedMod,
 			(newMod) -> flywheelSpeedMod = newMod);
+		builder.addBooleanProperty("Shooter Enabled", () -> m_enable.get(), null);
+		builder.addBooleanProperty("Belt Reversed", () -> m_reverse.get(), null);
 	}
 
 	private AngularVelocity calculateShooterSpeedFromRobotDistance() {
@@ -179,6 +179,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 			.div(ShooterConstants.FEEDER_SPEED_COEFF).times(m_reverse.get() ? -1.0 : 1.0);
 		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Shooter))
 			SmartDashboard.putNumber("Feeder Setpoint RPM", feederSetpoint.in(Units.RPM));
+		_feederSetpoint = feederSetpoint;
 		m_feederPid.setSetpoint(feederSetpoint.in(Units.RPM), ControlType.kVelocity);
 		return velocity;
 	}
