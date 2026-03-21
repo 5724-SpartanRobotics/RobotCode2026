@@ -5,6 +5,7 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
+import frc.lib.LoggedSlewRateLimiter;
 
 public interface CoordinatorIO {
 	public static class CoordinatorIOInputs implements LoggableInputs {
@@ -46,5 +47,9 @@ public interface CoordinatorIO {
 	}
 
 	default void stop() {
+	}
+
+	default LoggedSlewRateLimiter getRateLimiter() {
+		return null;
 	}
 }

@@ -25,7 +25,7 @@ public class PdhSubsystem extends NopSubsystemBase {
 		private static final PdhSubsystem INSTANCE = new PdhSubsystem();
 	}
 
-	public static PdhSubsystem getInstance() {
+	public static synchronized PdhSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 

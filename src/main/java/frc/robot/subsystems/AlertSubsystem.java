@@ -24,7 +24,7 @@ public class AlertSubsystem extends NopSubsystemBase {
 		private static final AlertSubsystem INSTANCE = new AlertSubsystem();
 	}
 
-	public static AlertSubsystem getInstance() {
+	public static synchronized AlertSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 

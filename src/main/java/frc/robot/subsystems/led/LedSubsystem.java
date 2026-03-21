@@ -16,12 +16,18 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.lib.Elastic;
+import frc.lib.Elastic.Notification;
+import frc.lib.Elastic.NotificationLevel;
 import frc.lib.NopSubsystemBase;
 import frc.robot.info.Debug;
 import frc.robot.info.RobotMode;
 import frc.robot.info.constants.DriveConstants;
 import frc.robot.info.constants.LedConstants;
+import frc.robot.subsystems.drive.DriveSubsystem;
 
 public class LedSubsystem extends NopSubsystemBase {
 	// Bing AI told me that WPILib uses 24 bits/pixel for LEDs (cannot corroborate
@@ -31,7 +37,7 @@ public class LedSubsystem extends NopSubsystemBase {
 	/** Default: 10 seconds */
 	public static Time kDefaultStandbyDelay = DriveConstants.WHEEL_LOCK_TIME;
 	/** Default: #FFF2D9 (cream) */
-	public static Color kDisabledColor = new Color("#FFF2D9");
+	public static Color kDisabledColor = new Color("#d1a15f");
 	/** Default: Black */
 	public static Color kInactiveColor = Color.kBlack;
 	/** Default: Green */
@@ -110,7 +116,7 @@ public class LedSubsystem extends NopSubsystemBase {
 		private static final LedSubsystem INSTANCE = new LedSubsystem();
 	}
 
-	public static LedSubsystem getInstance() {
+	public static synchronized LedSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 
@@ -205,6 +211,14 @@ public class LedSubsystem extends NopSubsystemBase {
 					renderRainbow();
 					break;
 				case DISABLED_STANDBY :
+					CommandScheduler.getInstance().schedule(
+						Commands.runOnce(
+							() -> DriveSubsystem.getInstance().setMotorBrake(false),
+							DriveSubsystem.getInstance()));
+					// Elastic.sendNotification(new Notification(
+					// NotificationLevel.INFO,
+					// "Robot Brake State Changed",
+					// "The wheel brake has been disabled and the robot can move freely."));
 					renderSolid(kDisabledColor);
 					break;
 				case ACTIVE_OFF :

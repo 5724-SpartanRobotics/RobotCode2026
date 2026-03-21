@@ -132,7 +132,7 @@ public class DriveSubsystem extends NopSubsystemBase {
 		private static final DriveSubsystem INSTANCE = new DriveSubsystem();
 	}
 
-	public static DriveSubsystem getInstance() {
+	public static synchronized DriveSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 
@@ -271,6 +271,7 @@ public class DriveSubsystem extends NopSubsystemBase {
 	public void addVisionMeasurement(Pose2d pose, double timestamp) {
 		m_odomLock.lock();
 		try {
+			m_swerveDrive.field.getObject("VisionEstimation").setPose(pose);
 			m_swerveDrive.addVisionMeasurement(pose, timestamp);
 		} finally {
 			m_odomLock.unlock();
@@ -280,6 +281,7 @@ public class DriveSubsystem extends NopSubsystemBase {
 	public void addVisionMeasurement(Pose2d pose, double timestamp, Matrix<N3, N1> stdDevs) {
 		m_odomLock.lock();
 		try {
+			m_swerveDrive.field.getObject("VisionEstimation").setPose(pose);
 			m_swerveDrive.addVisionMeasurement(pose, timestamp, stdDevs);
 		} finally {
 			m_odomLock.unlock();

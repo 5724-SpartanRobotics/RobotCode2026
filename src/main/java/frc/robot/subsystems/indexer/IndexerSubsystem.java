@@ -26,7 +26,7 @@ public class IndexerSubsystem extends NopSubsystemBase {
 		private static final IndexerSubsystem INSTANCE = new IndexerSubsystem();
 	}
 
-	public static IndexerSubsystem getInstance() {
+	public static synchronized IndexerSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 

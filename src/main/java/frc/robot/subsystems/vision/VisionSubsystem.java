@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -34,7 +35,9 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Notifier;
 import frc.lib.NopSubsystemBase;
 import frc.robot.info.RobotMode;
+import frc.robot.info.constants.VisionConstants.CameraConfigurations;
 import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import frc.robot.subsystems.vision.VisionIO.VisionFrame;
 
@@ -118,7 +121,7 @@ public class VisionSubsystem extends NopSubsystemBase {
 		};
 	}
 
-	public static VisionSubsystem getInstance() {
+	public static synchronized VisionSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 
@@ -152,6 +155,9 @@ public class VisionSubsystem extends NopSubsystemBase {
 				Logger.processInputs("Vision/Camera" + i, inputs[i]);
 			}
 		}
+
+		ShooterSubsystem.getInstance().hypotenuseToAllianceHub = DriveSubsystem.getInstance()
+			.getHypotToAllianceHub();
 	}
 
 	public void updateLoop() {
@@ -175,6 +181,7 @@ public class VisionSubsystem extends NopSubsystemBase {
 
 		// Loop over cameras
 		for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
+			var camera = CameraConfigurations.values()[cameraIndex];
 			// Update disconnected alert
 			disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].connected);
 
@@ -241,10 +248,8 @@ public class VisionSubsystem extends NopSubsystemBase {
 					linearStdDev *= frc.robot.info.constants.VisionConstants.LINEAR_STDEB_MEGATAG2_FACTOR;
 					angularStdDev *= frc.robot.info.constants.VisionConstants.ANGULAR_STDEV_MEGATAG2_FACTOR;
 				}
-				if (cameraIndex < frc.robot.info.constants.VisionConstants.CAMERA_STDEV_FACTORS.length) {
-					linearStdDev *= frc.robot.info.constants.VisionConstants.CAMERA_STDEV_FACTORS[cameraIndex];
-					angularStdDev *= frc.robot.info.constants.VisionConstants.CAMERA_STDEV_FACTORS[cameraIndex];
-				}
+				linearStdDev *= MathUtil.clamp(camera.getTrustFactor(), 0.0, 1.0);
+				angularStdDev *= MathUtil.clamp(camera.getTrustFactor(), 0.0, 1.0);
 
 				// Send vision observation
 				consumer.accept(

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -8,9 +9,6 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.FeedForwardConfig;
@@ -29,6 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.NopSubsystemBase;
+import frc.lib.spark.SparkIO_SparkFlex;
 import frc.robot.info.Debug;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.RobotConstants;
@@ -36,8 +35,7 @@ import frc.robot.info.constants.ShooterConstants;
 
 public class ShooterSubsystem extends NopSubsystemBase {
 	private final ShooterFlywheel m_flywheel;
-	private final SparkFlex m_feederMotor;
-	private final SparkClosedLoopController m_feederPid;
+	private final SparkIO_SparkFlex m_feederMotor;
 	private final RelativeEncoder m_feederEncoder;
 
 	private AtomicBoolean m_enable = new AtomicBoolean(false);
@@ -45,14 +43,15 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	private AngularVelocity _feederSetpoint = Units.RPM.of(0);
 
 	public Distance hypotenuseToAllianceHub = Units.Meters.of(0);
-	public double flywheelSpeedMod = 1.1;
+	public double flywheelSpeedMod = ShooterConstants.DEFAULT_FLYWHEEL_SPEEDMOD;
 
 	private ShooterIO.ShooterIOInputs inputs = new ShooterIO.ShooterIOInputs();
 
 	private ShooterSubsystem() {
 		m_flywheel = new ShooterFlywheel(this);
 
-		m_feederMotor = new SparkFlex(CanIdConstants.SHOOTER_UPPER_FEED, MotorType.kBrushless);
+		m_feederMotor = new SparkIO_SparkFlex(CanIdConstants.SHOOTER_UPPER_FEED,
+			MotorType.kBrushless);
 		m_feederMotor.configure(
 			new SparkFlexConfig()
 				.apply(new LimitSwitchConfig()
@@ -73,7 +72,6 @@ public class ShooterSubsystem extends NopSubsystemBase {
 				.idleMode(IdleMode.kBrake),
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
-		m_feederPid = m_feederMotor.getClosedLoopController();
 		m_feederEncoder = m_feederMotor.getEncoder();
 	}
 
@@ -81,15 +79,15 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		private static final ShooterSubsystem INSTANCE = new ShooterSubsystem();
 	}
 
-	public static ShooterSubsystem getInstance() {
+	public static synchronized ShooterSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 
 	@Override
 	public void periodic() {
-		m_flywheel.periodic();
-
 		var setpointVelocity = setMotorVelocities();
+
+		m_flywheel.periodic();
 
 		log(setpointVelocity);
 
@@ -180,7 +178,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Shooter))
 			SmartDashboard.putNumber("Feeder Setpoint RPM", feederSetpoint.in(Units.RPM));
 		_feederSetpoint = feederSetpoint;
-		m_feederPid.setSetpoint(feederSetpoint.in(Units.RPM), ControlType.kVelocity);
+		m_feederMotor.setVelocity(feederSetpoint, true, false);
 		return velocity;
 	}
 
@@ -243,5 +241,17 @@ public class ShooterSubsystem extends NopSubsystemBase {
 				s.disable();
 			}
 		}.withName("ShootCommand");
+	}
+
+	public Command changeFlywheelSpeedMod(DoubleSupplier rawAxis) {
+		return run(() -> {
+			double axis = rawAxis.getAsDouble();
+			double newFlywheelSpeedMod = 1.0 + axis * 0.5;
+			flywheelSpeedMod = newFlywheelSpeedMod;
+		});
+	}
+
+	public Command resetFlywheelSpeedMod() {
+		return run(() -> flywheelSpeedMod = ShooterConstants.DEFAULT_FLYWHEEL_SPEEDMOD);
 	}
 }

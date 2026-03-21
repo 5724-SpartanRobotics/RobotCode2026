@@ -11,7 +11,7 @@ import frc.lib.PIDFfRecord;
 import frc.robot.info.Math;
 
 public final class ShooterConstants {
-	private static final double SHOOTER_kFf = 0.0002;
+	private static final double SHOOTER_kFf = 0.0000;
 	private static final double FEEDER_kFf = 0.00;
 
 	public static final double GEAR_RATIO = 1.0;
@@ -54,4 +54,5 @@ public final class ShooterConstants {
 
 	public static final Distance FLYWHEEL_DIAMETER = Units.Inches.of(4);
 	public static final Distance FEEDER_PULLEY_DIAMETER = Units.Inches.of(1.2);
+	public static final double DEFAULT_FLYWHEEL_SPEEDMOD = 1.1;
 }

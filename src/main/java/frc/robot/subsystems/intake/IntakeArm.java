@@ -112,7 +112,7 @@ public class IntakeArm {
 			Units.DegreesPerSecond.of(45).in(Units.DegreesPerSecond));
 	}
 
-	public static IntakeArm getInstance() {
+	public static synchronized IntakeArm getInstance() {
 		if (instance == null)
 			instance = new IntakeArm();
 		return instance;

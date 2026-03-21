@@ -21,7 +21,8 @@ public class VisionConstants {
 					Units.Inches.of(2.0 + 7.0 / 8.0).in(Units.Meters),
 					Units.Inches.of(14.5).in(Units.Meters),
 					Units.Inches.of(12.75).in(Units.Meters)),
-				new Rotation3d(0, 0, 0))),
+				new Rotation3d(0, 0, 0)),
+			0.9),
 
 		Back(
 			"back",
@@ -30,7 +31,8 @@ public class VisionConstants {
 					Units.Inches.of(-11.0).in(Units.Meters),
 					Units.Inches.of(8.0 + 1.0 / 8.0).in(Units.Meters),
 					Units.Inches.of(13.0).in(Units.Meters)),
-				new Rotation3d(0, 0, Math.PI))),
+				new Rotation3d(0, 0, Math.PI)),
+			0.9),
 
 		Right(
 			"right",
@@ -39,16 +41,20 @@ public class VisionConstants {
 					Units.Inches.of(1.0 / 8.0).in(Units.Meters),
 					Units.Inches.of(-11.5).in(Units.Meters),
 					Units.Inches.of(19.0 + 1.0 / 8.0).in(Units.Meters)),
-				new Rotation3d(0, 0, frc.robot.info.Math.THREE_HALVES_PI)));
+				new Rotation3d(0, 0, frc.robot.info.Math.THREE_HALVES_PI)),
+			0.775);
 
 		private final String name;
 		private final Transform3d robotToCamera;
+		private final double trustFactor;
 
 		CameraConfigurations(
 			String name,
-			Transform3d robotCenterToCamera) {
+			Transform3d robotCenterToCamera,
+			double trustFactor) {
 			this.name = name;
 			this.robotToCamera = robotCenterToCamera;
+			this.trustFactor = trustFactor;
 		}
 
 		public String getName() {
@@ -57,6 +63,10 @@ public class VisionConstants {
 
 		public Transform3d getTransform3d() {
 			return robotToCamera;
+		}
+
+		public double getTrustFactor() {
+			return trustFactor;
 		}
 	}
 
@@ -68,14 +78,6 @@ public class VisionConstants {
 	// (Adjusted automatically based on distance and # of tags)
 	public static double LINEAR_STDEV_BASELINE = 0.02; // Meters
 	public static double ANGULAR_STDEV_BASELINE = 0.06; // Radians
-
-	// Standard deviation multipliers for each camera
-	// (Adjust to trust some cameras more than others)
-	public static double[] CAMERA_STDEV_FACTORS = new double[]{
-		1.0, // Camera 0 (Front)
-		1.0, // Camera 1 (Back)
-		0.9 // Camera 2 (Right)
-	};
 
 	// Multipliers to apply for MegaTag 2 observations
 	public static double LINEAR_STDEB_MEGATAG2_FACTOR = 0.5; // More stable than full 3D solve

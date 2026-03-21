@@ -38,7 +38,7 @@ public class SparkIO_SparkMax extends SparkMax implements SparkIO {
 
 	@Override
 	public void set(double speed) {
-		this.set(speed, false);
+		super.set(speed);
 	}
 
 	@Override
@@ -74,6 +74,6 @@ public class SparkIO_SparkMax extends SparkMax implements SparkIO {
 			throw new IllegalArgumentException(
 				"Cannot setVelocity on an open-loop SparkMax (must used closed-loop)");
 		super.getClosedLoopController().setSetpoint(velocity.in(Units.RPM),
-			useMaxMotion ? ControlType.kMAXMotionPositionControl : ControlType.kPosition);
+			useMaxMotion ? ControlType.kMAXMotionVelocityControl : ControlType.kVelocity);
 	}
 }

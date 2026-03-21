@@ -8,6 +8,8 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.ColorUtil;
 import frc.lib.NopSubsystemBase;
 import frc.robot.info.Alliance;
@@ -30,7 +32,7 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 		private static final CoordinatorSubsystem INSTANCE = new CoordinatorSubsystem();
 	}
 
-	public static CoordinatorSubsystem getInstance() {
+	public static synchronized CoordinatorSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 
@@ -54,21 +56,20 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 		io.updateInputs(inputs);
 		Logger.processInputs("Coordinator", inputs);
 
+		io.setVelocity(Units.RPM.of(
+			io.getRateLimiter().calculate(setpoint.in(Units.RPM))));
+
 		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Indexer))
 			SmartDashboard.putData(this);
 	}
 
-	public void enableToShooter() {
-		setpoint = CoordinatorConstants.RUN_SETPOINT;
-		io.setVelocity(setpoint);
-
+	public void enableToStorage() {
+		setpoint = CoordinatorConstants.RUN_TO_STORAGE_SETPOINT;
 		LedSubsystem.getInstance().setPersistentNotify(Alliance.getAllianceColor());
 	}
 
-	public void enableToStorage() {
-		setpoint = CoordinatorConstants.RUN_SETPOINT.times(-1.0);
-		io.setVelocity(setpoint);
-
+	public void enableToShooter() {
+		setpoint = CoordinatorConstants.RUN_TO_SHOOTER_SETPOINT;
 		LedSubsystem.getInstance().setPersistentNotify(
 			ColorUtil.plusRGB(Alliance.getAllianceColor(), 0, 100, 180));
 	}
@@ -78,5 +79,21 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 		io.stop();
 
 		LedSubsystem.getInstance().clearPersistentNotify(Alliance.getAllianceColor());
+		LedSubsystem.getInstance()
+			.clearPersistentNotify(ColorUtil.plusRGB(Alliance.getAllianceColor(), 0, 100, 180));
+	}
+
+	public Command toggleToShooter() {
+		return Commands.startEnd(
+			() -> enableToShooter(),
+			() -> disable(),
+			this);
+	}
+
+	public Command toggleToStorage() {
+		return Commands.startEnd(
+			() -> enableToStorage(),
+			() -> disable(),
+			this);
 	}
 }

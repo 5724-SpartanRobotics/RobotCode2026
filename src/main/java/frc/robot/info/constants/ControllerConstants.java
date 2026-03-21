@@ -9,8 +9,11 @@ public final class ControllerConstants {
 	public static final double DRIVER_TURN_CONSTANT = Math.TWO_PI;
 
 	public static final class DriverMap implements ClassFieldMapStringToInt {
-		public static final int SPEEDMOD_MIN = 1; // trigger
-		public static final int SPEEDMOD_MAX = 2; // thumb button
+		// public static final int SPEEDMOD_MIN = 1; // trigger
+		// public static final int SPEEDMOD_MAX = 2; // thumb button
+		public static final int ENABLE_INTAKE_IN = 2;
+		public static final int ENABLE_INTAKE_EXPEL = 1;
+		public static final int TOGGLE_SHOOTER = 3;
 		public static final int ZERO_GYRO = 7;
 		public static final int DRIVE_TO_POSE = 11;
 		public static final int CENTER_SWERVES = 10;

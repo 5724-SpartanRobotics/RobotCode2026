@@ -5,10 +5,10 @@ import frc.lib.ClassFieldMapStringToInt;
 public final class CanIdConstants implements ClassFieldMapStringToInt {
 	// https://docs.google.com/spreadsheets/d/1t8Ids1RzCOn0vlFqbZAr0mgEd12h2sJ_fCfxJkntMR0/edit?gid=0#gid=0
 	public static final int ROBORIO = 0;
-	public static final int PDH = 50;
+	public static final int PDH = 1;
 	public static final int PIGEON2 = 15;
 
-	public static final int FL_DRIVE = 1;
+	public static final int FL_DRIVE = 9;
 	public static final int FL_ENCODER = 13;
 	public static final int FL_TURN = 2;
 	public static final int BL_DRIVE = 8;

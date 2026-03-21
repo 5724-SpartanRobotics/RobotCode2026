@@ -1,13 +1,13 @@
 package frc.lib.spark;
 
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkFlex;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 
-public class SparkIO_SparkFlex extends SparkMax implements SparkIO {
+public class SparkIO_SparkFlex extends SparkFlex implements SparkIO {
 	private final MotorType motorType;
 
 	public SparkIO_SparkFlex(int deviceId, MotorType type) {
@@ -38,7 +38,16 @@ public class SparkIO_SparkFlex extends SparkMax implements SparkIO {
 
 	@Override
 	public void set(double speed) {
-		this.setDutyCycle(speed, false);
+		super.set(speed);
+	}
+
+	@Override
+	public void set(double speed, boolean isClosedLoop) {
+		if (isClosedLoop) {
+			super.getClosedLoopController().setSetpoint(speed, ControlType.kDutyCycle);
+		} else {
+			super.set(speed);
+		}
 	}
 
 	@Override
@@ -54,7 +63,7 @@ public class SparkIO_SparkFlex extends SparkMax implements SparkIO {
 	public void setPosition(Angle angle, boolean isClosedLoop, boolean useMaxMotion) {
 		if (!isClosedLoop)
 			throw new IllegalArgumentException(
-				"Cannot setPosition on an open-loop SparkMax (must used closed-loop)");
+				"Cannot setPosition on an open-loop SparkFlex (must used closed-loop)");
 		super.getClosedLoopController().setSetpoint(angle.in(Units.Rotations),
 			useMaxMotion ? ControlType.kMAXMotionPositionControl : ControlType.kPosition);
 	}
@@ -62,7 +71,7 @@ public class SparkIO_SparkFlex extends SparkMax implements SparkIO {
 	public void setPosition(double setpoint, boolean isClosedLoop, boolean useMaxMotion) {
 		if (!isClosedLoop)
 			throw new IllegalArgumentException(
-				"Cannot setPosition on an open-loop SparkMax (must used closed-loop)");
+				"Cannot setPosition on an open-loop SparkFlex (must used closed-loop)");
 		super.getClosedLoopController().setSetpoint(setpoint,
 			useMaxMotion ? ControlType.kMAXMotionPositionControl : ControlType.kPosition);
 	}
@@ -71,8 +80,8 @@ public class SparkIO_SparkFlex extends SparkMax implements SparkIO {
 	public void setVelocity(AngularVelocity velocity, boolean isClosedLoop, boolean useMaxMotion) {
 		if (!isClosedLoop)
 			throw new IllegalArgumentException(
-				"Cannot setVelocity on an open-loop SparkMax (must used closed-loop)");
+				"Cannot setVelocity on an open-loop SparkFlex (must used closed-loop)");
 		super.getClosedLoopController().setSetpoint(velocity.in(Units.RPM),
-			useMaxMotion ? ControlType.kMAXMotionPositionControl : ControlType.kPosition);
+			useMaxMotion ? ControlType.kMAXMotionVelocityControl : ControlType.kVelocity);
 	}
 }

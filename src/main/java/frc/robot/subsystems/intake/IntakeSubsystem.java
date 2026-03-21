@@ -5,9 +5,7 @@ import org.littletonrobotics.junction.Logger;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.LimitSwitchConfig;
@@ -23,6 +21,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.NopSubsystemBase;
+import frc.lib.spark.SparkIO_SparkFlex;
+import frc.lib.spark.SparkIO_SparkMax;
 import frc.robot.info.Debug;
 import frc.robot.info.Motors;
 import frc.robot.info.constants.CanIdConstants;
@@ -31,13 +31,13 @@ import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs;
 
 public class IntakeSubsystem extends NopSubsystemBase {
 	/** NEO Vortex on SparkFlex */
-	private final SparkFlex m_onArmIntake;
+	private final SparkIO_SparkFlex m_onArmIntake;
 	private double onArmIntakeSpeedReference = 0;
 	/** Redline on SparkMax */
-	private final SparkMax m_lowerFixedIntake;
+	private final SparkIO_SparkMax m_lowerFixedIntake;
 	private double lowerIntakeSpeedReference = 0;
 	/** NEO Vortex on SparkFlex */
-	private final SparkFlex m_upperFixedIntake;
+	private final SparkIO_SparkFlex m_upperFixedIntake;
 	private double upperIntakeSpeedReference = 0;
 
 	private final IntakeArm m_arm = IntakeArm.getInstance();
@@ -45,7 +45,7 @@ public class IntakeSubsystem extends NopSubsystemBase {
 	private final IntakeIOInputs inputs = new IntakeIOInputs();
 
 	private IntakeSubsystem() {
-		m_onArmIntake = new SparkFlex(CanIdConstants.INTAKE_ON_ARM, MotorType.kBrushless);
+		m_onArmIntake = new SparkIO_SparkFlex(CanIdConstants.INTAKE_ON_ARM, MotorType.kBrushless);
 		m_onArmIntake.configure(
 			new SparkFlexConfig()
 				.apply(new LimitSwitchConfig()
@@ -61,20 +61,19 @@ public class IntakeSubsystem extends NopSubsystemBase {
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
 
-		m_lowerFixedIntake = new SparkMax(CanIdConstants.INTAKE_LOWER_FIXED, MotorType.kBrushed);
+		m_lowerFixedIntake = new SparkIO_SparkMax(CanIdConstants.INTAKE_LOWER_FIXED,
+			MotorType.kBrushed);
 		m_lowerFixedIntake.configure(
 			new SparkFlexConfig()
 				.apply(new LimitSwitchConfig()
 					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
-				// I don't think we need a Closed Loop controller because this
-				// is just movement, no setpoints.
 				.inverted(true)
 				.idleMode(IdleMode.kBrake),
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
 
-		m_upperFixedIntake = new SparkFlex(CanIdConstants.INTAKE_UPPER_FIXED,
+		m_upperFixedIntake = new SparkIO_SparkFlex(CanIdConstants.INTAKE_UPPER_FIXED,
 			MotorType.kBrushless);
 		m_upperFixedIntake.configure(
 			new SparkFlexConfig()
@@ -83,7 +82,7 @@ public class IntakeSubsystem extends NopSubsystemBase {
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
 				.apply(new ClosedLoopConfig()
 					// TODO: Tune PIDs and Feedforward
-					.pid(0.1, 0, 0)
+					.pid(0.25, 0, 0)
 					.apply(new FeedForwardConfig()
 						.sva(0, 0, 0))
 					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
@@ -96,7 +95,7 @@ public class IntakeSubsystem extends NopSubsystemBase {
 		private static final IntakeSubsystem INSTANCE = new IntakeSubsystem();
 	}
 
-	public static IntakeSubsystem getInstance() {
+	public static synchronized IntakeSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 
@@ -209,9 +208,9 @@ public class IntakeSubsystem extends NopSubsystemBase {
 		onArmIntakeSpeedReference = speed * 1.1;
 		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
 		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
-		m_onArmIntake.set(onArmIntakeSpeedReference);
-		m_upperFixedIntake.set(upperIntakeSpeedReference);
-		m_lowerFixedIntake.set(lowerIntakeSpeedReference);
+		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference, true);
+		m_upperFixedIntake.setDutyCycle(upperIntakeSpeedReference, true);
+		m_lowerFixedIntake.setDutyCycle(lowerIntakeSpeedReference, true);
 	}
 
 	public void enableSpitout() {
@@ -219,9 +218,9 @@ public class IntakeSubsystem extends NopSubsystemBase {
 		onArmIntakeSpeedReference = speed;
 		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
 		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
-		m_onArmIntake.set(onArmIntakeSpeedReference);
-		m_upperFixedIntake.set(upperIntakeSpeedReference);
-		m_lowerFixedIntake.set(lowerIntakeSpeedReference);
+		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference, true);
+		m_upperFixedIntake.setDutyCycle(upperIntakeSpeedReference, true);
+		m_lowerFixedIntake.setDutyCycle(lowerIntakeSpeedReference, true);
 	}
 
 	public void enableReverse() {
@@ -229,16 +228,16 @@ public class IntakeSubsystem extends NopSubsystemBase {
 		onArmIntakeSpeedReference = speed;
 		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
 		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
-		m_onArmIntake.set(onArmIntakeSpeedReference);
-		m_upperFixedIntake.set(upperIntakeSpeedReference);
-		m_lowerFixedIntake.set(lowerIntakeSpeedReference);
+		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference, true);
+		m_upperFixedIntake.setDutyCycle(upperIntakeSpeedReference, true);
+		m_lowerFixedIntake.setDutyCycle(lowerIntakeSpeedReference, true);
 	}
 
 	public void disableIntake() {
 		onArmIntakeSpeedReference = lowerIntakeSpeedReference = upperIntakeSpeedReference = 0;
-		m_onArmIntake.set(onArmIntakeSpeedReference);
-		m_upperFixedIntake.set(upperIntakeSpeedReference);
-		m_lowerFixedIntake.set(lowerIntakeSpeedReference);
+		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference, true);
+		m_upperFixedIntake.setDutyCycle(upperIntakeSpeedReference, true);
+		m_lowerFixedIntake.setDutyCycle(lowerIntakeSpeedReference, true);
 	}
 
 	public Command toggleIntake() {

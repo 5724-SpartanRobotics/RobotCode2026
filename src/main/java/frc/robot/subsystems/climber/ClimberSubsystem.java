@@ -43,7 +43,7 @@ public class ClimberSubsystem extends NopSubsystemBase {
 		private static final ClimberSubsystem INSTANCE = new ClimberSubsystem();
 	}
 
-	public static ClimberSubsystem getInstance() {
+	public static synchronized ClimberSubsystem getInstance() {
 		return Holder.INSTANCE;
 	}
 
