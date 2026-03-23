@@ -1,4 +1,4 @@
-package frc.lib.talonfx;
+package frc.lib.motor.talonfx;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -13,8 +13,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
-import frc.lib.CtrMotionMagicRecord;
 import frc.lib.PIDFfRecord;
+import frc.lib.motor.CtrMotionMagicRecord;
 
 public class TalonFXWrapper {
 	private final TalonFX m_motor;

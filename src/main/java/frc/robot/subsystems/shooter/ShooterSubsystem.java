@@ -27,7 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.NopSubsystemBase;
-import frc.lib.spark.SparkIO_SparkFlex;
+import frc.lib.motor.spark.SparkIO_SparkFlex;
 import frc.robot.info.Debug;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.RobotConstants;
@@ -48,7 +48,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	private ShooterIO.ShooterIOInputs inputs = new ShooterIO.ShooterIOInputs();
 
 	private ShooterSubsystem() {
-		m_flywheel = new ShooterFlywheel(this);
+		m_flywheel = ShooterFlywheel.getInstance();
 
 		m_feederMotor = new SparkIO_SparkFlex(CanIdConstants.SHOOTER_UPPER_FEED,
 			MotorType.kBrushless);

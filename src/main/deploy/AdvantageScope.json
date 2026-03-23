@@ -1,0 +1,97 @@
+{
+  "hubs": [
+    {
+      "x": -8,
+      "y": -8,
+      "width": 1552,
+      "height": 849,
+      "state": {
+        "sidebar": {
+          "width": 300,
+          "expanded": [
+            "/Shooter",
+            "/PowerDistribution",
+            "/Drive",
+            "/Vision/Camera0/PoseObservations/0",
+            "/Vision/Camera0/PoseObservations/0/Pose",
+            "/SystemStats",
+            "/SystemStats/CANBus",
+            "/Vision"
+          ]
+        },
+        "tabs": {
+          "selected": 1,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "7ezznat6fjkdf44hfw09pubj9brap250",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 2,
+              "title": "2D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "/Drive/Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "bumpers": ""
+                    }
+                  }
+                ],
+                "field": "FRC:2026 Field",
+                "orientation": 0,
+                "size": "large"
+              },
+              "controllerUUID": "gwee22kp5n3bu0v82qfqlhd33npa6zle",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "/Drive/Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "2026 KitBot"
+                    }
+                  }
+                ],
+                "game": "FRC:2026 Field"
+              },
+              "controllerUUID": "ir6qw9g632sdgslfest0ywods2t7dozp",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  3.0490250410034347,
+                  5.051260037112958,
+                  7.662463728270415
+                ],
+                "cameraTarget": [
+                  1.00802151148727,
+                  -0.9626464523199509,
+                  -3.2755334079777025
+                ]
+              },
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "26.0.0"
+}

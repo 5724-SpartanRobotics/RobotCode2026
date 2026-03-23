@@ -9,9 +9,10 @@ import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.LimitSwitchConfig;
 import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkFlexConfig;
 
-import frc.lib.spark.SparkIO_SparkFlex;
+import frc.lib.motor.spark.SparkIO_SparkFlex;
+
+import com.revrobotics.spark.config.SparkFlexConfig;
 
 public class IndexerIO_RealAndSim implements IndexerIO {
 	private final SparkIO_SparkFlex motor;

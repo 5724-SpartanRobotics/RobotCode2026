@@ -19,7 +19,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.lib.LoggedSlewRateLimiter;
-import frc.lib.spark.SparkIO_SparkFlex;
+import frc.lib.motor.spark.SparkIO_SparkFlex;
 import frc.robot.info.Debug;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.ShooterConstants;
@@ -29,7 +29,6 @@ public class ShooterFlywheel {
 	private static final boolean kIsDebug = Debug.DebugLevel
 		.isOrAll(Debug.DebugLevel.Shooter);
 
-	private final ShooterSubsystem m_subsystem;
 	private final LoggedSlewRateLimiter m_rateLimiter;
 
 	// private final SmartMotorControllerConfig smcConfig;
@@ -42,9 +41,7 @@ public class ShooterFlywheel {
 	private double measuredVelocity = 0;
 	private AngularVelocity setpointVelocity = Units.RPM.of(0);
 
-	public ShooterFlywheel(ShooterSubsystem shooterSubsystem) {
-		m_subsystem = shooterSubsystem;
-
+	public ShooterFlywheel() {
 		// smcConfig = new SmartMotorControllerConfig(m_subsystem)
 		// .withControlMode(ControlMode.CLOSED_LOOP)
 		// // Feedback Constants (PID Constants)
@@ -119,6 +116,14 @@ public class ShooterFlywheel {
 		// .withSpeedometerSimulation(ShooterConstants.SOFT_LIMIT_VELOCITY.times(3.0 / 2.0));
 		// m_flywheel = new FlyWheel(shooterConfig);
 		m_rateLimiter = new LoggedSlewRateLimiter("ShooterFlywheel", 2500); // rpm/s
+	}
+
+	private static final class Holder {
+		private static final ShooterFlywheel INSTANCE = new ShooterFlywheel();
+	}
+
+	public static synchronized ShooterFlywheel getInstance() {
+		return Holder.INSTANCE;
 	}
 
 	public void periodic() {

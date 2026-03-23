@@ -14,7 +14,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.lib.LoggedSlewRateLimiter;
-import frc.lib.spark.SparkIO_SparkFlex;
+import frc.lib.motor.spark.SparkIO_SparkFlex;
 import frc.robot.info.constants.CoordinatorConstants;
 
 public class CoordinatorIO_RealAndSim implements CoordinatorIO {

@@ -15,13 +15,9 @@ public class IntakeIO {
 
 		// Motor outputs (what you're commanding)
 		public double onArmPercent = 0.0;
-		public double lowerPercent = 0.0;
-		public double upperPercent = 0.0;
 
 		// Measured (optional but very useful)
 		public double onArmVelocityRPM = 0.0;
-		public double lowerCurrentAmps = 0.0;
-		public double upperVelocityRPM = 0.0;
 
 		// Derived state
 		public boolean intakeActive = false;
@@ -35,12 +31,8 @@ public class IntakeIO {
 			table.put("ArmRightCurrentAmps", armRightCurrentAmps);
 
 			table.put("OnArmPercent", onArmPercent);
-			table.put("LowerPercent", lowerPercent);
-			table.put("UpperPercent", upperPercent);
 
 			table.put("OnArmVelocityRPM", onArmVelocityRPM);
-			table.put("LowerCurrentAmps", lowerCurrentAmps);
-			table.put("UpperVelocityRPM", upperVelocityRPM);
 
 			table.put("IntakeActive", intakeActive);
 			table.put("Reversed", reversed);
@@ -54,12 +46,8 @@ public class IntakeIO {
 			armRightCurrentAmps = table.get("ArmRightCurrentAmps", 0.0);
 
 			onArmPercent = table.get("OnArmPercent", 0.0);
-			lowerPercent = table.get("LowerPercent", 0.0);
-			upperPercent = table.get("UpperPercent", 0.0);
 
 			onArmVelocityRPM = table.get("OnArmVelocityRPM", 0.0);
-			lowerCurrentAmps = table.get("LowerCurrentAmps", 0.0);
-			upperVelocityRPM = table.get("UpperVelocityRPM", 0.0);
 
 			intakeActive = table.get("IntakeActive", false);
 			reversed = table.get("Reversed", false);

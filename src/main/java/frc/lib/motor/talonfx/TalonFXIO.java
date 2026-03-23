@@ -1,4 +1,4 @@
-package frc.lib.spark;
+package frc.lib.motor.talonfx;
 
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
@@ -7,65 +7,58 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import frc.lib.motor.ClosedLoopMotor;
 
-public interface SparkIO {
+public interface TalonFXIO extends ClosedLoopMotor {
+
+	/** Container for all sensor inputs */
 	@AutoLog
-	public static class SparkIOInputs implements LoggableInputs {
-		public String motorType = "Unknown";
+	public static class TalonFXIOInputs implements LoggableInputs {
 		public double positionRotations = 0.0;
 		public double velocityRPS = 0.0;
 		public double appliedVolts = 0.0;
-		public double busVoltage = 0.0;
-		public double outputCurrentAmps = 0.0;
+		public double supplyCurrentAmps = 0.0;
+		public double statorCurrentAmps = 0.0;
 		public double tempCelsius = 0.0;
 
 		@Override
 		public void toLog(LogTable table) {
-			table.put("MotorType", motorType);
 			table.put("PositionRotations", positionRotations);
 			table.put("VelocityRPS", velocityRPS);
 			table.put("AppliedVolts", appliedVolts);
-			table.put("SupplyCurrentAmps", busVoltage);
-			table.put("StatorCurrentAmps", outputCurrentAmps);
+			table.put("SupplyCurrentAmps", supplyCurrentAmps);
+			table.put("StatorCurrentAmps", statorCurrentAmps);
 			table.put("TempCelsius", tempCelsius);
 		}
 
 		@Override
 		public void fromLog(LogTable table) {
-			motorType = table.get("MotorType", motorType);
 			positionRotations = table.get("PositionRotations", positionRotations);
 			velocityRPS = table.get("VelocityRPS", velocityRPS);
 			appliedVolts = table.get("AppliedVolts", appliedVolts);
-			busVoltage = table.get("SupplyCurrentAmps", busVoltage);
-			outputCurrentAmps = table.get("StatorCurrentAmps", outputCurrentAmps);
+			supplyCurrentAmps = table.get("SupplyCurrentAmps", supplyCurrentAmps);
+			statorCurrentAmps = table.get("StatorCurrentAmps", statorCurrentAmps);
 			tempCelsius = table.get("TempCelsius", tempCelsius);
 		}
 	}
 
 	/** Updates the set of loggable inputs */
-	default void updateInputs(SparkIOInputs inputs) {
+	default void updateInputs(TalonFXIOInputs inputs) {
 	}
 
 	/** Open-loop [-1, 1] */
 	default void set(double speed) {
 	}
 
-	default void set(double speed, boolean isClosedLoop) {
-	}
-
-	default void setDutyCycle(double speed, boolean isClosedLoop) {
-		set(speed, isClosedLoop);
-	}
-
 	/** Voltage control */
-	default void setVoltage(Voltage volts, boolean isClosedLoop) {
+	default void setVoltage(Voltage volts) {
 	}
 
 	/** Position (rotations) */
-	default void setPosition(Angle angle, boolean isClosedLoop, boolean useMaxMotion) {
+	default void setPosition(Angle angle) {
 	}
 
 	/** Closed-loop velocity */
-	default void setVelocity(AngularVelocity velocity, boolean isClosedLoop, boolean useMaxMotion) {
+	default void setVelocity(AngularVelocity velocity) {
 	}
 }

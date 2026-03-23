@@ -2,8 +2,8 @@ package frc.robot.info.constants;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Current;
-import frc.lib.CtrMotionMagicRecord;
 import frc.lib.PIDFfRecord;
+import frc.lib.motor.CtrMotionMagicRecord;
 import frc.robot.info.Math;
 
 public final class ClimberConstants {

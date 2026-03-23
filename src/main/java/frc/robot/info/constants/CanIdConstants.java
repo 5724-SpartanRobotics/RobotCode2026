@@ -22,8 +22,8 @@ public final class CanIdConstants implements ClassFieldMapStringToInt {
 	public static final int FR_TURN = 3;
 
 	public static final int INTAKE_ON_ARM = 20;
-	public static final int INTAKE_LOWER_FIXED = 21;
-	public static final int INTAKE_UPPER_FIXED = 30;
+	// public static final int INTAKE_LOWER_FIXED = 21;
+	// public static final int INTAKE_UPPER_FIXED = 30;
 	public static final int ARM_LEFT_MASTER = 22;
 	public static final int ARM_RIGHT_SLAVE = 23;
 

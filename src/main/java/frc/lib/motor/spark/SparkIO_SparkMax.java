@@ -1,16 +1,16 @@
-package frc.lib.spark;
+package frc.lib.motor.spark;
 
-import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 
-public class SparkIO_SparkFlex extends SparkFlex implements SparkIO {
+public class SparkIO_SparkMax extends SparkMax implements SparkIO {
 	private final MotorType motorType;
 
-	public SparkIO_SparkFlex(int deviceId, MotorType type) {
+	public SparkIO_SparkMax(int deviceId, MotorType type) {
 		super(deviceId, type);
 		motorType = type;
 	}
@@ -63,16 +63,8 @@ public class SparkIO_SparkFlex extends SparkFlex implements SparkIO {
 	public void setPosition(Angle angle, boolean isClosedLoop, boolean useMaxMotion) {
 		if (!isClosedLoop)
 			throw new IllegalArgumentException(
-				"Cannot setPosition on an open-loop SparkFlex (must used closed-loop)");
+				"Cannot setPosition on an open-loop SparkMax (must used closed-loop)");
 		super.getClosedLoopController().setSetpoint(angle.in(Units.Rotations),
-			useMaxMotion ? ControlType.kMAXMotionPositionControl : ControlType.kPosition);
-	}
-
-	public void setPosition(double setpoint, boolean isClosedLoop, boolean useMaxMotion) {
-		if (!isClosedLoop)
-			throw new IllegalArgumentException(
-				"Cannot setPosition on an open-loop SparkFlex (must used closed-loop)");
-		super.getClosedLoopController().setSetpoint(setpoint,
 			useMaxMotion ? ControlType.kMAXMotionPositionControl : ControlType.kPosition);
 	}
 
@@ -80,8 +72,28 @@ public class SparkIO_SparkFlex extends SparkFlex implements SparkIO {
 	public void setVelocity(AngularVelocity velocity, boolean isClosedLoop, boolean useMaxMotion) {
 		if (!isClosedLoop)
 			throw new IllegalArgumentException(
-				"Cannot setVelocity on an open-loop SparkFlex (must used closed-loop)");
+				"Cannot setVelocity on an open-loop SparkMax (must used closed-loop)");
 		super.getClosedLoopController().setSetpoint(velocity.in(Units.RPM),
 			useMaxMotion ? ControlType.kMAXMotionVelocityControl : ControlType.kVelocity);
+	}
+
+	@Override
+	public void setDutyCycle(double setpoint) {
+		setDutyCycle(setpoint, true);
+	}
+
+	@Override
+	public void setVoltage(Voltage outputVoltage) {
+		setVoltage(outputVoltage, true);
+	}
+
+	@Override
+	public void setPosition(Angle angle) {
+		setPosition(angle, true, false);
+	}
+
+	@Override
+	public void setVelocity(AngularVelocity velocity) {
+		setVelocity(velocity, true, false);
 	}
 }

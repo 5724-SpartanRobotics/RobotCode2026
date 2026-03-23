@@ -17,6 +17,8 @@ public final class IntakeConstants {
 	public static final double LOWER_FIXED_GEAR_RATIO = 4; // 4:1
 	public static final double UPPER_FIXED_GEAR_RATIO = 1;
 
+	public static final PIDFfRecord PIDF = new PIDFfRecord(0, 0, 0, 0, 0, 0, 0);
+
 	public static final class Arm {
 		public static final double GEAR_RATIO = 5 * 5; // 5:1 -> 5:1 = 25:1
 		public static final AngularVelocity SETPOINT_RAMP_RATE = Units.DegreesPerSecond.of(60);

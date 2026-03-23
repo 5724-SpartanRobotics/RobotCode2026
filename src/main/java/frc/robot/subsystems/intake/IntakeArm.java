@@ -20,7 +20,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.lib.LoggedSlewRateLimiter;
-import frc.lib.spark.SparkIO_SparkFlex;
+import frc.lib.motor.spark.SparkIO_SparkFlex;
 import frc.robot.info.Motors;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.IntakeConstants;

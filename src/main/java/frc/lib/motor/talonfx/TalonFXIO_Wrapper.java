@@ -1,4 +1,4 @@
-package frc.lib.talonfx;
+package frc.lib.motor.talonfx;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -30,6 +30,11 @@ public class TalonFXIO_Wrapper implements TalonFXIO {
 	@Override
 	public void set(double speed) {
 		wrapper.set(speed);
+	}
+
+	@Override
+	public void setDutyCycle(double setpoint) {
+		wrapper.set(setpoint);
 	}
 
 	@Override

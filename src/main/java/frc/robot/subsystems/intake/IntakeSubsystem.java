@@ -2,93 +2,42 @@ package frc.robot.subsystems.intake;
 
 import org.littletonrobotics.junction.Logger;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.ClosedLoopConfig;
-import com.revrobotics.spark.config.FeedForwardConfig;
-import com.revrobotics.spark.config.LimitSwitchConfig;
-import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkFlexConfig;
+import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.Units;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.NopSubsystemBase;
-import frc.lib.spark.SparkIO_SparkFlex;
-import frc.lib.spark.SparkIO_SparkMax;
+import frc.lib.motor.talonfx.TalonFXIO_Wrapper;
+import frc.lib.motor.talonfx.TalonFXWrapper;
 import frc.robot.info.Debug;
-import frc.robot.info.Motors;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs;
 
 public class IntakeSubsystem extends NopSubsystemBase {
-	/** NEO Vortex on SparkFlex */
-	private final SparkIO_SparkFlex m_onArmIntake;
+	/** Kraken X60 on TalonFX */
+	private final TalonFXIO_Wrapper m_onArmIntake;
 	private double onArmIntakeSpeedReference = 0;
-	/** Redline on SparkMax */
-	private final SparkIO_SparkMax m_lowerFixedIntake;
-	private double lowerIntakeSpeedReference = 0;
-	/** NEO Vortex on SparkFlex */
-	private final SparkIO_SparkFlex m_upperFixedIntake;
-	private double upperIntakeSpeedReference = 0;
 
 	private final IntakeArm m_arm = IntakeArm.getInstance();
 
 	private final IntakeIOInputs inputs = new IntakeIOInputs();
 
 	private IntakeSubsystem() {
-		m_onArmIntake = new SparkIO_SparkFlex(CanIdConstants.INTAKE_ON_ARM, MotorType.kBrushless);
-		m_onArmIntake.configure(
-			new SparkFlexConfig()
-				.apply(new LimitSwitchConfig()
-					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
-					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
-				.apply(new ClosedLoopConfig()
-					// TODO: Tune PIDs and Feedforward
-					.pid(0, 0, 0)
-					.apply(new FeedForwardConfig()
-						.sva(0, 0, 0))
-					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
-				.idleMode(IdleMode.kBrake),
-			ResetMode.kResetSafeParameters,
-			PersistMode.kNoPersistParameters);
-
-		m_lowerFixedIntake = new SparkIO_SparkMax(CanIdConstants.INTAKE_LOWER_FIXED,
-			MotorType.kBrushed);
-		m_lowerFixedIntake.configure(
-			new SparkFlexConfig()
-				.apply(new LimitSwitchConfig()
-					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
-					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
-				.inverted(true)
-				.idleMode(IdleMode.kBrake),
-			ResetMode.kResetSafeParameters,
-			PersistMode.kNoPersistParameters);
-
-		m_upperFixedIntake = new SparkIO_SparkFlex(CanIdConstants.INTAKE_UPPER_FIXED,
-			MotorType.kBrushless);
-		m_upperFixedIntake.configure(
-			new SparkFlexConfig()
-				.apply(new LimitSwitchConfig()
-					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
-					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
-				.apply(new ClosedLoopConfig()
-					// TODO: Tune PIDs and Feedforward
-					.pid(0.25, 0, 0)
-					.apply(new FeedForwardConfig()
-						.sva(0, 0, 0))
-					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
-				.idleMode(IdleMode.kBrake),
-			ResetMode.kResetSafeParameters,
-			PersistMode.kNoPersistParameters);
+		m_onArmIntake = new TalonFXIO_Wrapper(
+			new TalonFXWrapper(CanIdConstants.INTAKE_ON_ARM)
+				.withConfiguration(new TalonFXConfiguration()
+					.withHardwareLimitSwitch(new HardwareLimitSwitchConfigs()
+						.withForwardLimitEnable(false)
+						.withReverseLimitEnable(false)))
+				.withNeutralMode(NeutralModeValue.Brake)
+				.withSlot0Pidf(IntakeConstants.PIDF));
 	}
 
 	private static final class Holder {
@@ -118,10 +67,6 @@ public class IntakeSubsystem extends NopSubsystemBase {
 				Math.abs(inputs.onArmPercent) > 0.3);
 
 		Logger.recordOutput(
-			"Intake/AI_SpeedMismatch",
-			inputs.onArmVelocityRPM - inputs.upperVelocityRPM);
-
-		Logger.recordOutput(
 			"Intake/AI_ArmErrorDeg",
 			inputs.armSetpointDeg - inputs.armPositionDeg);
 	}
@@ -134,18 +79,12 @@ public class IntakeSubsystem extends NopSubsystemBase {
 
 		// Commanded outputs
 		inputs.onArmPercent = onArmIntakeSpeedReference;
-		inputs.lowerPercent = lowerIntakeSpeedReference;
-		inputs.upperPercent = upperIntakeSpeedReference;
 
 		// Measured values (if available)
-		inputs.onArmVelocityRPM = m_onArmIntake.getEncoder().getVelocity();
-		inputs.upperVelocityRPM = m_upperFixedIntake.getEncoder().getVelocity();
-		inputs.lowerCurrentAmps = m_lowerFixedIntake.getOutputCurrent();
+		inputs.onArmVelocityRPM = m_onArmIntake.getMotor().getVelocity().getValue().in(Units.RPM);
 
 		// Derived state
-		inputs.intakeActive = Math.abs(onArmIntakeSpeedReference) > 0.01 ||
-			Math.abs(lowerIntakeSpeedReference) > 0.01 ||
-			Math.abs(upperIntakeSpeedReference) > 0.01;
+		inputs.intakeActive = Math.abs(onArmIntakeSpeedReference) > 0.01;
 
 		inputs.reversed = onArmIntakeSpeedReference < 0;
 	}
@@ -169,30 +108,6 @@ public class IntakeSubsystem extends NopSubsystemBase {
 		builder.addDoubleProperty(
 			"IntakeOnArmSpeedPercent",
 			() -> onArmIntakeSpeedReference, null);
-		builder.addDoubleProperty(
-			"IntakeLowerFixedSpeedPercent",
-			() -> lowerIntakeSpeedReference, null);
-		builder.addDoubleProperty(
-			"IntakeUpperFixedSpeedPercent",
-			() -> upperIntakeSpeedReference, null);
-	}
-
-	private static double calculateLowerReferenceInRelationToArmIntake(double setpoint) {
-		final double speedMod = 1.0 / 65.0;
-		AngularVelocity upperVelocity = Motors.VORTEX_MAX_VELOCITY.times(setpoint);
-		AngularVelocity otherSide = upperVelocity.div(IntakeConstants.ON_ARM_GEAR_RATIO);
-		double linearSpeedSurfaceSpeedInchesPerMinute = otherSide.in(Units.RPM) *
-			IntakeConstants.UPPER_WHEEL_CURCUMFERENCE.in(Units.Inches);
-		double lowerMotorRpm = linearSpeedSurfaceSpeedInchesPerMinute *
-			IntakeConstants.LOWER_WHEEL_CURCUMFERENCE.in(Units.Inches);
-		double lowerRpmWithReducer = lowerMotorRpm * IntakeConstants.LOWER_FIXED_GEAR_RATIO;
-		double lowerReference = lowerRpmWithReducer /
-			Motors.REDLINE_MAX_VELOCITY.in(Units.RPM);
-		return lowerReference * speedMod;
-	}
-
-	private static double calculateUpperReferenceInRelationToArmIntake(double setpoint) {
-		return setpoint / IntakeConstants.UPPER_FIXED_GEAR_RATIO * 1.01;
 	}
 
 	public void extendArm() {
@@ -206,38 +121,24 @@ public class IntakeSubsystem extends NopSubsystemBase {
 	public void enableIntake() {
 		final double speed = IntakeConstants.SPEED.in(Units.Value); // Value gives n/100
 		onArmIntakeSpeedReference = speed * 1.1;
-		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
-		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
-		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference, true);
-		m_upperFixedIntake.setDutyCycle(upperIntakeSpeedReference, true);
-		m_lowerFixedIntake.setDutyCycle(lowerIntakeSpeedReference, true);
+		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference);
 	}
 
 	public void enableSpitout() {
 		final double speed = IntakeConstants.SPEED.times(-1.0).in(Units.Value); // of 100, not 1
 		onArmIntakeSpeedReference = speed;
-		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
-		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
-		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference, true);
-		m_upperFixedIntake.setDutyCycle(upperIntakeSpeedReference, true);
-		m_lowerFixedIntake.setDutyCycle(lowerIntakeSpeedReference, true);
+		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference);
 	}
 
 	public void enableReverse() {
 		final double speed = IntakeConstants.SPEED.times(-1.0).in(Units.Value);
 		onArmIntakeSpeedReference = speed;
-		lowerIntakeSpeedReference = calculateLowerReferenceInRelationToArmIntake(speed);
-		upperIntakeSpeedReference = calculateUpperReferenceInRelationToArmIntake(speed);
-		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference, true);
-		m_upperFixedIntake.setDutyCycle(upperIntakeSpeedReference, true);
-		m_lowerFixedIntake.setDutyCycle(lowerIntakeSpeedReference, true);
+		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference);
 	}
 
 	public void disableIntake() {
-		onArmIntakeSpeedReference = lowerIntakeSpeedReference = upperIntakeSpeedReference = 0;
-		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference, true);
-		m_upperFixedIntake.setDutyCycle(upperIntakeSpeedReference, true);
-		m_lowerFixedIntake.setDutyCycle(lowerIntakeSpeedReference, true);
+		onArmIntakeSpeedReference = 0;
+		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference);
 	}
 
 	public Command toggleIntake() {

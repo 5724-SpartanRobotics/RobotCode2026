@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.motor;
 
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.measure.AngularAcceleration;
