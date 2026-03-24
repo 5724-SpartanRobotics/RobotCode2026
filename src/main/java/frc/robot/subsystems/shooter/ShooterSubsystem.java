@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -42,7 +43,8 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	private AtomicBoolean m_reverse = new AtomicBoolean(false);
 	private AngularVelocity _feederSetpoint = Units.RPM.of(0);
 
-	public Distance hypotenuseToAllianceHub = Units.Meters.of(0);
+	public AtomicReference<Distance> hypotenuseToAllianceHub = new AtomicReference<>(
+		Units.Meters.of(0));
 	public double flywheelSpeedMod = ShooterConstants.DEFAULT_FLYWHEEL_SPEEDMOD;
 
 	private ShooterIO.ShooterIOInputs inputs = new ShooterIO.ShooterIOInputs();
@@ -69,7 +71,8 @@ public class ShooterSubsystem extends NopSubsystemBase {
 							ShooterConstants.FEEDER_PIDF.kFfV(),
 							ShooterConstants.FEEDER_PIDF.kFfA()))
 					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
-				.idleMode(IdleMode.kBrake),
+				.idleMode(IdleMode.kBrake)
+				.inverted(true),
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
 		m_feederEncoder = m_feederMotor.getEncoder();
@@ -101,7 +104,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		inputs.enabled = m_enable.get();
 		inputs.reversed = m_reverse.get();
 
-		inputs.distanceMeters = hypotenuseToAllianceHub.in(Units.Meters);
+		inputs.distanceMeters = hypotenuseToAllianceHub.get().in(Units.Meters);
 		inputs.flywheelSpeedMod = flywheelSpeedMod;
 
 		// Feeder
@@ -140,8 +143,15 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		builder.addBooleanProperty("Belt Reversed", () -> m_reverse.get(), null);
 	}
 
+	public static double roundToNearest(double x, double k) {
+		if (k == 0) {
+			throw new IllegalArgumentException("k must not be 0");
+		}
+		return Math.round(x / k) * k;
+	}
+
 	private AngularVelocity calculateShooterSpeedFromRobotDistance() {
-		Distance copy = hypotenuseToAllianceHub;
+		Distance copy = hypotenuseToAllianceHub.get();
 		// copy = Units.Meters.of(1);
 		double d = copy.in(Units.Meters);
 		double g = frc.robot.info.Math.g.in(Units.MetersPerSecondPerSecond);
@@ -156,10 +166,13 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		double lowVoltageMultiplier = RobotController.getBatteryVoltage()
 			/ RobotConstants.NOMINAL_BATTERY_VOLTAGE.in(Units.Volts);
 		lowVoltageMultiplier = 1.01 * (1.0 / lowVoltageMultiplier);
-		return omega
+		double rpm = omega
 			.times(lowVoltageMultiplier)
 			.times(Math.min(1.0, flywheelSpeedMod))
-			.times(ShooterConstants.LAUNCH_VELOCITY_FUDGE_COEFF);
+			.times(ShooterConstants.LAUNCH_VELOCITY_FUDGE_COEFF)
+			.in(Units.RPM);
+		double nearestK = roundToNearest(rpm, 50);
+		return Units.RPM.of(nearestK);
 	}
 
 	private AngularVelocity setMotorVelocities() {
@@ -245,8 +258,8 @@ public class ShooterSubsystem extends NopSubsystemBase {
 
 	public Command changeFlywheelSpeedMod(DoubleSupplier rawAxis) {
 		return run(() -> {
-			double axis = rawAxis.getAsDouble();
-			double newFlywheelSpeedMod = 1.0 + axis * 0.5;
+			double axis = rawAxis.getAsDouble() + 1.0; // default 1
+			double newFlywheelSpeedMod = axis * 0.5;
 			flywheelSpeedMod = newFlywheelSpeedMod;
 		});
 	}

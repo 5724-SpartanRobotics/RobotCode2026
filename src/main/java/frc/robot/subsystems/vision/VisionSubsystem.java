@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.vision;
 
+import java.nio.BufferUnderflowException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,6 +34,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.Timer;
 import frc.lib.NopSubsystemBase;
 import frc.robot.info.RobotMode;
 import frc.robot.info.constants.VisionConstants.CameraConfigurations;
@@ -60,6 +62,7 @@ public class VisionSubsystem extends NopSubsystemBase {
 		new LinkedList<>());
 	private final AtomicReference<List<Pose3d>> _allRobotPosesRejected = new AtomicReference<>(
 		new LinkedList<>());
+	private final AtomicReference<Double> lastBufferUnderflow = new AtomicReference<>(-1.0D);
 
 	private VisionSubsystem(VisionConsumer consumer, VisionIO... io) {
 		this.consumer = consumer;
@@ -141,6 +144,8 @@ public class VisionSubsystem extends NopSubsystemBase {
 				"RejectedRobotPoses", () -> _allRobotPosesRejected.get().stream()
 					.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(),
 				null);
+		builder.addDoubleProperty("Last Buffer Underflow FPGA Time",
+			() -> lastBufferUnderflow.get(), null);
 	}
 
 	@Override
@@ -156,8 +161,8 @@ public class VisionSubsystem extends NopSubsystemBase {
 			}
 		}
 
-		ShooterSubsystem.getInstance().hypotenuseToAllianceHub = DriveSubsystem.getInstance()
-			.getHypotToAllianceHub();
+		ShooterSubsystem.getInstance().hypotenuseToAllianceHub.set(DriveSubsystem.getInstance()
+			.getHypotToAllianceHub());
 	}
 
 	public void updateLoop() {
@@ -259,18 +264,24 @@ public class VisionSubsystem extends NopSubsystemBase {
 			}
 
 			// Log camera datadata
-			Logger.recordOutput(
-				"Vision/Camera" + Integer.toString(cameraIndex) + "/TagPoses",
-				tagPoses.toArray(new Pose3d[tagPoses.size()]));
-			Logger.recordOutput(
-				"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPoses",
-				robotPoses.toArray(new Pose3d[robotPoses.size()]));
-			Logger.recordOutput(
-				"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesAccepted",
-				robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()]));
-			Logger.recordOutput(
-				"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
-				robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
+			try {
+				Logger.recordOutput(
+					"Vision/Camera" + Integer.toString(cameraIndex) + "/TagPoses",
+					tagPoses.toArray(new Pose3d[tagPoses.size()]));
+				Logger.recordOutput(
+					"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPoses",
+					robotPoses.toArray(new Pose3d[robotPoses.size()]));
+				Logger.recordOutput(
+					"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesAccepted",
+					robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()]));
+				Logger.recordOutput(
+					"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
+					robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
+			} catch (BufferUnderflowException e) {
+				// For some reason this occasionally creates a buffer underflow so we just catch it
+				// and ignore it
+				lastBufferUnderflow.set(Timer.getFPGATimestamp());
+			}
 			allTagPoses.addAll(tagPoses);
 			allRobotPoses.addAll(robotPoses);
 			allRobotPosesAccepted.addAll(robotPosesAccepted);

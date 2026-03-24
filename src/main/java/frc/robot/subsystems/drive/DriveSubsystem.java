@@ -81,6 +81,8 @@ public class DriveSubsystem extends NopSubsystemBase {
 			: TelemetryVerbosity.POSE;
 	}
 
+	private double distToAllianceHubMeters = 0;
+
 	/**
 	 * Initialize {@link SwerveDrive} with the directory provided.
 	 *
@@ -174,6 +176,7 @@ public class DriveSubsystem extends NopSubsystemBase {
 		double diffX = hub.getX() - robotTranslation.getX();
 		double diffY = hub.getY() - robotTranslation.getY();
 		double dist = Math.hypot(diffX, diffY);
+		distToAllianceHubMeters = dist;
 		return Units.Meters.of(dist);
 	}
 
@@ -266,6 +269,7 @@ public class DriveSubsystem extends NopSubsystemBase {
 				() -> m.getAngleMotor().getPosition(),
 				null);
 		}
+		builder.addDoubleProperty("Distance to Hub Meters", () -> distToAllianceHubMeters, null);
 	}
 
 	public void addVisionMeasurement(Pose2d pose, double timestamp) {

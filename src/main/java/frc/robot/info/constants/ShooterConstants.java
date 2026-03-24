@@ -48,8 +48,8 @@ public final class ShooterConstants {
 		0.0);
 	public static final double FEEDER_SPEED_COEFF = 2.7;
 
-	public static final Angle LAUNCH_ANGLE = Units.Degrees.of(25);
-	public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 3.33; // usually between 1.1 and
+	public static final Angle LAUNCH_ANGLE = Units.Degrees.of(30);
+	public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 2.7; // usually between 1.1 and
 																	// 1.4;
 
 	public static final Distance FLYWHEEL_DIAMETER = Units.Inches.of(4);

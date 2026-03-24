@@ -172,7 +172,7 @@ public class IntakeArm {
 	}
 
 	public void rotateOut() {
-		setpoint = IntakeConstants.Arm.MAX_ROTATION;
+		setpoint = IntakeConstants.Arm.DEFAULT_ROTATION_SETPOINT;
 	}
 
 	public void rotateTo(Angle setpoint) {

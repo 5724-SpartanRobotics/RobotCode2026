@@ -18,9 +18,9 @@ public class VisionConstants {
 			// Camera translation relative to robot center (tune as needed)
 			new Transform3d(
 				new Translation3d(
-					Units.Inches.of(2.0 + 7.0 / 8.0).in(Units.Meters),
-					Units.Inches.of(14.5).in(Units.Meters),
-					Units.Inches.of(12.75).in(Units.Meters)),
+					Units.Inches.of(-2.0).in(Units.Meters),
+					Units.Inches.of(14).in(Units.Meters),
+					Units.Inches.of(20.5).in(Units.Meters)),
 				new Rotation3d(0, 0, 0)),
 			0.9),
 

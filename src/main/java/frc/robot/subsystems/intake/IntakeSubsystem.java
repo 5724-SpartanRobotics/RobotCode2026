@@ -37,7 +37,8 @@ public class IntakeSubsystem extends NopSubsystemBase {
 						.withForwardLimitEnable(false)
 						.withReverseLimitEnable(false)))
 				.withNeutralMode(NeutralModeValue.Brake)
-				.withSlot0Pidf(IntakeConstants.PIDF));
+				.withSlot0Pidf(IntakeConstants.PIDF)
+				.withInverted(true));
 	}
 
 	private static final class Holder {
@@ -119,19 +120,22 @@ public class IntakeSubsystem extends NopSubsystemBase {
 	}
 
 	public void enableIntake() {
-		final double speed = IntakeConstants.SPEED.in(Units.Value); // Value gives n/100
+		final double speed = IntakeConstants.SPEED.times(IntakeConstants.ON_ARM_GEAR_RATIO)
+			.in(Units.Value); // Value gives n/100
 		onArmIntakeSpeedReference = speed * 1.1;
 		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference);
 	}
 
 	public void enableSpitout() {
-		final double speed = IntakeConstants.SPEED.times(-1.0).in(Units.Value); // of 100, not 1
+		final double speed = IntakeConstants.SPEED.times(IntakeConstants.ON_ARM_GEAR_RATIO)
+			.times(-1.0).in(Units.Value); // of 100, not 1
 		onArmIntakeSpeedReference = speed;
 		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference);
 	}
 
 	public void enableReverse() {
-		final double speed = IntakeConstants.SPEED.times(-1.0).in(Units.Value);
+		final double speed = IntakeConstants.SPEED.times(IntakeConstants.ON_ARM_GEAR_RATIO)
+			.times(-1.0).in(Units.Value);
 		onArmIntakeSpeedReference = speed;
 		m_onArmIntake.setDutyCycle(onArmIntakeSpeedReference);
 	}
