@@ -18,20 +18,21 @@ import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.NopSubsystemBase;
 import frc.lib.motor.spark.SparkIO_SparkFlex;
 import frc.robot.info.Debug;
+import frc.robot.info.Period;
 import frc.robot.info.constants.CanIdConstants;
-import frc.robot.info.constants.RobotConstants;
 import frc.robot.info.constants.ShooterConstants;
 
 public class ShooterSubsystem extends NopSubsystemBase {
@@ -48,6 +49,9 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	public double flywheelSpeedMod = ShooterConstants.DEFAULT_FLYWHEEL_SPEEDMOD;
 
 	private ShooterIO.ShooterIOInputs inputs = new ShooterIO.ShooterIOInputs();
+
+	private final LinearFilter distanceFilter = LinearFilter.singlePoleIIR(0.1, Period.getPeriod());
+	private double filteredSetpointRPM = 0;
 
 	private ShooterSubsystem() {
 		m_flywheel = ShooterFlywheel.getInstance();
@@ -150,10 +154,10 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		return Math.round(x / k) * k;
 	}
 
-	private AngularVelocity calculateShooterSpeedFromRobotDistance() {
+	private AngularVelocity calculateShooterSpeedFromRobotDistance_idealPhysics() {
 		Distance copy = hypotenuseToAllianceHub.get();
 		// copy = Units.Meters.of(1);
-		double d = copy.in(Units.Meters);
+		double d = distanceFilter.calculate(copy.in(Units.Meters));
 		double g = frc.robot.info.Math.g.in(Units.MetersPerSecondPerSecond);
 		double v = Math.sqrt(
 			(d * g)
@@ -163,16 +167,57 @@ public class ShooterSubsystem extends NopSubsystemBase {
 																					// equation
 		AngularVelocity omega = Units.RadiansPerSecond.of(
 			v / ShooterConstants.FLYWHEEL_DIAMETER.div(2.0).in(Units.Meters)); // v/r
-		double lowVoltageMultiplier = RobotController.getBatteryVoltage()
-			/ RobotConstants.NOMINAL_BATTERY_VOLTAGE.in(Units.Volts);
-		lowVoltageMultiplier = 1.01 * (1.0 / lowVoltageMultiplier);
+		// double lowVoltageMultiplier = RobotController.getBatteryVoltage()
+		// / RobotConstants.NOMINAL_BATTERY_VOLTAGE.in(Units.Volts);
+		// lowVoltageMultiplier = 1.01 * (1.0 / lowVoltageMultiplier);
+		double lowVoltageMultiplier = 1.0;
 		double rpm = omega
 			.times(lowVoltageMultiplier)
 			.times(Math.min(1.0, flywheelSpeedMod))
 			.times(ShooterConstants.LAUNCH_VELOCITY_FUDGE_COEFF)
 			.in(Units.RPM);
-		double nearestK = roundToNearest(rpm, 50);
+		double nearestK = roundToNearest(rpm, 100);
 		return Units.RPM.of(nearestK);
+	}
+
+	private AngularVelocity calculateShooterSpeedFromRobotDistance() {
+		double distanceMeters = distanceFilter.calculate(
+			hypotenuseToAllianceHub.get().in(Units.Meters));
+
+		// --- Shooter curve ---
+		double targetRPM = ShooterConstants.SHOOTER_RPM_SLOPE.in(Units.RPM.per(Units.Meter))
+			* distanceMeters
+			+ ShooterConstants.SHOOTER_RPM_INTERCEPT.in(Units.RPM);
+
+		// --- Clamp ---
+		targetRPM = MathUtil.clamp(
+			targetRPM,
+			ShooterConstants.MIN_SHOOTER_VELOCITY.in(Units.RPM),
+			ShooterConstants.MAX_SHOOTER_VELOCITY.in(Units.RPM));
+
+		// --- Rate limiting ---
+		double delta = targetRPM - filteredSetpointRPM;
+		delta = MathUtil.clamp(
+			delta,
+			-ShooterConstants.MAX_RPM_CHANGE_PER_LOOP,
+			ShooterConstants.MAX_RPM_CHANGE_PER_LOOP);
+		filteredSetpointRPM += delta;
+
+		// --- Optional quantization ---
+		if (ShooterConstants.RPM_STEP_SIZE.in(Units.RPM) > 0) {
+			filteredSetpointRPM = Math
+				.round(filteredSetpointRPM / ShooterConstants.RPM_STEP_SIZE.in(Units.RPM))
+				* ShooterConstants.RPM_STEP_SIZE.in(Units.RPM);
+		}
+
+		// --- Global scaling ---
+		filteredSetpointRPM *= ShooterConstants.LAUNCH_VELOCITY_FUDGE_COEFF;
+
+		return Units.RPM.of(MathUtil.clamp(
+			roundToNearest(filteredSetpointRPM, 50),
+			ShooterConstants.MIN_SHOOTER_VELOCITY.in(Units.RPM),
+			ShooterConstants.MAX_SHOOTER_VELOCITY.in(Units.RPM)
+		));
 	}
 
 	private AngularVelocity setMotorVelocities() {
@@ -187,7 +232,8 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		m_flywheel.enable(velocity);
 		AngularVelocity feederSetpoint = velocity.times(
 			ShooterConstants.FLYWHEEL_DIAMETER.div(ShooterConstants.FEEDER_PULLEY_DIAMETER))
-			.div(ShooterConstants.FEEDER_SPEED_COEFF).times(m_reverse.get() ? -1.0 : 1.0);
+			.div(ShooterConstants.FEEDER_SPEED_COEFF).times(m_reverse.get() ? -1.0 : 1.0)
+			.times(ShooterConstants.FEEDER_GEAR_RATIO);
 		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Shooter))
 			SmartDashboard.putNumber("Feeder Setpoint RPM", feederSetpoint.in(Units.RPM));
 		_feederSetpoint = feederSetpoint;
