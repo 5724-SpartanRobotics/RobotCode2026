@@ -1,5 +1,6 @@
 package frc.robot.subsystems.coordinator;
 
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -22,7 +23,7 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 	private final CoordinatorIO io;
 	private final CoordinatorIO.CoordinatorIOInputs inputs = new CoordinatorIO.CoordinatorIOInputs();
 
-	private AngularVelocity setpoint = Units.RPM.of(0);
+	private AtomicReference<AngularVelocity> setpoint = new AtomicReference<>(Units.RPM.of(0));
 
 	private CoordinatorSubsystem() {
 		io = new CoordinatorIO_RealAndSim(CanIdConstants.COORDINATOR);
@@ -38,11 +39,13 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 
 	@Override
 	public void initSendable(SendableBuilder builder) {
-		BooleanSupplier enabled = () -> ((int) setpoint.abs(Units.RPM)) > 0;
-		BooleanSupplier reversed = () -> enabled.getAsBoolean() && setpoint.lt(Units.RPM.of(0));
+		BooleanSupplier enabled = () -> ((int) setpoint.get().abs(Units.RPM)) > 0;
+		BooleanSupplier reversed = () -> enabled.getAsBoolean()
+			&& setpoint.get().lt(Units.RPM.of(0));
 
 		builder.setSmartDashboardType(this.getClass().getName());
-		builder.addDoubleProperty("Velocity Setpoint RPM", () -> setpoint.in(Units.RPM), null);
+		builder.addDoubleProperty("Velocity Setpoint RPM", () -> setpoint.get().in(Units.RPM),
+			null);
 		builder.addBooleanProperty("Enabled", enabled, null);
 		builder.addBooleanProperty("Reversed", reversed, null);
 		builder.addBooleanProperty("To Storage", reversed, null);
@@ -57,25 +60,25 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 		Logger.processInputs("Coordinator", inputs);
 
 		io.setVelocity(Units.RPM.of(
-			io.getRateLimiter().calculate(setpoint.in(Units.RPM))));
+			io.getRateLimiter().calculate(setpoint.get().in(Units.RPM))));
 
 		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Indexer))
 			SmartDashboard.putData(this);
 	}
 
 	public void enableToStorage() {
-		setpoint = CoordinatorConstants.RUN_TO_STORAGE_SETPOINT;
+		setpoint.set(CoordinatorConstants.RUN_TO_STORAGE_SETPOINT);
 		LedSubsystem.getInstance().setPersistentNotify(Alliance.getAllianceColor());
 	}
 
 	public void enableToShooter() {
-		setpoint = CoordinatorConstants.RUN_TO_SHOOTER_SETPOINT;
+		setpoint.set(CoordinatorConstants.RUN_TO_SHOOTER_SETPOINT);
 		LedSubsystem.getInstance().setPersistentNotify(
 			ColorUtil.plusRGB(Alliance.getAllianceColor(), 0, 100, 180));
 	}
 
 	public void disable() {
-		setpoint = Units.RPM.of(0);
+		setpoint.set(Units.RPM.of(0));
 		io.stop();
 
 		LedSubsystem.getInstance().clearPersistentNotify(Alliance.getAllianceColor());

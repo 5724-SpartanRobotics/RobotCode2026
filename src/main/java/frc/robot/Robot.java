@@ -20,8 +20,8 @@ import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.CustomPeriodLoggedRobot;
@@ -34,6 +34,9 @@ import frc.robot.io.RobotIO;
 import frc.robot.io.RobotIO_Real;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.led.LedSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.coordinator.CoordinatorSubsystem;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
 
 public class Robot extends CustomPeriodLoggedRobot {
 	private final Command m_selectAutoTabOnBootCommand = new SelectAutonomousTabOnDSConnect(
@@ -44,6 +47,8 @@ public class Robot extends CustomPeriodLoggedRobot {
 
 	private final RobotIO io;
 	private final RobotIO.RobotIOInputs inputs = new RobotIO.RobotIOInputs();
+
+	private final Timer m_autoTimer = new Timer();
 
 	public Robot() {
 		if (!Debug.isBeanDebug()) {
@@ -127,6 +132,12 @@ public class Robot extends CustomPeriodLoggedRobot {
 	public void robotPeriodic() {
 		CommandScheduler.getInstance().run();
 
+		if (m_autoTimer.get() >= 20.0) {
+			CoordinatorSubsystem.getInstance().disable();
+			IndexerSubsystem.getInstance().disable();
+			ShooterSubsystem.getInstance().disableAll();
+		}
+
 		io.updateInputs(inputs);
 		Logger.processInputs("Robot", inputs);
 
@@ -152,6 +163,9 @@ public class Robot extends CustomPeriodLoggedRobot {
 
 	@Override
 	public void autonomousInit() {
+		m_autoTimer.reset();
+		m_autoTimer.start();
+
 		if (m_selectAutoTabOnBootCommand != null)
 			m_selectAutoTabOnBootCommand.cancel();
 
@@ -172,10 +186,14 @@ public class Robot extends CustomPeriodLoggedRobot {
 
 	@Override
 	public void autonomousExit() {
+		m_robotContainer.getNamedCommands().forEach((name, command) -> command.cancel());
 	}
 
 	@Override
 	public void teleopInit() {
+		m_autoTimer.reset();
+		m_autoTimer.stop();
+
 		if (m_selectAutoTabOnBootCommand != null)
 			m_selectAutoTabOnBootCommand.cancel();
 
@@ -195,6 +213,7 @@ public class Robot extends CustomPeriodLoggedRobot {
 
 	@Override
 	public void teleopExit() {
+		DriveSubsystem.getInstance().faceModulesToAllianceWall();
 		LedSubsystem.getInstance().clearAllPersistentNotify();
 	}
 

@@ -8,7 +8,8 @@ public interface ShooterIO {
 	@AutoLog
 	public static class ShooterIOInputs implements LoggableInputs {
 		// State
-		public boolean enabled = false;
+		public boolean enabledFlywheel = false;
+		public boolean enabledFeeder = false;
 		public boolean reversed = false;
 
 		// Distance + tuning
@@ -25,7 +26,8 @@ public interface ShooterIO {
 
 		@Override
 		public void toLog(LogTable table) {
-			table.put("Enabled", enabled);
+			table.put("EnabledFlywheel", enabledFlywheel);
+			table.put("EnabledFeeder", enabledFeeder);
 			table.put("Reversed", reversed);
 
 			table.put("DistanceMeters", distanceMeters);
@@ -40,7 +42,8 @@ public interface ShooterIO {
 
 		@Override
 		public void fromLog(LogTable table) {
-			enabled = table.get("Enabled", false);
+			enabledFlywheel = table.get("EnabledFlywheel", false);
+			enabledFeeder = table.get("EnabledFeeder", false);
 			reversed = table.get("Reversed", false);
 
 			distanceMeters = table.get("DistanceMeters", 0.0);

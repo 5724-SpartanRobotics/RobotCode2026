@@ -42,6 +42,8 @@ public class RobotContainer {
 	private final CommandJoystick m_driverController;
 	private final CommandXboxController m_operatorController;
 
+	private Map<String, Command> m_namedCommands;
+
 	private RobotContainer() {
 		ClassFieldMapStringToInt.invalidateDuplicates(CanIdConstants.class);
 		ClassFieldMapStringToInt.invalidateDuplicates(PdhChannelConstants.class);
@@ -66,6 +68,8 @@ public class RobotContainer {
 
 		m_autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto choices", m_autoChooser);
+
+		SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", false);
 	}
 
 	private static final class Holder {
@@ -130,33 +134,53 @@ public class RobotContainer {
 		m_driverController.button(DriverMap.ENABLE_INTAKE_EXPEL)
 			.whileTrue(ControllerActions.enableCoordinatedIntakeReverse())
 			.onFalse(ControllerActions.disableCoordinatedIntake());
+		m_driverController.button(DriverMap.DIST_FROM_HUB_2METERS).whileTrue(
+			DriveSubsystem.getInstance().driveToTargetCommand(2));
+
+		// m_driverController.button(16).onTrue(AutoActions.enableCoordinatedShooter());
+		// m_driverController.button(15).onTrue(AutoActions.disableCoordinatedShooter());
 
 		final double OPERATOR_AXIS_THRESHOLD = 0.1;
 		m_operatorController
 			.axisMagnitudeGreaterThan(XboxController.Axis.kRightY.value, OPERATOR_AXIS_THRESHOLD)
 			.whileTrue(
-				Commands.run(() -> {
+				IndexerSubsystem.getInstance().run(() -> {
 					double axis = m_operatorController
 						.getRawAxis(XboxController.Axis.kRightY.value);
 					if (axis < -OPERATOR_AXIS_THRESHOLD) {
-						IntakeSubsystem.getInstance().enableIntake();
 						IndexerSubsystem.getInstance().enable();
 					} else
 						if (axis > OPERATOR_AXIS_THRESHOLD) {
-							IntakeSubsystem.getInstance().enableSpitout();
 							IndexerSubsystem.getInstance().enableReverse();
 						} else {
-							IntakeSubsystem.getInstance().disableIntake();
 							IndexerSubsystem.getInstance().disable();
 						}
-				}, IntakeSubsystem.getInstance(), IndexerSubsystem.getInstance()))
-			.onFalse(ControllerActions.disableCoordinatedIntake());
+				}))
+			.onFalse(
+				IndexerSubsystem.getInstance().run(() -> IndexerSubsystem.getInstance().disable()));
+		m_operatorController
+			.axisMagnitudeGreaterThan(XboxController.Axis.kLeftY.value, OPERATOR_AXIS_THRESHOLD)
+			.whileTrue(
+				IntakeSubsystem.getInstance().run(() -> {
+					double axis = m_operatorController
+						.getRawAxis(XboxController.Axis.kLeftY.value);
+					if (axis < -OPERATOR_AXIS_THRESHOLD) {
+						IntakeSubsystem.getInstance().enableIntake();
+					} else
+						if (axis > OPERATOR_AXIS_THRESHOLD) {
+							IntakeSubsystem.getInstance().enableSpitout();
+						} else {
+							IntakeSubsystem.getInstance().disableIntake();
+						}
+				}))
+			.onFalse(IntakeSubsystem.getInstance()
+				.run(() -> IntakeSubsystem.getInstance().disableIntake()));
 		m_operatorController.y().toggleOnTrue(ShooterSubsystem.getInstance().toggle());
 		m_operatorController.b().toggleOnTrue(ShooterSubsystem.getInstance().toggleFeederReverse());
 		m_operatorController.leftBumper()
-			.toggleOnTrue(CoordinatorSubsystem.getInstance().toggleToStorage());
-		m_operatorController.rightBumper()
 			.toggleOnTrue(CoordinatorSubsystem.getInstance().toggleToShooter());
+		m_operatorController.rightBumper()
+			.toggleOnTrue(CoordinatorSubsystem.getInstance().toggleToStorage());
 		m_operatorController
 			.axisGreaterThan(XboxController.Axis.kRightTrigger.value, OPERATOR_AXIS_THRESHOLD)
 			.whileTrue(ShooterSubsystem.getInstance().changeFlywheelSpeedMod(
@@ -169,13 +193,19 @@ public class RobotContainer {
 	}
 
 	public void configureNamedCommands() {
-		NamedCommands.registerCommands(
-			Map.of(
-				"Extend Arm", IntakeSubsystem.getInstance().extendArmCommand(),
-				"Retract Arm", IntakeSubsystem.getInstance().retractArmCommand(),
-				"Intake", IntakeSubsystem.getInstance().enableIntakeForeverCommand(),
-				"Find Pose", DriveSubsystem.getInstance().driveToTargetCommand().withTimeout(2),
-				"Shoot", ShooterSubsystem.getInstance().enableForeverCommand()));
+		m_namedCommands = Map.of(
+			"Extend Arm", IntakeSubsystem.getInstance().extendArmCommand(),
+			"Retract Arm", IntakeSubsystem.getInstance().retractArmCommand(),
+			"Intake", IntakeSubsystem.getInstance().enableIntakeForeverCommand(),
+			"Find Pose", DriveSubsystem.getInstance().faceTargetCommand().withTimeout(2),
+			"Shoot", AutoActions.enableCoordinatedShooter(),
+			"Warmup Flywheel", ShooterSubsystem.getInstance().warmupFlywheelCommand(),
+			"ZZZ CANCEL ALL", AutoActions.disableCoordinatedShooter());
+		NamedCommands.registerCommands(m_namedCommands);
+	}
+
+	public Map<String, Command> getNamedCommands() {
+		return m_namedCommands;
 	}
 
 	public Command getAutonomousCommand() {
@@ -205,6 +235,28 @@ public class RobotContainer {
 				IntakeSubsystem.getInstance().disableIntake();
 				IndexerSubsystem.getInstance().disable();
 			}, IntakeSubsystem.getInstance(), IndexerSubsystem.getInstance());
+		}
+	}
+
+	public static final class AutoActions {
+		public static Command enableCoordinatedShooter() {
+			return Commands.runOnce(() -> {
+				SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", true);
+				ShooterSubsystem.getInstance().enableAll();
+				IndexerSubsystem.getInstance().enable();
+				CoordinatorSubsystem.getInstance().enableToShooter();
+			}, ShooterSubsystem.getInstance(), IndexerSubsystem.getInstance(),
+				CoordinatorSubsystem.getInstance());
+		}
+
+		public static Command disableCoordinatedShooter() {
+			return Commands.runOnce(() -> {
+				SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", false);
+				ShooterSubsystem.getInstance().disableAll();
+				IndexerSubsystem.getInstance().disable();
+				CoordinatorSubsystem.getInstance().disable();
+			}, ShooterSubsystem.getInstance(), IndexerSubsystem.getInstance(),
+				CoordinatorSubsystem.getInstance());
 		}
 	}
 }

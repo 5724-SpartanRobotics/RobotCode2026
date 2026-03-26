@@ -3,6 +3,7 @@ package frc.robot.info.constants;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.PerUnit;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
@@ -17,7 +18,7 @@ import frc.robot.info.Motors;
 
 public final class ShooterConstants {
 	private static final double SHOOTER_kP = 0.0005;
-	private static final double SHOOTER_kFf = 0.00001382;
+	private static final double SHOOTER_kFf = 0.0000138225;
 	private static final double FEEDER_kFf = 0.00;
 
 	public static final double GEAR_RATIO = 1.0;
@@ -66,15 +67,19 @@ public final class ShooterConstants {
 	// --- Distance filtering ---
 	public static final Time DISTANCE_FILTER_TIME_CONSTANT = Units.Seconds.of(0.25);
 
-	// --- Shooter curve (linear example: RPM = m*d + b) ---
-	public static final Per<AngularVelocityUnit, DistanceUnit> SHOOTER_RPM_SLOPE = Units.RPM.of(685)
+	// --- Shooter curve (quadratic example: RPM = a*d^2 + b*d + c) ---
+	// How aggressively RPM ramps up at long distance
+	public static final Per<AngularVelocityUnit, PerUnit<?, ?>> SHOOTER_RPM_CURVATURE = Units.RPM
+		.of(6.5).per(Units.Meter.per(Units.Meter)); // RPM/m^2
+	// How much RPM increases per meter
+	public static final Per<AngularVelocityUnit, DistanceUnit> SHOOTER_RPM_SLOPE = Units.RPM.of(450)
 		.per(Units.Meter); // RPM per meter
-	public static final AngularVelocity SHOOTER_RPM_INTERCEPT = Units.RPM.of(1300); // Base RPM
+	// Minimum RPM needed to even reach the goal (close shots)
+	public static final AngularVelocity SHOOTER_RPM_INTERCEPT = Units.RPM.of(2000); // Base RPM
 
 	// --- Limits ---
-	public static final AngularVelocity MIN_SHOOTER_VELOCITY = Units.RPM.of(800);
-	public static final AngularVelocity MAX_SHOOTER_VELOCITY = Motors.VORTEX_MAX_VELOCITY
-		.minus(Units.RPM.of(100));
+	public static final AngularVelocity MIN_SHOOTER_VELOCITY = Units.RPM.of(1800);
+	public static final AngularVelocity MAX_SHOOTER_VELOCITY = Units.RPM.of(4250);
 
 	// --- Rate limiting ---
 	public static final double MAX_RPM_CHANGE_PER_LOOP = 150.0; // RPM per 20ms loop

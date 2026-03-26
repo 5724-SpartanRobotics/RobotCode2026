@@ -20,9 +20,10 @@ public class RotateToAngleCommand extends Command {
 	private final DriveSubsystem drive;
 	private final Supplier<Rotation2d> targetRotationSupplier;
 	private final ProfiledPIDController thetaController;
+	private final boolean forever;
 
 	public RotateToAngleCommand(
-		Supplier<Rotation2d> targetRotationSupplier) {
+		Supplier<Rotation2d> targetRotationSupplier, boolean forever) {
 		this.drive = DriveSubsystem.getInstance();
 		this.targetRotationSupplier = targetRotationSupplier;
 
@@ -38,7 +39,13 @@ public class RotateToAngleCommand extends Command {
 			constraints);
 		thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
+		this.forever = forever;
+
 		addRequirements(drive);
+	}
+
+	public RotateToAngleCommand(Supplier<Rotation2d> targetRotationSupplier) {
+		this(targetRotationSupplier, false);
 	}
 
 	@Override
@@ -87,6 +94,9 @@ public class RotateToAngleCommand extends Command {
 
 	@Override
 	public boolean isFinished() {
+		if (forever) {
+			return false;
+		}
 		double currentTheta = drive.getPose().getRotation().getRadians();
 		double error = Math.abs(normalizeRadians(
 			thetaController.getGoal().position - currentTheta));

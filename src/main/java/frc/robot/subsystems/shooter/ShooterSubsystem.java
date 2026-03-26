@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
@@ -34,13 +35,16 @@ import frc.robot.info.Debug;
 import frc.robot.info.Period;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.ShooterConstants;
+import frc.robot.subsystems.coordinator.CoordinatorSubsystem;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
 
 public class ShooterSubsystem extends NopSubsystemBase {
 	private final ShooterFlywheel m_flywheel;
 	private final SparkIO_SparkFlex m_feederMotor;
 	private final RelativeEncoder m_feederEncoder;
 
-	private AtomicBoolean m_enable = new AtomicBoolean(false);
+	private AtomicBoolean m_enableFlywheel = new AtomicBoolean(false);
+	private AtomicBoolean m_enableFeeder = new AtomicBoolean(false);
 	private AtomicBoolean m_reverse = new AtomicBoolean(false);
 	private AngularVelocity _feederSetpoint = Units.RPM.of(0);
 
@@ -52,6 +56,15 @@ public class ShooterSubsystem extends NopSubsystemBase {
 
 	private final LinearFilter distanceFilter = LinearFilter.singlePoleIIR(0.1, Period.getPeriod());
 	private double filteredSetpointRPM = 0;
+
+	private static final LoggedNetworkNumber kA = new LoggedNetworkNumber("/Tuning/Shooter/A",
+		ShooterConstants.SHOOTER_RPM_CURVATURE.in(Units.RPM.per(Units.Meter.per(Units.Meter))));
+
+	private static final LoggedNetworkNumber kB = new LoggedNetworkNumber("/Tuning/Shooter/B",
+		ShooterConstants.SHOOTER_RPM_SLOPE.in(Units.RPM.per(Units.Meter)));
+
+	private static final LoggedNetworkNumber kC = new LoggedNetworkNumber("/Tuning/Shooter/C",
+		ShooterConstants.SHOOTER_RPM_INTERCEPT.in(Units.RPM));
 
 	private ShooterSubsystem() {
 		m_flywheel = ShooterFlywheel.getInstance();
@@ -105,7 +118,8 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	}
 
 	private void log(AngularVelocity setpointVelocity) {
-		inputs.enabled = m_enable.get();
+		inputs.enabledFlywheel = m_enableFlywheel.get();
+		inputs.enabledFeeder = m_enableFeeder.get();
 		inputs.reversed = m_reverse.get();
 
 		inputs.distanceMeters = hypotenuseToAllianceHub.get().in(Units.Meters);
@@ -143,8 +157,10 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		builder.addDoubleProperty("Feeder Setpoint RPM", () -> _feederSetpoint.in(Units.RPM), null);
 		builder.addDoubleProperty("Flywheel SpeedMod", () -> flywheelSpeedMod,
 			(newMod) -> flywheelSpeedMod = newMod);
-		builder.addBooleanProperty("Shooter Enabled", () -> m_enable.get(), null);
+		builder.addBooleanProperty("Shooter Enabled", () -> m_enableFlywheel.get(), null);
 		builder.addBooleanProperty("Belt Reversed", () -> m_reverse.get(), null);
+		builder.addDoubleProperty("Distance from HUB Meters",
+			() -> hypotenuseToAllianceHub.get().in(Units.Meters), null);
 	}
 
 	public static double roundToNearest(double x, double k) {
@@ -183,11 +199,12 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	private AngularVelocity calculateShooterSpeedFromRobotDistance() {
 		double distanceMeters = distanceFilter.calculate(
 			hypotenuseToAllianceHub.get().in(Units.Meters));
+		double distancePow2 = Math.pow(distanceMeters, 2);
 
 		// --- Shooter curve ---
-		double targetRPM = ShooterConstants.SHOOTER_RPM_SLOPE.in(Units.RPM.per(Units.Meter))
-			* distanceMeters
-			+ ShooterConstants.SHOOTER_RPM_INTERCEPT.in(Units.RPM);
+		double targetRPM = kA.get() * distancePow2 +
+			kB.get() * distanceMeters +
+			kC.get();
 
 		// --- Clamp ---
 		targetRPM = MathUtil.clamp(
@@ -220,59 +237,89 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	}
 
 	private AngularVelocity setMotorVelocities() {
-		if (!m_enable.get()) {
+		if (!m_enableFlywheel.get()) {
 			m_flywheel.disable();
+		}
+		if (!m_enableFeeder.get()) {
 			m_feederMotor.set(0);
 			m_feederMotor.stopMotor();
+		}
+
+		if (!m_enableFlywheel.get() && !m_enableFeeder.get()) {
 			return Units.RPM.of(0);
 		}
 
 		var velocity = calculateShooterSpeedFromRobotDistance();
-		m_flywheel.enable(velocity);
+		if (m_enableFlywheel.get() && !m_reverse.get())
+			m_flywheel.enable(velocity);
+		else
+			if (m_enableFlywheel.get() && m_reverse.get())
+				m_flywheel.enableReverse(velocity);
 		AngularVelocity feederSetpoint = velocity.times(
 			ShooterConstants.FLYWHEEL_DIAMETER.div(ShooterConstants.FEEDER_PULLEY_DIAMETER))
 			.div(ShooterConstants.FEEDER_SPEED_COEFF).times(m_reverse.get() ? -1.0 : 1.0)
 			.times(ShooterConstants.FEEDER_GEAR_RATIO);
-		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Shooter))
-			SmartDashboard.putNumber("Feeder Setpoint RPM", feederSetpoint.in(Units.RPM));
-		_feederSetpoint = feederSetpoint;
-		m_feederMotor.setVelocity(feederSetpoint, true, false);
+		if (m_enableFeeder.get()) {
+			if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Shooter))
+				SmartDashboard.putNumber("Feeder Setpoint RPM", feederSetpoint.in(Units.RPM));
+			_feederSetpoint = feederSetpoint;
+			m_feederMotor.setVelocity(feederSetpoint, true, false);
+		}
 		return velocity;
 	}
 
-	public void enable() {
+	public void enableFlywheel() {
+		m_enableFlywheel.set(true);
+	}
+
+	public void enableAll() {
+		enableFlywheel();
 		m_reverse.set(false);
-		m_enable.set(true);
+		m_enableFeeder.set(true);
 	}
 
 	public void enableReverse() {
-		m_enable.set(true);
+		enableFlywheel();
 		m_reverse.set(true);
+		m_enableFeeder.set(true);
 	}
 
-	public void disable() {
-		m_enable.set(false);
+	public void disableAll() {
+		m_enableFlywheel.set(false);
+		m_enableFeeder.set(false);
+	}
+
+	public void disableFlywheel() {
+		m_enableFlywheel.set(false);
+	}
+
+	public void disableFeeder() {
+		m_enableFeeder.set(false);
 	}
 
 	public Command toggle() {
 		return Commands.startEnd(
-			() -> enable(),
-			() -> disable(),
+			() -> enableAll(),
+			() -> disableAll(),
 			this);
 	}
 
 	public Command toggleFeederReverse() {
 		return Commands.startEnd(
 			() -> enableReverse(),
-			() -> disable(),
+			() -> disableAll(),
 			this);
 	}
 
 	public Command runForCommand(Time duration) {
 		return Commands.sequence(
-			Commands.run(this::enable, this),
+			Commands.run(this::enableAll, this),
 			Commands.waitTime(duration),
-			Commands.run(this::disable, this));
+			Commands.run(this::disableAll, this));
+	}
+
+	public Command warmupFlywheelCommand() {
+		return this.runOnce(this::enableFlywheel).withName("WarmupFlywheel").withTimeout(0.5);
 	}
 
 	public Command enableForeverCommand() {
@@ -286,7 +333,9 @@ public class ShooterSubsystem extends NopSubsystemBase {
 
 			@Override
 			public void execute() {
-				s.enable();
+				s.enableAll();
+				IndexerSubsystem.getInstance().enable();
+				CoordinatorSubsystem.getInstance().enableToShooter();
 			}
 
 			@Override
@@ -296,7 +345,9 @@ public class ShooterSubsystem extends NopSubsystemBase {
 
 			@Override
 			public void end(boolean interrupted) {
-				s.disable();
+				CoordinatorSubsystem.getInstance().disable();
+				IndexerSubsystem.getInstance().disable();
+				s.disableAll();
 			}
 		}.withName("ShootCommand");
 	}

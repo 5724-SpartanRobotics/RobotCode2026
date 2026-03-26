@@ -180,6 +180,11 @@ public class ShooterFlywheel {
 		// m_motor.setVelocity(velocity, true, false);
 	}
 
+	public void enableReverse(AngularVelocity velocity) {
+		setpointVelocity = velocity.times(-1.0);
+		// m_motor.setVelocity(velocity, true, false);
+	}
+
 	public void disable() {
 		setpointVelocity = Units.RPM.of(0);
 		// m_motor.setVelocity(setpointVelocity, true, false);

@@ -43,7 +43,7 @@ public class CoordinatorIO_RealAndSim implements CoordinatorIO {
 							CoordinatorConstants.PIDF.kFfA()))
 					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
 				.idleMode(IdleMode.kCoast)
-				.inverted(true),
+				.inverted(false),
 			ResetMode.kResetSafeParameters,
 			PersistMode.kNoPersistParameters);
 		rateLimiter = new LoggedSlewRateLimiter("Coordinator",

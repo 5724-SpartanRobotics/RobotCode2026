@@ -140,7 +140,7 @@ public class DriveSubsystem extends NopSubsystemBase {
 		return Holder.INSTANCE;
 	}
 
-	public Command driveToTargetCommand() {
+	public Command faceTargetCommand() {
 		return new InstantCommand(() -> {
 			// 1) Read current robot pose and compute the offset pose ONCE
 			Pose2d currentPose = getPose(); // ensure odometry is up-to-date
@@ -153,13 +153,41 @@ public class DriveSubsystem extends NopSubsystemBase {
 			double ux = diffX / dist;
 			double uy = diffY / dist;
 
-			double x_new = hub.getX() - 2.0 * ux;
-			double y_new = hub.getY() - 2.0 * uy;
+			double x_new = hub.getX() - diffX * ux;
+			double y_new = hub.getY() - diffY * uy;
 			Rotation2d heading = new Rotation2d(Math.atan2(diffY, diffX)).plus(Rotation2d.k180deg);
 
 			Pose2d staticTarget = new Pose2d(new Translation2d(x_new, y_new), heading);
 
-			Command pathCmd = this.driveToPose(staticTarget, 0.8);
+			Command rotCmd = new RotateToAngleCommand(() -> staticTarget.getRotation(), true);
+			CommandScheduler.getInstance().schedule(rotCmd);
+		}, this);
+	}
+
+	public Command driveToTargetCommand() {
+		return driveToTargetCommand(2);
+	}
+
+	public Command driveToTargetCommand(double distFrom) {
+		return new InstantCommand(() -> {
+			// 1) Read current robot pose and compute the offset pose ONCE
+			Pose2d currentPose = getPose(); // ensure odometry is up-to-date
+			Translation2d robotTranslation = currentPose.getTranslation();
+			Translation2d hub = getAllianceHubTx();
+
+			double diffX = hub.getX() - robotTranslation.getX();
+			double diffY = hub.getY() - robotTranslation.getY();
+			double dist = Math.hypot(diffX, diffY);
+			double ux = diffX / dist;
+			double uy = diffY / dist;
+
+			double x_new = hub.getX() - distFrom * ux;
+			double y_new = hub.getY() - distFrom * uy;
+			Rotation2d heading = new Rotation2d(Math.atan2(diffY, diffX)).plus(Rotation2d.k180deg);
+
+			Pose2d staticTarget = new Pose2d(new Translation2d(x_new, y_new), heading);
+
+			Command pathCmd = this.driveToPose(staticTarget, 1.0);
 			Command rotCmd = new RotateToAngleCommand(() -> staticTarget.getRotation());
 			CommandScheduler.getInstance().schedule(
 				pathCmd.andThen(
@@ -330,8 +358,19 @@ public class DriveSubsystem extends NopSubsystemBase {
 	 * @return a Command that centers the modules of the SwerveDrive subsystem
 	 */
 	public Command centerModulesCommand() {
-		return run(
-			() -> Arrays.asList(m_swerveDrive.getModules()).forEach(it -> it.setAngle(0.0)));
+		return run(this::centerModules);
+	}
+
+	public void centerModules() {
+		Arrays.asList(m_swerveDrive.getModules()).forEach(it -> it.setAngle(0.0));
+	}
+
+	public void faceModulesToAllianceWall() {
+		Rotation2d currentAngle = getPose().getRotation();
+		double offset = 360.0 - currentAngle.getDegrees();
+		Arrays.asList(m_swerveDrive.getModules()).forEach(it -> {
+			it.setAngle(offset);
+		});
 	}
 
 	/**
