@@ -85,7 +85,7 @@
       },
       "prevControl": {
         "x": 7.375491617610361,
-        "y": 1.0165648912042726
+        "y": 1.0165648912042722
       },
       "nextControl": {
         "x": 7.9399882629107985,
@@ -223,6 +223,19 @@
         "nominalVoltage": 12.0,
         "unlimited": false
       }
+    },
+    {
+      "name": "shoot preload",
+      "minWaypointRelativePos": 0.9498759305210749,
+      "maxWaypointRelativePos": 1.15,
+      "constraints": {
+        "maxVelocity": 0.1,
+        "maxAcceleration": 1.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
     }
   ],
   "pointTowardsZones": [
@@ -252,7 +265,7 @@
         "y": 4.039
       },
       "rotationOffset": 180.0,
-      "minWaypointRelativePos": 0.6,
+      "minWaypointRelativePos": 0.55,
       "maxWaypointRelativePos": 2.0198511166253224,
       "name": "Point Towards Hub"
     }
@@ -260,8 +273,8 @@
   "eventMarkers": [
     {
       "name": "Shoot",
-      "waypointRelativePos": 0.9717121588089147,
-      "endWaypointRelativePos": 2.0853598014888486,
+      "waypointRelativePos": 0.6,
+      "endWaypointRelativePos": 1.5,
       "command": {
         "type": "parallel",
         "data": {
@@ -278,37 +291,19 @@
     },
     {
       "name": "Extend Arm",
-      "waypointRelativePos": 2.7816377171215465,
+      "waypointRelativePos": 4.312655086848572,
       "endWaypointRelativePos": null,
       "command": null
     },
     {
       "name": "Intake",
       "waypointRelativePos": 4.801488833746877,
-      "endWaypointRelativePos": 5.746898263027259,
+      "endWaypointRelativePos": 7.173200992555779,
       "command": null
     },
     {
-      "name": "Shoot",
-      "waypointRelativePos": 9.744416873449111,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "parallel",
-        "data": {
-          "commands": [
-            {
-              "type": "named",
-              "data": {
-                "name": "Intake"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
       "name": "Retract Arm",
-      "waypointRelativePos": 10.28039702233242,
+      "waypointRelativePos": 7.478908188585636,
       "endWaypointRelativePos": null,
       "command": null
     }

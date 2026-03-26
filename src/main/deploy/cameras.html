@@ -44,19 +44,26 @@
 
     <div class="grid">
         <div class="camera">
-            <img src="http://roborio-5724-frc.local:5806/stream.mjpg">
+            <img src="http://roborio-5724-frc.local:5806/stream.mjpg" data-port="5806">
             <div class="label">Front Camera</div>
         </div>
 
         <div class="camera">
-            <img src="http://roborio-5724-frc.local:5808/stream.mjpg">
+            <img src="http://roborio-5724-frc.local:5808/stream.mjpg" data-port="5808">
             <div class="label">Back Camera</div>
         </div>
 
         <div class="camera">
-            <img src="http://roborio-5724-frc.local:5810/stream.mjpg">
+            <img src="http://roborio-5724-frc.local:5810/stream.mjpg" data-port="5810">
             <div class="label">Right Camera</div>
         </div>
     </div>
+    <script defer>
+        const host = location.hostname;
+        [...document.querySelectorAll('img')].forEach(img => {
+            const port = img.dataset.port;
+            img.src = `http://${host}:${port}/stream.mjpg`;
+        });
+    </script>
 </body>
 </html>

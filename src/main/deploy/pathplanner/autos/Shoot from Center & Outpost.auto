@@ -5,22 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Shoot from Center"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Warmup Flywheel"
-                }
-              }
-            ]
+            "name": "Warmup Flywheel"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot from Center & Outpost"
           }
         },
         {
@@ -38,7 +31,19 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 5.0
+            "waitTime": 4.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Retract Arm"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
           }
         },
         {

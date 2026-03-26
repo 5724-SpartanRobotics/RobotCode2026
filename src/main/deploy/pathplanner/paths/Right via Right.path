@@ -178,10 +178,10 @@
     },
     {
       "name": "Preloaded shooting",
-      "minWaypointRelativePos": 0,
-      "maxWaypointRelativePos": 1.2466501240694385,
+      "minWaypointRelativePos": 0.4,
+      "maxWaypointRelativePos": 1.4,
       "constraints": {
-        "maxVelocity": 0.5,
+        "maxVelocity": 0.1,
         "maxAcceleration": 6.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -238,31 +238,13 @@
   "eventMarkers": [
     {
       "name": "Shoot",
-      "waypointRelativePos": 0.19851116625310633,
-      "endWaypointRelativePos": 1.1037220843672393,
+      "waypointRelativePos": 0.42,
+      "endWaypointRelativePos": 1.38,
       "command": null
     },
     {
-      "name": "Shoot",
-      "waypointRelativePos": 0.3,
-      "endWaypointRelativePos": 2.0853598014888486,
-      "command": {
-        "type": "parallel",
-        "data": {
-          "commands": [
-            {
-              "type": "named",
-              "data": {
-                "name": "Intake"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
       "name": "Extend Arm",
-      "waypointRelativePos": 1.1354838709677428,
+      "waypointRelativePos": 2.358312655086848,
       "endWaypointRelativePos": null,
       "command": null
     },
@@ -273,26 +255,8 @@
       "command": null
     },
     {
-      "name": "Shoot",
-      "waypointRelativePos": 6.85,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "parallel",
-        "data": {
-          "commands": [
-            {
-              "type": "named",
-              "data": {
-                "name": "Intake"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
       "name": "Retract Arm",
-      "waypointRelativePos": 7.280397022332419,
+      "waypointRelativePos": 5.296277915632742,
       "endWaypointRelativePos": null,
       "command": null
     }
