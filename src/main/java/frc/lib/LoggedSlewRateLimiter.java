@@ -1,5 +1,8 @@
 package frc.lib;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -24,9 +27,13 @@ public class LoggedSlewRateLimiter {
 		double output = limiter.calculate(input);
 
 		// Logging
-		Logger.recordOutput(key + "/Input", input);
-		Logger.recordOutput(key + "/Output", output);
-		Logger.recordOutput(key + "/Delta", output - lastOutput);
+		try {
+			Logger.recordOutput(key + "/Input", input);
+			Logger.recordOutput(key + "/Output", output);
+			Logger.recordOutput(key + "/Delta", output - lastOutput);
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 
 		lastOutput = output;
 		return output;
@@ -36,7 +43,11 @@ public class LoggedSlewRateLimiter {
 		limiter.reset(value);
 		lastOutput = value;
 
-		Logger.recordOutput(key + "/ResetValue", value);
+		try {
+			Logger.recordOutput(key + "/ResetValue", value);
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 	}
 
 	public double getLastOutput() {

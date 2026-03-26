@@ -1,5 +1,8 @@
 package frc.robot.subsystems.intake;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+
 import org.littletonrobotics.junction.Logger;
 
 import com.revrobotics.PersistMode;
@@ -135,16 +138,20 @@ public class IntakeArm {
 		m_masterLeft.setPosition(reference, true, false);
 
 		log();
-		Logger.recordOutput(
-			"Intake/Arm/Stalled",
-			Math.abs(inputs.errorDeg) > 5 && inputs.masterCurrentAmps > 40);
-		double velocityDegPerSec = (inputs.positionDeg - lastPositionDeg) / 0.02;
+		try {
+			Logger.recordOutput(
+				"Intake/Arm/Stalled",
+				Math.abs(inputs.errorDeg) > 5 && inputs.masterCurrentAmps > 40);
+			double velocityDegPerSec = (inputs.positionDeg - lastPositionDeg) / 0.02;
 
-		Logger.recordOutput("Intake/Arm/VelocityDegPerSec", velocityDegPerSec);
-		lastPositionDeg = inputs.positionDeg;
-		Logger.recordOutput(
-			"Intake/Arm/LeftRightErrorDeg",
-			inputs.positionDeg - inputs.slavePositionDeg);
+			Logger.recordOutput("Intake/Arm/VelocityDegPerSec", velocityDegPerSec);
+			lastPositionDeg = inputs.positionDeg;
+			Logger.recordOutput(
+				"Intake/Arm/LeftRightErrorDeg",
+				inputs.positionDeg - inputs.slavePositionDeg);
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 	}
 
 	public void log() {

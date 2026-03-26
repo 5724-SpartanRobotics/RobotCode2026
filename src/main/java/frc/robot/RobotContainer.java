@@ -9,8 +9,10 @@ import java.util.Map;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import edu.wpi.first.net.PortForwarder;
+import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -45,6 +47,14 @@ public class RobotContainer {
 		ClassFieldMapStringToInt.invalidateDuplicates(PdhChannelConstants.class);
 		ClassFieldMapStringToInt.invalidateDuplicates(ControllerConstants.DriverMap.class);
 		ClassFieldMapStringToInt.invalidateDuplicates(ControllerConstants.OperatorMap.class);
+
+		WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+		PortForwarder.add(5805, "photonvision-front.local", 5800); // dashboard
+		PortForwarder.add(5806, "photonvision-front.local", 1182); // stream
+		PortForwarder.add(5807, "photonvision-back.local", 5800); // dashboard
+		PortForwarder.add(5808, "photonvision-back.local", 1182); // stream
+		PortForwarder.add(5809, "photonvision-right.local", 5800); // dashboard
+		PortForwarder.add(5810, "photonvision-right.local", 1182); // stream
 
 		nops();
 		createInstances();
@@ -100,8 +110,8 @@ public class RobotContainer {
 		DriveSubsystem.getInstance().setDefaultCommand(
 			DriveCommands.getCommand(DriveCommands.DriveType.FO_AngularVelocity));
 
-		m_driverController.button(DriverMap.DRIVE_TO_POSE).whileTrue(
-			DriveSubsystem.getInstance().driveToTargetCommand().repeatedly());
+		m_driverController.button(DriverMap.DRIVE_TO_POSE)
+			.whileTrue(DriveCommands.faceAllianceHub());
 		m_driverController.button(DriverMap.ZERO_GYRO).onTrue(
 			Commands.run(DriveSubsystem.getInstance()::zeroGyro, DriveSubsystem.getInstance()));
 		m_driverController.button(DriverMap.RESET_ODOMETRY).onTrue(

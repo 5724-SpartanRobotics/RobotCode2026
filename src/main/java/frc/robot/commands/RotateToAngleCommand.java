@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -45,7 +47,12 @@ public class RotateToAngleCommand extends Command {
 		thetaController.reset(drive.getPose().getRotation().getRadians());
 		thetaController.setGoal(target.getRadians());
 
-		Logger.recordOutput("RotateToAngle/InitializedTarget", target.getRadians());
+		try {
+			Logger.recordOutput("RotateToAngle/InitializedTarget", target.getRadians());
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
+
 	}
 
 	@Override
@@ -55,15 +62,19 @@ public class RotateToAngleCommand extends Command {
 		double targetTheta = thetaController.getGoal().position;
 
 		// Logging
-		Logger.recordOutput("RotateToAngle/CurrentTheta", currentTheta);
-		Logger.recordOutput("RotateToAngle/TargetTheta", targetTheta);
-		Logger.recordOutput("RotateToAngle/Error",
-			normalizeRadians(targetTheta - currentTheta));
-		Logger.recordOutput("RotateToAngle/OutputOmega", outputOmega);
-		Logger.recordOutput("RotateToAngle/SetpointVelocity",
-			thetaController.getSetpoint().velocity);
-		Logger.recordOutput("RotateToAngle/TargetPose",
-			drive.getPose().rotateBy(new Rotation2d(targetTheta)));
+		try {
+			Logger.recordOutput("RotateToAngle/CurrentTheta", currentTheta);
+			Logger.recordOutput("RotateToAngle/TargetTheta", targetTheta);
+			Logger.recordOutput("RotateToAngle/Error",
+				normalizeRadians(targetTheta - currentTheta));
+			Logger.recordOutput("RotateToAngle/OutputOmega", outputOmega);
+			Logger.recordOutput("RotateToAngle/SetpointVelocity",
+				thetaController.getSetpoint().velocity);
+			Logger.recordOutput("RotateToAngle/TargetPose",
+				drive.getPose().rotateBy(new Rotation2d(targetTheta)));
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 
 		// Convert to chassis speeds: zero x,y, angular = outputOmega
 		ChassisSpeeds speeds = new ChassisSpeeds(0.0, 0.0, outputOmega);
@@ -84,7 +95,12 @@ public class RotateToAngleCommand extends Command {
 
 	@Override
 	public void end(boolean interrupted) {
-		Logger.recordOutput("RotateToAngle/Interrupted", interrupted);
+		try {
+			Logger.recordOutput("RotateToAngle/Interrupted", interrupted);
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
+
 		drive.stop();
 	}
 }

@@ -216,8 +216,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 		return Units.RPM.of(MathUtil.clamp(
 			roundToNearest(filteredSetpointRPM, 50),
 			ShooterConstants.MIN_SHOOTER_VELOCITY.in(Units.RPM),
-			ShooterConstants.MAX_SHOOTER_VELOCITY.in(Units.RPM)
-		));
+			ShooterConstants.MAX_SHOOTER_VELOCITY.in(Units.RPM)));
 	}
 
 	private AngularVelocity setMotorVelocities() {

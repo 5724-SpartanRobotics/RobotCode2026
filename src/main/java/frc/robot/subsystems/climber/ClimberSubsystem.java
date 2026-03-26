@@ -1,5 +1,8 @@
 package frc.robot.subsystems.climber;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -51,10 +54,14 @@ public class ClimberSubsystem extends NopSubsystemBase {
 	public void periodic() {
 		isEnabled = Math.abs((int) (m_motor.getMotor().getMotorVoltage().getValueAsDouble())) > 0;
 
-		Logger.processInputs("Climber", inputs);
-		Logger.recordOutput(
-			"Climber/Stalled",
-			inputs.statorCurrentAmps > 80 && Math.abs(inputs.velocityRPS) < 0.1);
+		try {
+			Logger.processInputs("Climber", inputs);
+			Logger.recordOutput(
+				"Climber/Stalled",
+				inputs.statorCurrentAmps > 80 && Math.abs(inputs.velocityRPS) < 0.1);
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 
 		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Climb))
 			SmartDashboard.putData(this);

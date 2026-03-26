@@ -1,23 +1,29 @@
 package frc.robot.info.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Per;
+import edu.wpi.first.units.measure.Time;
 import frc.lib.PIDFfRecord;
 import frc.robot.info.Math;
+import frc.robot.info.Motors;
 
 public final class ShooterConstants {
-	private static final double SHOOTER_kFf = 0.0000;
+	private static final double SHOOTER_kP = 0.0005;
+	private static final double SHOOTER_kFf = 0.00001382;
 	private static final double FEEDER_kFf = 0.00;
 
 	public static final double GEAR_RATIO = 1.0;
 	public static final PIDFfRecord SHOOTER_PIDF = new PIDFfRecord(
 		// TODO: Tune the P
-		0.025, 0.0, 0.0, SHOOTER_kFf,
+		SHOOTER_kP, 0.0, 0.1 * SHOOTER_kP, SHOOTER_kFf,
 		0.0,
 		Units.VoltsPerRadianPerSecond
 			.of(RobotConstants.NOMINAL_BATTERY_VOLTAGE.in(Units.Volts)
@@ -46,13 +52,33 @@ public final class ShooterConstants {
 			.baseUnitMagnitude()
 			/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
 		0.0);
-	public static final double FEEDER_SPEED_COEFF = 2.7;
+	public static final double FEEDER_SPEED_COEFF = 0.95;
 
 	public static final Angle LAUNCH_ANGLE = Units.Degrees.of(30);
-	public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 2.7; // usually between 1.1 and
+	public static final double LAUNCH_VELOCITY_FUDGE_COEFF = 1.0; // usually between 1.1 and
 																	// 1.4;
 
 	public static final Distance FLYWHEEL_DIAMETER = Units.Inches.of(4);
-	public static final Distance FEEDER_PULLEY_DIAMETER = Units.Inches.of(1.2);
-	public static final double DEFAULT_FLYWHEEL_SPEEDMOD = 1.1;
+	public static final Distance FEEDER_PULLEY_DIAMETER = Units.Inches.of(1.75);
+	public static final double FEEDER_GEAR_RATIO = 5.0; // 5:1
+	public static final double DEFAULT_FLYWHEEL_SPEEDMOD = 0.955;
+
+	// --- Distance filtering ---
+	public static final Time DISTANCE_FILTER_TIME_CONSTANT = Units.Seconds.of(0.25);
+
+	// --- Shooter curve (linear example: RPM = m*d + b) ---
+	public static final Per<AngularVelocityUnit, DistanceUnit> SHOOTER_RPM_SLOPE = Units.RPM.of(685)
+		.per(Units.Meter); // RPM per meter
+	public static final AngularVelocity SHOOTER_RPM_INTERCEPT = Units.RPM.of(1300); // Base RPM
+
+	// --- Limits ---
+	public static final AngularVelocity MIN_SHOOTER_VELOCITY = Units.RPM.of(800);
+	public static final AngularVelocity MAX_SHOOTER_VELOCITY = Motors.VORTEX_MAX_VELOCITY
+		.minus(Units.RPM.of(100));
+
+	// --- Rate limiting ---
+	public static final double MAX_RPM_CHANGE_PER_LOOP = 150.0; // RPM per 20ms loop
+
+	// --- Optional quantization (set to 0 to disable) ---
+	public static final AngularVelocity RPM_STEP_SIZE = Units.RPM.of(150);
 }

@@ -15,10 +15,10 @@ public final class ControllerConstants {
 		public static final int ENABLE_INTAKE_EXPEL = 1;
 		public static final int TOGGLE_SHOOTER = 3;
 		public static final int ZERO_GYRO = 7;
-		public static final int DRIVE_TO_POSE = 11;
+		public static final int DRIVE_TO_POSE = 5;
 		public static final int CENTER_SWERVES = 10;
 		public static final int RESET_ODOMETRY = 8;
-		public static final int RESET_ODOMETRY_FLIPPED = 5;
+		// public static final int RESET_ODOMETRY_FLIPPED = 5;
 		public static final int DRIVE_TO_INITIAL_POSE = 9;
 		public static final int TOGGLE_NOTIFICATION = 12;
 	}

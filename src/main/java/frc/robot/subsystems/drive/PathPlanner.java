@@ -1,5 +1,8 @@
 package frc.robot.subsystems.drive;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+
 import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -61,14 +64,22 @@ public final class PathPlanner {
 		// Log active path for visualization
 		PathPlannerLogging.setLogActivePathCallback(
 			(activePath) -> {
-				Logger.recordOutput(
-					"Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
+				try {
+					Logger.recordOutput(
+						"Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
+				} catch (BufferUnderflowException e) {
+				} catch (BufferOverflowException e) {
+				}
 			});
 
 		// Log target pose for visualization
 		PathPlannerLogging.setLogTargetPoseCallback(
 			(targetPose) -> {
-				Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+				try {
+					Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+				} catch (BufferUnderflowException e) {
+				} catch (BufferOverflowException e) {
+				}
 			});
 
 		CommandScheduler.getInstance().schedule(PathfindingCommand.warmupCommand());

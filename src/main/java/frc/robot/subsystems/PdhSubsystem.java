@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
@@ -50,7 +53,12 @@ public class PdhSubsystem extends NopSubsystemBase {
 
 		Logger.processInputs("PDH", inputs);
 		ClassFieldMapStringToInt.getAsMap(PdhChannelConstants.class).forEach((device, port) -> {
-			Logger.recordOutput("PDH/Channel" + port + "_" + device, inputs.channelCurrents[port]);
+			try {
+				Logger.recordOutput("PDH/Channel" + port + "_" + device,
+					inputs.channelCurrents[port]);
+			} catch (BufferUnderflowException e) {
+			} catch (BufferOverflowException e) {
+			}
 		});
 	}
 

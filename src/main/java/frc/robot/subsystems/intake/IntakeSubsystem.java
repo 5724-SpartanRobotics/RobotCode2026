@@ -1,5 +1,8 @@
 package frc.robot.subsystems.intake;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
@@ -61,15 +64,19 @@ public class IntakeSubsystem extends NopSubsystemBase {
 		Logger.processInputs("Intake", inputs);
 		Logger.processInputs("IntakeArm", m_arm.getInputs());
 
-		Logger.recordOutput(
-			"Intake/AI_JamDetected",
-			inputs.intakeActive &&
-				Math.abs(inputs.onArmVelocityRPM) < 100 &&
-				Math.abs(inputs.onArmPercent) > 0.3);
+		try {
+			Logger.recordOutput(
+				"Intake/AI_JamDetected",
+				inputs.intakeActive &&
+					Math.abs(inputs.onArmVelocityRPM) < 100 &&
+					Math.abs(inputs.onArmPercent) > 0.3);
 
-		Logger.recordOutput(
-			"Intake/AI_ArmErrorDeg",
-			inputs.armSetpointDeg - inputs.armPositionDeg);
+			Logger.recordOutput(
+				"Intake/AI_ArmErrorDeg",
+				inputs.armSetpointDeg - inputs.armPositionDeg);
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 	}
 
 	public void log() {

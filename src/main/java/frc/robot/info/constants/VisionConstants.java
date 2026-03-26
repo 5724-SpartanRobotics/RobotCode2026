@@ -76,8 +76,8 @@ public class VisionConstants {
 
 	// Standard deviation baselines, for 1 meter distance and 1 tag
 	// (Adjusted automatically based on distance and # of tags)
-	public static double LINEAR_STDEV_BASELINE = 0.02; // Meters
-	public static double ANGULAR_STDEV_BASELINE = 0.06; // Radians
+	public static double LINEAR_STDEV_BASELINE = 0.5; // Meters
+	public static double ANGULAR_STDEV_BASELINE = 1.5; // Radians
 
 	// Multipliers to apply for MegaTag 2 observations
 	public static double LINEAR_STDEB_MEGATAG2_FACTOR = 0.5; // More stable than full 3D solve

@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.vision;
 
+import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +33,7 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.Timer;
@@ -249,12 +251,28 @@ public class VisionSubsystem extends NopSubsystemBase {
 					* stdDevFactor;
 				double angularStdDev = frc.robot.info.constants.VisionConstants.ANGULAR_STDEV_BASELINE
 					* stdDevFactor;
+
 				if (observation.type() == PoseObservationType.MEGATAG_2) {
 					linearStdDev *= frc.robot.info.constants.VisionConstants.LINEAR_STDEB_MEGATAG2_FACTOR;
 					angularStdDev *= frc.robot.info.constants.VisionConstants.ANGULAR_STDEV_MEGATAG2_FACTOR;
 				}
-				linearStdDev *= MathUtil.clamp(camera.getTrustFactor(), 0.0, 1.0);
-				angularStdDev *= MathUtil.clamp(camera.getTrustFactor(), 0.0, 1.0);
+				if (observation.tagCount() == 1) {
+					linearStdDev *= 2.5;
+					angularStdDev *= 3.0;
+				}
+
+				double trust = MathUtil.clamp(camera.getTrustFactor(), 0.0, 1.0);
+				double trustScale = 1.0 / Math.max(trust, 0.01);
+				linearStdDev *= trustScale;
+				angularStdDev *= trustScale;
+				linearStdDev = Math.max(linearStdDev, 0.3);
+				angularStdDev = Math.max(angularStdDev, 0.8);
+
+				if (!DriverStation.isEnabled()) {
+					// Trust vision more for quick pose snapping when disabled
+					linearStdDev *= 0.1;
+					angularStdDev *= 0.1;
+				}
 
 				// Send vision observation
 				consumer.accept(
@@ -289,16 +307,21 @@ public class VisionSubsystem extends NopSubsystemBase {
 		}
 
 		// Log summary data
-		Logger.recordOutput(
-			"Vision/Summary/TagPoses", allTagPoses.toArray(new Pose3d[allTagPoses.size()]));
-		Logger.recordOutput(
-			"Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[allRobotPoses.size()]));
-		Logger.recordOutput(
-			"Vision/Summary/RobotPosesAccepted",
-			allRobotPosesAccepted.toArray(new Pose3d[allRobotPosesAccepted.size()]));
-		Logger.recordOutput(
-			"Vision/Summary/RobotPosesRejected",
-			allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
+		try {
+			Logger.recordOutput(
+				"Vision/Summary/TagPoses", allTagPoses.toArray(new Pose3d[allTagPoses.size()]));
+			Logger.recordOutput(
+				"Vision/Summary/RobotPoses",
+				allRobotPoses.toArray(new Pose3d[allRobotPoses.size()]));
+			Logger.recordOutput(
+				"Vision/Summary/RobotPosesAccepted",
+				allRobotPosesAccepted.toArray(new Pose3d[allRobotPosesAccepted.size()]));
+			Logger.recordOutput(
+				"Vision/Summary/RobotPosesRejected",
+				allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 
 		_allTagPoses.set(allTagPoses);
 		_allRobotPoses.set(allRobotPoses);

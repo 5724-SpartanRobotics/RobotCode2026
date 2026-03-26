@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj.Alert;
@@ -47,10 +50,14 @@ public class AlertSubsystem extends NopSubsystemBase {
 		brownoutAlert.set(RobotController.isBrownedOut() || voltage < 7.0);
 		lowVoltageAlert.set(voltage < 10.5);
 
-		Logger.recordOutput("Health/BatteryVoltage", voltage);
-		Logger.recordOutput("Health/BrownedOut", RobotController.isBrownedOut());
-		Logger.recordOutput("Health/CANErrors", can.receiveErrorCount);
-		Logger.recordOutput("Health/CANWarnings", can.transmitErrorCount);
-		Logger.recordOutput("Health/CANUtilization", can.percentBusUtilization * 100.0);
+		try {
+			Logger.recordOutput("Health/BatteryVoltage", voltage);
+			Logger.recordOutput("Health/BrownedOut", RobotController.isBrownedOut());
+			Logger.recordOutput("Health/CANErrors", can.receiveErrorCount);
+			Logger.recordOutput("Health/CANWarnings", can.transmitErrorCount);
+			Logger.recordOutput("Health/CANUtilization", can.percentBusUtilization * 100.0);
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 	}
 }

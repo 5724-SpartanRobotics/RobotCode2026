@@ -6,8 +6,11 @@ import frc.robot.info.Period;
 
 public class CustomPeriodLoggedRobot extends LoggedRobot {
 	protected CustomPeriodLoggedRobot() {
-		// super(Period.getPeriod());
-		// Period.logPeriod();
-		super();
+		super(Period.getPeriod());
+		Period.logPeriod();
+	}
+
+	public double getPeriod() {
+		return Period.getPeriod();
 	}
 }

@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -93,5 +94,23 @@ public class DriveCommands {
 			case RO_AngularVelocity -> m_driveSubsystem.driveFieldOriented(DriveRobotOriented());
 			default -> Commands.none();
 		};
+	}
+
+	public static Command faceAllianceHub() {
+		return new FacePointDriveCommand(
+			() -> applyJoystickDeadbandAndScale(
+				m_joystickSupplier.get().getRawAxis(1) /*
+														 * * (Constants.isRedAlliance() ? -1.0 :
+														 * 1.0)
+														 */,
+				ControllerConstants.DRIVER_DEADBAND_XY), // Y axis (forward/back)
+			() -> applyJoystickDeadbandAndScale(
+				m_joystickSupplier.get().getRawAxis(0)/*
+														 * * (Constants.isRedAlliance() ? -1.0 :
+														 * 1.0)
+														 */,
+				ControllerConstants.DRIVER_DEADBAND_XY), // X axis (strafe)
+			() -> m_driveSubsystem.getAllianceHubTx(),
+			() -> Rotation2d.k180deg);
 	}
 }

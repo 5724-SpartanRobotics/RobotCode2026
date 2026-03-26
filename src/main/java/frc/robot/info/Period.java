@@ -6,17 +6,17 @@ import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.Time;
 
 public final class Period {
-	protected static Frequency PERIOD_FREQ = Units.Hertz.of(50);
-	protected static Time PERIOD_TIME = PERIOD_FREQ.asPeriod();
+	protected static Time PERIOD_TIME = Units.Seconds.of(0.02);
+	protected static Frequency PERIOD_FREQ = PERIOD_TIME.asFrequency();
 
-	public static long setPeriod(Time period) {
+	public static double setPeriod(Time period) {
 		PERIOD_TIME = period.copy();
 		PERIOD_FREQ = PERIOD_TIME.asFrequency();
 		return getPeriod();
 	}
 
-	public static long getPeriod() {
-		return Double.valueOf(PERIOD_TIME.in(Units.Seconds)).longValue();
+	public static double getPeriod() {
+		return PERIOD_TIME.in(Units.Seconds);
 	}
 
 	public static void logPeriod() {

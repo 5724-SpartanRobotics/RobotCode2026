@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.drive;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -143,9 +145,7 @@ public class DriveSubsystem extends NopSubsystemBase {
 			// 1) Read current robot pose and compute the offset pose ONCE
 			Pose2d currentPose = getPose(); // ensure odometry is up-to-date
 			Translation2d robotTranslation = currentPose.getTranslation();
-			Translation2d hub = Alliance.isRedAlliance()
-				? Field.RED_HUB_CENTER
-				: Field.BLUE_HUB_CENTER;
+			Translation2d hub = getAllianceHubTx();
 
 			double diffX = hub.getX() - robotTranslation.getX();
 			double diffY = hub.getY() - robotTranslation.getY();
@@ -167,12 +167,16 @@ public class DriveSubsystem extends NopSubsystemBase {
 		}, this).withName("DriveToTargetWrapper");
 	}
 
+	public Translation2d getAllianceHubTx() {
+		return Alliance.isRedAlliance()
+			? Field.RED_HUB_CENTER
+			: Field.BLUE_HUB_CENTER;
+	}
+
 	public Distance getHypotToAllianceHub() {
 		Pose2d currentPose = getPose(); // ensure odometry is up-to-date
 		Translation2d robotTranslation = currentPose.getTranslation();
-		Translation2d hub = Alliance.isRedAlliance()
-			? Field.RED_HUB_CENTER
-			: Field.BLUE_HUB_CENTER;
+		Translation2d hub = getAllianceHubTx();
 		double diffX = hub.getX() - robotTranslation.getX();
 		double diffY = hub.getY() - robotTranslation.getY();
 		double dist = Math.hypot(diffX, diffY);
@@ -229,8 +233,12 @@ public class DriveSubsystem extends NopSubsystemBase {
 
 		// Log empty setpoints when disabled to avoid dashboard confusion
 		if (DriverStation.isDisabled()) {
-			Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[]{});
-			Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[]{});
+			try {
+				Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[]{});
+				Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[]{});
+			} catch (BufferUnderflowException e) {
+			} catch (BufferOverflowException e) {
+			}
 		}
 
 		updateCameraPositions();
@@ -251,7 +259,11 @@ public class DriveSubsystem extends NopSubsystemBase {
 		}
 
 		// Log for visualization
-		Logger.recordOutput("CameraPositions", globalCameraPositions);
+		try {
+			Logger.recordOutput("CameraPositions", globalCameraPositions);
+		} catch (BufferUnderflowException e) {
+		} catch (BufferOverflowException e) {
+		}
 
 		getModuleStates();
 	}
