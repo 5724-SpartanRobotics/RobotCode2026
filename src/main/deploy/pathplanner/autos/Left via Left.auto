@@ -5,9 +5,15 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "Warmup Flywheel"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Center via Left"
+            "pathName": "Left via Left"
           }
         },
         {

@@ -180,7 +180,7 @@
       "minWaypointRelativePos": 4.0,
       "maxWaypointRelativePos": 6.0,
       "constraints": {
-        "maxVelocity": 2.0,
+        "maxVelocity": 1.5,
         "maxAcceleration": 6.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -213,40 +213,16 @@
   ],
   "eventMarkers": [
     {
-      "name": "Retract Arm",
-      "waypointRelativePos": 0,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
       "name": "Extend Arm",
-      "waypointRelativePos": 1.7816377171215465,
+      "waypointRelativePos": 3.0997518610421206,
       "endWaypointRelativePos": null,
       "command": null
     },
     {
       "name": "Intake",
       "waypointRelativePos": 3.359801488833749,
-      "endWaypointRelativePos": 5.0,
+      "endWaypointRelativePos": 5.8332506203473695,
       "command": null
-    },
-    {
-      "name": "Shoot",
-      "waypointRelativePos": 7.85,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "parallel",
-        "data": {
-          "commands": [
-            {
-              "type": "named",
-              "data": {
-                "name": "Intake"
-              }
-            }
-          ]
-        }
-      }
     }
   ],
   "globalConstraints": {
