@@ -5,19 +5,31 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "named",
+          "data": {
+            "name": "Warmup Flywheel"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot from Center"
+          }
+        },
+        {
+          "type": "deadline",
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "Shoot from Center"
+                  "waitTime": 1.0
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Warmup Flywheel"
+                  "name": "Find Pose"
                 }
               }
             ]
@@ -32,7 +44,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Shoot"
+            "name": "Shoot (Continuous)"
           }
         },
         {

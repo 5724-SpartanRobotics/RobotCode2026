@@ -7,37 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Blue Left of Hub to Center"
+            "pathName": "Test arm"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Intake"
+            "name": "Extend Arm"
           }
         },
         {
-          "type": "path",
+          "type": "wait",
           "data": {
-            "pathName": "Center to Blue Hub (Left)"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Find Pose"
+            "waitTime": 3.0
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Shoot"
+            "name": "Retract Arm"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Blue Collect & Shoot via Left",
+  "folder": null,
   "choreoAuto": false
 }
