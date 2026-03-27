@@ -13,7 +13,7 @@ public final class RobotConstants {
 	public static final Voltage NOMINAL_BATTERY_VOLTAGE = Units.Volts.of(13.1);
 
 	// TODO: These values will all need updated once the robot is finished.
-	public static final Mass MASS = Units.Pounds.of(95);
+	public static final Mass MASS = Units.Pounds.of(101.6);
 
 	public static final MomentOfInertia MOMENT_OF_INERTIA = Units.KilogramSquareMeters.of(4);
 

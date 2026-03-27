@@ -26,7 +26,8 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 	private AtomicReference<AngularVelocity> setpoint = new AtomicReference<>(Units.RPM.of(0));
 
 	private CoordinatorSubsystem() {
-		io = new CoordinatorIO_RealAndSim(CanIdConstants.COORDINATOR);
+		io = new CoordinatorIO_RealAndSim(
+			CanIdConstants.COORDINATOR, CanIdConstants.AGITATOR);
 	}
 
 	private static final class Holder {

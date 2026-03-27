@@ -31,6 +31,7 @@ public final class CanIdConstants implements ClassFieldMapStringToInt {
 
 	public static final int INDEXER = 27;
 	public static final int COORDINATOR = 31;
+	public static final int AGITATOR = 32;
 	public static final int SHOOTER = 28;
 	public static final int SHOOTER_UPPER_FEED = 29;
 }

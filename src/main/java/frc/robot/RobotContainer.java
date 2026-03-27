@@ -117,7 +117,7 @@ public class RobotContainer {
 		m_driverController.button(DriverMap.DRIVE_TO_POSE)
 			.whileTrue(DriveCommands.faceAllianceHub());
 		m_driverController.button(DriverMap.ZERO_GYRO).onTrue(
-			Commands.run(DriveSubsystem.getInstance()::zeroGyro, DriveSubsystem.getInstance()));
+			Commands.runOnce(DriveSubsystem.getInstance()::zeroGyro, DriveSubsystem.getInstance()));
 		m_driverController.button(DriverMap.RESET_ODOMETRY).onTrue(
 			DriveSubsystem.getInstance().resetOdometryFlippedCommand());
 		m_driverController.button(DriverMap.CENTER_SWERVES).whileTrue(
@@ -137,14 +137,14 @@ public class RobotContainer {
 		m_driverController.button(DriverMap.DIST_FROM_HUB_2METERS).whileTrue(
 			DriveSubsystem.getInstance().driveToTargetCommand(2));
 
-		// m_driverController.button(16).onTrue(AutoActions.enableCoordinatedShooter());
-		// m_driverController.button(15).onTrue(AutoActions.disableCoordinatedShooter());
+		m_driverController.button(16).onTrue(IntakeSubsystem.getInstance().extendArmCommand());
+		m_driverController.button(15).onTrue(IntakeSubsystem.getInstance().retractArmCommand());
 
 		final double OPERATOR_AXIS_THRESHOLD = 0.1;
 		m_operatorController
 			.axisMagnitudeGreaterThan(XboxController.Axis.kRightY.value, OPERATOR_AXIS_THRESHOLD)
 			.whileTrue(
-				IndexerSubsystem.getInstance().run(() -> {
+				IndexerSubsystem.getInstance().runOnce(() -> {
 					double axis = m_operatorController
 						.getRawAxis(XboxController.Axis.kRightY.value);
 					if (axis < -OPERATOR_AXIS_THRESHOLD) {
@@ -157,11 +157,12 @@ public class RobotContainer {
 						}
 				}))
 			.onFalse(
-				IndexerSubsystem.getInstance().run(() -> IndexerSubsystem.getInstance().disable()));
+				IndexerSubsystem.getInstance()
+					.runOnce(() -> IndexerSubsystem.getInstance().disable()));
 		m_operatorController
 			.axisMagnitudeGreaterThan(XboxController.Axis.kLeftY.value, OPERATOR_AXIS_THRESHOLD)
 			.whileTrue(
-				IntakeSubsystem.getInstance().run(() -> {
+				IntakeSubsystem.getInstance().runOnce(() -> {
 					double axis = m_operatorController
 						.getRawAxis(XboxController.Axis.kLeftY.value);
 					if (axis < -OPERATOR_AXIS_THRESHOLD) {
@@ -174,7 +175,7 @@ public class RobotContainer {
 						}
 				}))
 			.onFalse(IntakeSubsystem.getInstance()
-				.run(() -> IntakeSubsystem.getInstance().disableIntake()));
+				.runOnce(() -> IntakeSubsystem.getInstance().disableIntake()));
 		m_operatorController.y().toggleOnTrue(ShooterSubsystem.getInstance().toggle());
 		m_operatorController.b().toggleOnTrue(ShooterSubsystem.getInstance().toggleFeederReverse());
 		m_operatorController.leftBumper()
@@ -199,7 +200,9 @@ public class RobotContainer {
 			"Intake", IntakeSubsystem.getInstance().enableIntakeForeverCommand(),
 			"Find Pose", DriveSubsystem.getInstance().faceTargetCommand().withTimeout(2),
 			"Shoot", AutoActions.enableCoordinatedShooter(),
+			"Shoot (Continuous)", AutoActions.enableCoordinatedShooterForever(),
 			"Warmup Flywheel", ShooterSubsystem.getInstance().warmupFlywheelCommand(),
+			"UnWarmup Flywheel", ShooterSubsystem.getInstance().cooldownFlywheelCommand(),
 			"ZZZ CANCEL ALL", AutoActions.disableCoordinatedShooter());
 		NamedCommands.registerCommands(m_namedCommands);
 	}
@@ -217,21 +220,21 @@ public class RobotContainer {
 
 	public static final class ControllerActions {
 		public static Command enableCoordinatedIntake() {
-			return Commands.run(() -> {
+			return Commands.runOnce(() -> {
 				IntakeSubsystem.getInstance().enableIntake();
 				IndexerSubsystem.getInstance().enable();
 			}, IntakeSubsystem.getInstance(), IndexerSubsystem.getInstance());
 		}
 
 		public static Command enableCoordinatedIntakeReverse() {
-			return Commands.run(() -> {
+			return Commands.runOnce(() -> {
 				IntakeSubsystem.getInstance().enableSpitout();
 				IndexerSubsystem.getInstance().enableReverse();
 			}, IntakeSubsystem.getInstance(), IndexerSubsystem.getInstance());
 		}
 
 		public static Command disableCoordinatedIntake() {
-			return Commands.run(() -> {
+			return Commands.runOnce(() -> {
 				IntakeSubsystem.getInstance().disableIntake();
 				IndexerSubsystem.getInstance().disable();
 			}, IntakeSubsystem.getInstance(), IndexerSubsystem.getInstance());
@@ -241,6 +244,21 @@ public class RobotContainer {
 	public static final class AutoActions {
 		public static Command enableCoordinatedShooter() {
 			return Commands.runOnce(() -> {
+				SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", true);
+				ShooterSubsystem.getInstance().enableAll();
+				IndexerSubsystem.getInstance().enable();
+				CoordinatorSubsystem.getInstance().enableToShooter();
+			}, ShooterSubsystem.getInstance(), IndexerSubsystem.getInstance(),
+				CoordinatorSubsystem.getInstance()).finallyDo(() -> {
+					SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", false);
+					ShooterSubsystem.getInstance().disableAll();
+					IndexerSubsystem.getInstance().disable();
+					CoordinatorSubsystem.getInstance().disable();
+				});
+		}
+
+		public static Command enableCoordinatedShooterForever() {
+			return Commands.run(() -> {
 				SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", true);
 				ShooterSubsystem.getInstance().enableAll();
 				IndexerSubsystem.getInstance().enable();

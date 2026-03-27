@@ -147,6 +147,8 @@ public class Robot extends CustomPeriodLoggedRobot {
 			.setDouble(RobotController.getBatteryVoltage());
 		NetworkTableInstance.getDefault().getEntry("/DS Attached")
 			.setBoolean(DriverStation.isDSAttached());
+		NetworkTableInstance.getDefault().getEntry("/Rotation")
+			.setNumber(DriveSubsystem.getInstance().getPose().getRotation().getDegrees() % 360.0);
 	}
 
 	@Override

@@ -11,10 +11,10 @@ public final class CoordinatorConstants {
 
 	private static final double GEAR_RATIO = 1.0;
 
-	private static final double kFf = 0.00;
+	private static final double kFf = 0.0000155;
 	public static final PIDFfRecord PIDF = new PIDFfRecord(
 		// TODO: Tune the P
-		0.0003, 0.000, 0.0, kFf,
+		0.000335, 0.000, 0.0, kFf,
 		0.0,
 		Units.VoltsPerRadianPerSecond
 			.of(RobotConstants.NOMINAL_BATTERY_VOLTAGE.in(Units.Volts) /* volts */ * kFf /* kFf */
@@ -22,4 +22,6 @@ public final class CoordinatorConstants {
 			.baseUnitMagnitude()
 			/* motor V/rad/s */ * GEAR_RATIO /* flywheel V/rad/s */,
 		0.0);
+
+	public static final AngularVelocity AGITATOR_RUN_SETPOINT = Units.RPM.of(1000);
 }

@@ -313,13 +313,17 @@ public class ShooterSubsystem extends NopSubsystemBase {
 
 	public Command runForCommand(Time duration) {
 		return Commands.sequence(
-			Commands.run(this::enableAll, this),
+			runOnce(this::enableAll),
 			Commands.waitTime(duration),
-			Commands.run(this::disableAll, this));
+			runOnce(this::disableAll));
 	}
 
 	public Command warmupFlywheelCommand() {
 		return this.runOnce(this::enableFlywheel).withName("WarmupFlywheel").withTimeout(0.5);
+	}
+
+	public Command cooldownFlywheelCommand() {
+		return this.runOnce(this::disableFlywheel).withName("CooldownFlywheel").withTimeout(0.5);
 	}
 
 	public Command enableForeverCommand() {
@@ -353,7 +357,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	}
 
 	public Command changeFlywheelSpeedMod(DoubleSupplier rawAxis) {
-		return run(() -> {
+		return runOnce(() -> {
 			double axis = rawAxis.getAsDouble() + 1.0; // default 1
 			double newFlywheelSpeedMod = axis * 0.5;
 			flywheelSpeedMod = newFlywheelSpeedMod;
@@ -361,6 +365,6 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	}
 
 	public Command resetFlywheelSpeedMod() {
-		return run(() -> flywheelSpeedMod = ShooterConstants.DEFAULT_FLYWHEEL_SPEEDMOD);
+		return runOnce(() -> flywheelSpeedMod = ShooterConstants.DEFAULT_FLYWHEEL_SPEEDMOD);
 	}
 }

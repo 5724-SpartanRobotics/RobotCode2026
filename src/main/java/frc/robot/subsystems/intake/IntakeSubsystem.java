@@ -153,35 +153,35 @@ public class IntakeSubsystem extends NopSubsystemBase {
 	}
 
 	public Command toggleIntake() {
-		return Commands.startEnd(this::enableIntake, this::disableIntake, this);
+		return startEnd(this::enableIntake, this::disableIntake);
 	}
 
 	public Command toggleArm() {
-		return Commands.startEnd(this::extendArm, this::retractArm, this);
+		return startEnd(this::extendArm, this::retractArm);
 	}
 
 	public Command extendArmCommand() {
-		return Commands.run(this::extendArm, this);
+		return runOnce(this::extendArm);
 	}
 
 	public Command retractArmCommand() {
-		return Commands.run(this::retractArm, this);
+		return runOnce(this::retractArm);
 	}
 
 	public Command incrementArmCommand() {
-		return Commands.runOnce(m_arm::increment, this);
+		return runOnce(m_arm::increment);
 	}
 
 	public Command decrementArmCommand() {
-		return Commands.runOnce(m_arm::decrement, this);
+		return runOnce(m_arm::decrement);
 	}
 
 	public Command stopArm() {
-		return Commands.run(m_arm::stop, this);
+		return runOnce(m_arm::stop);
 	}
 
 	public Command toggleAll() {
-		return Commands.startEnd(
+		return startEnd(
 			() -> {
 				extendArm();
 				enableIntake();
@@ -189,21 +189,20 @@ public class IntakeSubsystem extends NopSubsystemBase {
 			() -> {
 				disableIntake();
 				retractArm();
-			},
-			this);
+			});
 	}
 
 	public Command runForCommand(Time duration) {
 		return Commands.sequence(
-			Commands.run(() -> {
+			runOnce(() -> {
 				extendArm();
 				enableIntake();
-			}, this),
+			}),
 			Commands.waitTime(duration),
-			Commands.run(() -> {
+			runOnce(() -> {
 				disableIntake();
 				retractArm();
-			}, this));
+			}));
 	}
 
 	public Command enableIntakeForeverCommand() {
