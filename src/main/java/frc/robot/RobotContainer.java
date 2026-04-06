@@ -17,19 +17,22 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.lib.ClassFieldMapStringToInt;
 import frc.robot.commands.DriveCommands;
+import frc.robot.info.RobotMode;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.ControllerConstants;
 import frc.robot.info.constants.ControllerConstants.DriverMap;
 import frc.robot.info.constants.PdhChannelConstants;
 import frc.robot.subsystems.AlertSubsystem;
+import frc.robot.subsystems.GameTimerSubsystem;
 import frc.robot.subsystems.PdhSubsystem;
-import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.coordinator.CoordinatorSubsystem;
 import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.feeder.FeederSubsystem;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.led.LedSubsystem;
@@ -85,9 +88,10 @@ public class RobotContainer {
 		PdhSubsystem.staticNop();
 
 		LedSubsystem.staticNop();
-		ClimberSubsystem.staticNop();
+		GameTimerSubsystem.staticNop();
 		CoordinatorSubsystem.staticNop();
 		DriveSubsystem.staticNop();
+		FeederSubsystem.staticNop();
 		IndexerSubsystem.staticNop();
 		IntakeSubsystem.staticNop();
 		ShooterSubsystem.staticNop();
@@ -96,16 +100,19 @@ public class RobotContainer {
 
 	public void createInstances() {
 		AlertSubsystem.getInstance();
-		// PdhSubsystem.getInstance();
+		if (RobotMode.is(RobotMode.Real)) {
+			PdhSubsystem.getInstance();
+		}
 
-		LedSubsystem.getInstance();
-		ClimberSubsystem.getInstance();
-		CoordinatorSubsystem.getInstance();
-		DriveSubsystem.getInstance();
-		IndexerSubsystem.getInstance();
-		IntakeSubsystem.getInstance();
-		ShooterSubsystem.getInstance();
-		VisionSubsystem.getInstance();
+		// LedSubsystem.getInstance();
+		// GameTimerSubsystem.getInstance();
+		// CoordinatorSubsystem.getInstance();
+		// DriveSubsystem.getInstance();
+		// FeederSubsystem.getInstance();
+		// IndexerSubsystem.getInstance();
+		// IntakeSubsystem.getInstance();
+		// ShooterSubsystem.getInstance();
+		// VisionSubsystem.getInstance();
 
 		DriveCommands.initialize(() -> m_driverController);
 	}
@@ -137,8 +144,8 @@ public class RobotContainer {
 		m_driverController.button(DriverMap.DIST_FROM_HUB_2METERS).whileTrue(
 			DriveSubsystem.getInstance().driveToTargetCommand(2));
 
-		m_driverController.button(16).onTrue(IntakeSubsystem.getInstance().extendArmCommand());
-		m_driverController.button(15).onTrue(IntakeSubsystem.getInstance().retractArmCommand());
+		// m_driverController.button(16).onTrue(IntakeSubsystem.getInstance().extendArmCommand());
+		// m_driverController.button(15).onTrue(IntakeSubsystem.getInstance().retractArmCommand());
 
 		final double OPERATOR_AXIS_THRESHOLD = 0.1;
 		m_operatorController
@@ -199,7 +206,9 @@ public class RobotContainer {
 			"Retract Arm", IntakeSubsystem.getInstance().retractArmCommand(),
 			"Intake", IntakeSubsystem.getInstance().enableIntakeForeverCommand(),
 			"Find Pose", DriveSubsystem.getInstance().faceTargetCommand().withTimeout(2),
-			"Shoot", AutoActions.enableCoordinatedShooter(),
+			"Shoot", AutoActions.newShootCommand(),
+			"Force Enable Feeder (Continuous)",
+			FeederSubsystem.getInstance().enableCommand().repeatedly(),
 			"Shoot (Continuous)", AutoActions.enableCoordinatedShooterForever(),
 			"Warmup Flywheel", ShooterSubsystem.getInstance().warmupFlywheelCommand(),
 			"UnWarmup Flywheel", ShooterSubsystem.getInstance().cooldownFlywheelCommand(),
@@ -245,36 +254,53 @@ public class RobotContainer {
 		public static Command enableCoordinatedShooter() {
 			return Commands.runOnce(() -> {
 				SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", true);
-				ShooterSubsystem.getInstance().enableAll();
+				ShooterSubsystem.getInstance().enableForward();
+				FeederSubsystem.getInstance().enableForward();
 				IndexerSubsystem.getInstance().enable();
 				CoordinatorSubsystem.getInstance().enableToShooter();
 			}, ShooterSubsystem.getInstance(), IndexerSubsystem.getInstance(),
-				CoordinatorSubsystem.getInstance()).finallyDo(() -> {
-					SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", false);
-					ShooterSubsystem.getInstance().disableAll();
-					IndexerSubsystem.getInstance().disable();
-					CoordinatorSubsystem.getInstance().disable();
-				});
+				CoordinatorSubsystem.getInstance(), FeederSubsystem.getInstance());
+			// .finallyDo(() -> {
+			// SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", false);
+			// ShooterSubsystem.getInstance().disable();
+			// FeederSubsystem.getInstance().disable();
+			// IndexerSubsystem.getInstance().disable();
+			// CoordinatorSubsystem.getInstance().disable();
+			// });
 		}
 
 		public static Command enableCoordinatedShooterForever() {
 			return Commands.run(() -> {
 				SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", true);
-				ShooterSubsystem.getInstance().enableAll();
+				ShooterSubsystem.getInstance().enableForward();
+				FeederSubsystem.getInstance().enableForward();
 				IndexerSubsystem.getInstance().enable();
 				CoordinatorSubsystem.getInstance().enableToShooter();
 			}, ShooterSubsystem.getInstance(), IndexerSubsystem.getInstance(),
-				CoordinatorSubsystem.getInstance());
+				CoordinatorSubsystem.getInstance(), FeederSubsystem.getInstance()).repeatedly();
 		}
 
 		public static Command disableCoordinatedShooter() {
-			return Commands.runOnce(() -> {
+			return new InstantCommand(() -> {
 				SmartDashboard.putBoolean("Auto Coordinated Shooter Enabled", false);
-				ShooterSubsystem.getInstance().disableAll();
+				ShooterSubsystem.getInstance().disable();
+				FeederSubsystem.getInstance().disable();
 				IndexerSubsystem.getInstance().disable();
 				CoordinatorSubsystem.getInstance().disable();
 			}, ShooterSubsystem.getInstance(), IndexerSubsystem.getInstance(),
-				CoordinatorSubsystem.getInstance());
+				CoordinatorSubsystem.getInstance(), FeederSubsystem.getInstance());
+		}
+
+		public static Command enableFeederForever() {
+			return FeederSubsystem.getInstance().enableCommand();
+		}
+
+		public static Command newShootCommand() {
+			return Commands.parallel(
+				ShooterSubsystem.getInstance().enableForeverCommand().repeatedly(),
+				FeederSubsystem.getInstance().enableForeverCommand().repeatedly(),
+				IndexerSubsystem.getInstance().enableForeverCommand().repeatedly(),
+				CoordinatorSubsystem.getInstance().enableToShooterForeverCommand().repeatedly());
 		}
 	}
 }

@@ -5,10 +5,13 @@ import java.nio.BufferUnderflowException;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.lib.NopSubsystemBase;
+import frc.robot.info.Debug;
 
 public class AlertSubsystem extends NopSubsystemBase {
 	private final Alert canAlert = new Alert("CAN warnings/errors detected!", AlertType.kError);
@@ -58,6 +61,21 @@ public class AlertSubsystem extends NopSubsystemBase {
 			Logger.recordOutput("Health/CANUtilization", can.percentBusUtilization * 100.0);
 		} catch (BufferUnderflowException e) {
 		} catch (BufferOverflowException e) {
+		}
+
+		SmartDashboard.putData(this);
+	}
+
+	@Override
+	public void initSendable(SendableBuilder builder) {
+		builder.setSmartDashboardType(this.getClass().getName());
+		if (Debug.DebugLevel.isAny()) {
+			builder.addDoubleProperty("CAN Utilization %",
+				() -> RobotController.getCANStatus().percentBusUtilization * 100.0, null);
+			builder.addDoubleProperty("CAN Errors",
+				() -> RobotController.getCANStatus().receiveErrorCount, null);
+			builder.addDoubleProperty("CAN Warnings",
+				() -> RobotController.getCANStatus().transmitErrorCount, null);
 		}
 	}
 }

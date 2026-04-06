@@ -18,6 +18,7 @@ import org.littletonrobotics.urcl.URCL;
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -32,11 +33,13 @@ import frc.robot.info.RobotMode;
 import frc.robot.info.constants.BuildConstants;
 import frc.robot.io.RobotIO;
 import frc.robot.io.RobotIO_Real;
+import frc.robot.subsystems.GameTimerSubsystem;
+import frc.robot.subsystems.coordinator.CoordinatorSubsystem;
 import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.feeder.FeederSubsystem;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.led.LedSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.coordinator.CoordinatorSubsystem;
-import frc.robot.subsystems.indexer.IndexerSubsystem;
 
 public class Robot extends CustomPeriodLoggedRobot {
 	private final Command m_selectAutoTabOnBootCommand = new SelectAutonomousTabOnDSConnect(
@@ -113,6 +116,8 @@ public class Robot extends CustomPeriodLoggedRobot {
 				break;
 		}
 
+		DriverStation.silenceJoystickConnectionWarning(RobotMode.is(RobotMode.Simulation));
+
 		Logger.start();
 
 		io = new RobotIO_Real();
@@ -132,23 +137,28 @@ public class Robot extends CustomPeriodLoggedRobot {
 	public void robotPeriodic() {
 		CommandScheduler.getInstance().run();
 
-		if (m_autoTimer.get() >= 20.0) {
+		if (m_autoTimer.get() >= 19.9) {
 			CoordinatorSubsystem.getInstance().disable();
 			IndexerSubsystem.getInstance().disable();
-			ShooterSubsystem.getInstance().disableAll();
+			FeederSubsystem.getInstance().disable();
+			ShooterSubsystem.getInstance().disable();
 		}
 
 		io.updateInputs(inputs);
 		Logger.processInputs("Robot", inputs);
 
-		NetworkTableInstance.getDefault().getEntry("/Match Time")
-			.setDouble(DriverStation.getMatchTime());
+		NetworkTableInstance.getDefault().getEntry("/Match Time").setDouble(getMatchTime());
 		NetworkTableInstance.getDefault().getEntry("/Voltage")
 			.setDouble(RobotController.getBatteryVoltage());
 		NetworkTableInstance.getDefault().getEntry("/DS Attached")
 			.setBoolean(DriverStation.isDSAttached());
 		NetworkTableInstance.getDefault().getEntry("/Rotation")
-			.setNumber(DriveSubsystem.getInstance().getPose().getRotation().getDegrees() % 360.0);
+			.setNumber(
+				DriveSubsystem.getInstance().getAllianceRelativeRotation().in(Units.Degrees));
+	}
+
+	private double getMatchTime() {
+		return GameTimerSubsystem.getMatchTime();
 	}
 
 	@Override
@@ -165,6 +175,8 @@ public class Robot extends CustomPeriodLoggedRobot {
 
 	@Override
 	public void autonomousInit() {
+		GameTimerSubsystem.getInstance().startTimer();
+
 		m_autoTimer.reset();
 		m_autoTimer.start();
 
@@ -237,5 +249,13 @@ public class Robot extends CustomPeriodLoggedRobot {
 		SignalLogger.stop();
 		DataLogManager.stop();
 		super.endCompetition();
+	}
+
+	@Override
+	public void simulationInit() {
+	}
+
+	@Override
+	public void simulationPeriodic() {
 	}
 }
