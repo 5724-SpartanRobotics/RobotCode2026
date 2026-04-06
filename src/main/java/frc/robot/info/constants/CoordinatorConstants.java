@@ -6,8 +6,8 @@ import frc.lib.PIDFfRecord;
 import frc.robot.info.Math;
 
 public final class CoordinatorConstants {
-	public static final AngularVelocity RUN_TO_SHOOTER_SETPOINT = Units.RPM.of(1000);
-	public static final AngularVelocity RUN_TO_STORAGE_SETPOINT = Units.RPM.of(-550);
+	public static final AngularVelocity RUN_TO_SHOOTER_SETPOINT = Units.RPM.of(1300);
+	public static final AngularVelocity RUN_TO_STORAGE_SETPOINT = Units.RPM.of(-800);
 
 	private static final double GEAR_RATIO = 1.0;
 
@@ -24,4 +24,5 @@ public final class CoordinatorConstants {
 		0.0);
 
 	public static final AngularVelocity AGITATOR_RUN_SETPOINT = Units.RPM.of(1000);
+	public static final PIDFfRecord AGITATOR_PIDF = new PIDFfRecord(0.0001, 0, 0, 0, 0, 0, 0);
 }

@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.NopSubsystemBase;
+import frc.lib.motor.ClosedLoopMotor;
 import frc.lib.motor.talonfx.TalonFXIO_Wrapper;
 import frc.lib.motor.talonfx.TalonFXWrapper;
 import frc.robot.info.Debug;
@@ -25,7 +26,7 @@ import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs;
 
 public class IntakeSubsystem extends NopSubsystemBase {
 	/** Kraken X60 on TalonFX */
-	private final TalonFXIO_Wrapper m_onArmIntake;
+	private final ClosedLoopMotor m_onArmIntake;
 	private double onArmIntakeSpeedReference = 0;
 
 	private final IntakeArm m_arm = IntakeArm.getInstance();
@@ -58,9 +59,6 @@ public class IntakeSubsystem extends NopSubsystemBase {
 
 		log();
 
-		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Intake))
-			SmartDashboard.putData(this);
-
 		Logger.processInputs("Intake", inputs);
 		Logger.processInputs("IntakeArm", m_arm.getInputs());
 
@@ -77,6 +75,8 @@ public class IntakeSubsystem extends NopSubsystemBase {
 		} catch (BufferUnderflowException e) {
 		} catch (BufferOverflowException e) {
 		}
+
+		SmartDashboard.putData(this);
 	}
 
 	public void log() {
@@ -89,7 +89,8 @@ public class IntakeSubsystem extends NopSubsystemBase {
 		inputs.onArmPercent = onArmIntakeSpeedReference;
 
 		// Measured values (if available)
-		inputs.onArmVelocityRPM = m_onArmIntake.getMotor().getVelocity().getValue().in(Units.RPM);
+		inputs.onArmVelocityRPM = m_onArmIntake.as_TalonFXIOWrapper().getMotor().getVelocity()
+			.getValue().in(Units.RPM);
 
 		// Derived state
 		inputs.intakeActive = Math.abs(onArmIntakeSpeedReference) > 0.01;
@@ -101,21 +102,23 @@ public class IntakeSubsystem extends NopSubsystemBase {
 	public void initSendable(SendableBuilder builder) {
 		builder.setSmartDashboardType(this.getClass().getName());
 		m_arm.initSendable(builder);
-		builder.addDoubleProperty(
-			"ArmPositionDeg",
-			() -> m_arm.getAngle().in(Units.Degrees), null);
-		builder.addDoubleProperty(
-			"ArmSetpointDeg",
-			() -> m_arm.getSetpoint().in(Units.Degrees), null);
-		builder.addDoubleProperty(
-			"ArmLeftCurrentAmps",
-			() -> m_arm.getMasterOutputCurrent().in(Units.Amps), null);
-		builder.addDoubleProperty(
-			"ArmRightCurrentAmps",
-			() -> m_arm.getSlaveOutputCurrent().in(Units.Amps), null);
-		builder.addDoubleProperty(
-			"IntakeOnArmSpeedPercent",
-			() -> onArmIntakeSpeedReference, null);
+		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Intake)) {
+			builder.addDoubleProperty(
+				"ArmPositionDeg",
+				() -> m_arm.getAngle().in(Units.Degrees), null);
+			builder.addDoubleProperty(
+				"ArmSetpointDeg",
+				() -> m_arm.getSetpoint().in(Units.Degrees), null);
+			builder.addDoubleProperty(
+				"ArmLeftCurrentAmps",
+				() -> m_arm.getMasterOutputCurrent().in(Units.Amps), null);
+			builder.addDoubleProperty(
+				"ArmRightCurrentAmps",
+				() -> m_arm.getSlaveOutputCurrent().in(Units.Amps), null);
+			builder.addDoubleProperty(
+				"IntakeOnArmSpeedPercent",
+				() -> onArmIntakeSpeedReference, null);
+		}
 	}
 
 	public void extendArm() {

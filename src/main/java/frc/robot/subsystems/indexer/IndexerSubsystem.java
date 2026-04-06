@@ -6,6 +6,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.NopSubsystemBase;
 import frc.robot.info.Debug;
 import frc.robot.info.constants.CanIdConstants;
@@ -35,9 +36,11 @@ public class IndexerSubsystem extends NopSubsystemBase {
 		BooleanSupplier enabled = () -> Math.abs((int) setpoint) > 0;
 
 		builder.setSmartDashboardType(this.getClass().getName());
-		builder.addDoubleProperty("Duty Cycle Setpoint", () -> setpoint, null);
 		builder.addBooleanProperty("Enabled", enabled, null);
 		builder.addBooleanProperty("Reversed", () -> enabled.getAsBoolean() && setpoint < 0, null);
+		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Indexer)) {
+			builder.addDoubleProperty("Duty Cycle Setpoint", () -> setpoint, null);
+		}
 	}
 
 	@Override
@@ -45,8 +48,7 @@ public class IndexerSubsystem extends NopSubsystemBase {
 		io.updateInputs(inputs);
 		Logger.processInputs("Indexer", inputs);
 
-		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Indexer))
-			SmartDashboard.putData(this);
+		SmartDashboard.putData(this);
 	}
 
 	public void enable() {
@@ -55,6 +57,10 @@ public class IndexerSubsystem extends NopSubsystemBase {
 
 		LedSubsystem.getInstance().setPersistentNotify(
 			LedSubsystem.kNotification2Color);
+	}
+
+	public Command enableForeverCommand() {
+		return this.run(this::enable).repeatedly();
 	}
 
 	public void enableReverse() {

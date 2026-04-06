@@ -5,13 +5,8 @@ import java.nio.BufferUnderflowException;
 
 import org.littletonrobotics.junction.Logger;
 
-import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig;
-import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.LimitSwitchConfig;
 import com.revrobotics.spark.config.LimitSwitchConfig.Behavior;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -23,7 +18,9 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.lib.LoggedSlewRateLimiter;
+import frc.lib.motor.ClosedLoopMotor;
 import frc.lib.motor.spark.SparkIO_SparkFlex;
+import frc.robot.info.Debug;
 import frc.robot.info.Motors;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.IntakeConstants;
@@ -37,9 +34,9 @@ public class IntakeArm {
 	public static Angle kRotateBy = Units.Degrees.of(5.0);
 
 	/** NEO Vortex on SparkFlex */
-	private final SparkIO_SparkFlex m_masterLeft;
+	private final ClosedLoopMotor m_masterLeft;
 	/** NEO Vortex on SparkFlex */
-	private final SparkIO_SparkFlex m_slaveRight;
+	private final ClosedLoopMotor m_slaveRight;
 	private final RelativeEncoder m_masterLeftEncoder;
 	private final RelativeEncoder m_slaveRightEncoder;
 	private final LoggedSlewRateLimiter m_ramp;
@@ -52,64 +49,31 @@ public class IntakeArm {
 	private final IntakeArmIOInputs inputs = new IntakeArmIOInputs();
 
 	private IntakeArm() {
-		m_masterLeft = new SparkIO_SparkFlex(CanIdConstants.ARM_LEFT_MASTER, MotorType.kBrushless);
-		m_masterLeft.configure(
+		m_masterLeft = new SparkIO_SparkFlex(CanIdConstants.ARM_LEFT_MASTER);
+		m_masterLeft.applyPidfsva(IntakeConstants.Arm.PIDF);
+		m_masterLeft.as_SparkIO().applyConfiguration(
 			new SparkFlexConfig()
 				.apply(new LimitSwitchConfig()
 					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
-				.apply(new ClosedLoopConfig()
-					// TODO: Tune PIDs and Feedforward
-					.pidf(
-						IntakeConstants.Arm.PIDF.kP(),
-						IntakeConstants.Arm.PIDF.kI(),
-						IntakeConstants.Arm.PIDF.kD(),
-						IntakeConstants.Arm.PIDF.kFf())
-					.iMaxAccum(kIMaxAccum)
-					.apply(new FeedForwardConfig()
-						// There's no good way to convert a Feedforward constant to
-						// a kS or kA, you can do kV with some math, though.
-						.sva(
-							IntakeConstants.Arm.PIDF.kFfS(),
-							IntakeConstants.Arm.PIDF.kFfV(),
-							IntakeConstants.Arm.PIDF.kFfA()))
-					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
+				.apply(new ClosedLoopConfig().iMaxAccum(kIMaxAccum))
 				.inverted(false)
 				.idleMode(IdleMode.kBrake)
-				.smartCurrentLimit((int) kMaxCurrent.in(Units.Amps)),
-			ResetMode.kResetSafeParameters,
-			PersistMode.kNoPersistParameters);
-		m_masterLeftEncoder = m_masterLeft.getEncoder();
+				.smartCurrentLimit((int) kMaxCurrent.in(Units.Amps)));
+		m_masterLeftEncoder = m_masterLeft.as_SparkIO().as_IOSparkFlex().getEncoder();
 
-		m_slaveRight = new SparkIO_SparkFlex(CanIdConstants.ARM_RIGHT_SLAVE, MotorType.kBrushless);
-		m_slaveRight.configure(
+		m_slaveRight = new SparkIO_SparkFlex(CanIdConstants.ARM_RIGHT_SLAVE);
+		m_slaveRight.applyPidfsva(IntakeConstants.Arm.PIDF);
+		m_slaveRight.as_SparkIO().applyConfiguration(
 			new SparkFlexConfig()
 				.apply(new LimitSwitchConfig()
 					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
-				.apply(new ClosedLoopConfig()
-					// TODO: Tune PIDs and Feedforward
-					.pidf(
-						IntakeConstants.Arm.PIDF.kP(),
-						IntakeConstants.Arm.PIDF.kI(),
-						IntakeConstants.Arm.PIDF.kD(),
-						IntakeConstants.Arm.PIDF.kFf())
-					.iMaxAccum(kIMaxAccum)
-					.apply(new FeedForwardConfig()
-						// There's no good way to convert a Feedforward constant to
-						// a kS or kA, you can do kV with some math, though.
-						.sva(
-							IntakeConstants.Arm.PIDF.kFfS(),
-							IntakeConstants.Arm.PIDF.kFfV(),
-							IntakeConstants.Arm.PIDF.kFfA()))
-					.feedbackSensor(FeedbackSensor.kPrimaryEncoder))
 				.idleMode(IdleMode.kBrake)
 				// TODO: IDK if this is correct
-				.follow(m_masterLeft, true)
-				.smartCurrentLimit((int) kMaxCurrent.in(Units.Amps)),
-			ResetMode.kResetSafeParameters,
-			PersistMode.kNoPersistParameters);
-		m_slaveRightEncoder = m_slaveRight.getEncoder();
+				.follow(m_masterLeft.as_SparkIO().as_IOSparkFlex(), true)
+				.smartCurrentLimit((int) kMaxCurrent.in(Units.Amps)));
+		m_slaveRightEncoder = m_slaveRight.as_SparkIO().as_IOSparkFlex().getEncoder();
 
 		m_ramp = new LoggedSlewRateLimiter(this.getClass().getName(),
 			Units.DegreesPerSecond.of(45).in(Units.DegreesPerSecond));
@@ -122,10 +86,14 @@ public class IntakeArm {
 	}
 
 	public void initSendable(SendableBuilder builder) {
-		builder.addDoubleProperty("Arm Setpoint Degrees", () -> setpoint.in(Units.Degrees), null);
-		builder.addDoubleProperty("Arm Ramped Setpoint Degrees", () -> rampedSetpointDegrees, null);
-		builder.addDoubleProperty("Arm Ramped Setpoint Motor Rotations",
-			() -> motorSetpointRotations, null);
+		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Intake)) {
+			builder.addDoubleProperty("Arm Setpoint Degrees", () -> setpoint.in(Units.Degrees),
+				null);
+			builder.addDoubleProperty("Arm Ramped Setpoint Degrees", () -> rampedSetpointDegrees,
+				null);
+			builder.addDoubleProperty("Arm Ramped Setpoint Motor Rotations",
+				() -> motorSetpointRotations, null);
+		}
 	}
 
 	public void periodic() {
@@ -135,7 +103,7 @@ public class IntakeArm {
 			Motors.NEO_COUNTS_PER_REVOLUTION *
 			IntakeConstants.Arm.GEAR_RATIO / 360.0;
 		motorSetpointRotations = reference;
-		m_masterLeft.setPosition(reference, true, false);
+		m_masterLeft.as_SparkIO().as_IOSparkFlex().setPosition(reference, true, false);
 
 		log();
 		try {
@@ -192,7 +160,7 @@ public class IntakeArm {
 
 	public void rotateAt(double speed) {
 		stop();
-		m_masterLeft.set(MathUtil.clamp(speed, -1.0, 1.0));
+		m_masterLeft.as_SparkIO().as_IOSparkFlex().set(MathUtil.clamp(speed, -1.0, 1.0));
 	}
 
 	public void increment() {
@@ -212,7 +180,7 @@ public class IntakeArm {
 	}
 
 	public void stop() {
-		m_masterLeft.stopMotor();
+		m_masterLeft.as_SparkIO().as_IOSparkFlex().stopMotor();
 	}
 
 	/** Get the actual angle of the master (left) motor. */
@@ -231,11 +199,11 @@ public class IntakeArm {
 	}
 
 	public Current getMasterOutputCurrent() {
-		return Units.Amps.of(m_masterLeft.getOutputCurrent());
+		return Units.Amps.of(m_masterLeft.as_SparkIO().as_IOSparkFlex().getOutputCurrent());
 	}
 
 	public Current getSlaveOutputCurrent() {
-		return Units.Amps.of(m_slaveRight.getOutputCurrent());
+		return Units.Amps.of(m_slaveRight.as_SparkIO().as_IOSparkFlex().getOutputCurrent());
 	}
 
 	public Angle getSetpoint() {

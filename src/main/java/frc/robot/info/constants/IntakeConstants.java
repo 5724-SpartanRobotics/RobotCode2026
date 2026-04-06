@@ -9,7 +9,7 @@ import frc.robot.info.Math;
 
 public final class IntakeConstants {
 	public static final Dimensionless SPEED = Units.Percent.of(15);
-	public static final double ON_ARM_GEAR_RATIO = 3; // 3:1
+	public static final double ON_ARM_GEAR_RATIO = 4; // 4:1
 
 	public static final PIDFfRecord PIDF = new PIDFfRecord(0.0001, 0, 0, 0, 0, 0, 0);
 

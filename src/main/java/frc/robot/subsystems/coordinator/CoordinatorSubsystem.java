@@ -45,8 +45,11 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 			&& setpoint.get().lt(Units.RPM.of(0));
 
 		builder.setSmartDashboardType(this.getClass().getName());
-		builder.addDoubleProperty("Velocity Setpoint RPM", () -> setpoint.get().in(Units.RPM),
-			null);
+		if (Debug.DebugLevel.isAnyOf(Debug.DebugLevel.All, Debug.DebugLevel.Indexer,
+			Debug.DebugLevel.Shooter)) {
+			builder.addDoubleProperty("Velocity Setpoint RPM", () -> setpoint.get().in(Units.RPM),
+				null);
+		}
 		builder.addBooleanProperty("Enabled", enabled, null);
 		builder.addBooleanProperty("Reversed", reversed, null);
 		builder.addBooleanProperty("To Storage", reversed, null);
@@ -63,8 +66,7 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 		io.setVelocity(Units.RPM.of(
 			io.getRateLimiter().calculate(setpoint.get().in(Units.RPM))));
 
-		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Indexer))
-			SmartDashboard.putData(this);
+		SmartDashboard.putData(this);
 	}
 
 	public void enableToStorage() {
@@ -76,6 +78,10 @@ public class CoordinatorSubsystem extends NopSubsystemBase {
 		setpoint.set(CoordinatorConstants.RUN_TO_SHOOTER_SETPOINT);
 		LedSubsystem.getInstance().setPersistentNotify(
 			ColorUtil.plusRGB(Alliance.getAllianceColor(), 0, 100, 180));
+	}
+
+	public Command enableToShooterForeverCommand() {
+		return this.run(this::enableToShooter).repeatedly();
 	}
 
 	public void disable() {
