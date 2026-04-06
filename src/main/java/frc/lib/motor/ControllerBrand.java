@@ -1,8 +1,5 @@
 package frc.lib.motor;
 
 public enum ControllerBrand {
-    kSparkFlex,
-    kSparkMax,
-    kTalonFX,
-    kVictorSPX;
+	kSparkFlex, kSparkMax, kTalonFX, kVictorSPX;
 }

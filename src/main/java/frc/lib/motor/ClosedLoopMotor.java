@@ -18,12 +18,14 @@ public interface ClosedLoopMotor {
 
 	/**
 	 * @return Spark (IO) wrapper
-	 * @throws UnsupportedOperationException if the motor cannot convert to SparkIO
+	 * @throws UnsupportedOperationException
+	 *             if the motor cannot convert to SparkIO
 	 */
 	public SparkIO as_SparkIO();
-		/**
+	/**
 	 * @return TalonFXIO_Wrapper TalonFX (IO) wrapper
-	 * @throws UnsupportedOperationException if the motor cannot convert to TalonFXIO_Wrapper
+	 * @throws UnsupportedOperationException
+	 *             if the motor cannot convert to TalonFXIO_Wrapper
 	 */
 	public TalonFXIO_Wrapper as_TalonFXIOWrapper();
 

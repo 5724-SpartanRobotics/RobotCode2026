@@ -72,10 +72,8 @@ public class SparkIO_SparkFlex extends SparkFlex implements SparkIO {
 		this.config.apply(new ClosedLoopConfig()
 			.pidf(pid.kP(), pid.kI(), pid.kD(), pid.kFf())
 			.apply(new FeedForwardConfig()
-				.sva(pid.kFfS(), pid.kFfV(), pid.kFfA())
-			)
-			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-		);
+				.sva(pid.kFfS(), pid.kFfV(), pid.kFfA()))
+			.feedbackSensor(FeedbackSensor.kPrimaryEncoder));
 		return this.applyConfiguration(this.config);
 	}
 
