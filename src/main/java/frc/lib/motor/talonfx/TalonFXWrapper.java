@@ -20,7 +20,8 @@ import frc.lib.motor.CtrMotionMagicRecord;
 
 public class TalonFXWrapper {
 	private final TalonFX m_motor;
-	private final VelocityVoltage m_slot0VelocityVoltage = new VelocityVoltage(0).withSlot(0);
+	private final VelocityVoltage m_slot0VelocityVoltage = new VelocityVoltage(0)
+		.withSlot(0).withUpdateFreqHz(Units.Hertz.of(50));
 
 	private TalonFXSimState m_sim = null;
 	private double _simVelocity = 0;
@@ -28,6 +29,8 @@ public class TalonFXWrapper {
 
 	public TalonFXWrapper(int canID) {
 		m_motor = new TalonFX(canID);
+		m_motor.optimizeBusUtilization();
+		m_motor.setControl(m_slot0VelocityVoltage);
 		replaceSim();
 	}
 
@@ -144,5 +147,12 @@ public class TalonFXWrapper {
 				"TalonFXWrapper: Closed-loop is not active. Use withSlot0Pidf to enable.");
 
 		m_motor.setControl(m_slot0VelocityVoltage.withVelocity(v));
+	}
+
+	public TalonFXWrapper applySlot0Config(Slot0Configs config) {
+		m_motor.getConfigurator().apply(config);
+		replaceSim();
+		isClosedLoop = true;
+		return this;
 	}
 }

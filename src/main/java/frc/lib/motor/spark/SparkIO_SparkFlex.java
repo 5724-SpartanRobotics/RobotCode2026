@@ -1,18 +1,28 @@
 package frc.lib.motor.spark;
 
+import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.config.ClosedLoopConfig;
+import com.revrobotics.spark.config.FeedForwardConfig;
+import com.revrobotics.spark.config.SignalsConfig;
+import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import frc.lib.PIDFfRecord;
+import frc.lib.motor.ClosedLoopMotor;
+import frc.lib.motor.talonfx.TalonFXIO_Wrapper;
 
 public class SparkIO_SparkFlex extends SparkFlex implements SparkIO {
 	private final MotorType motorType;
+	private final SparkFlexConfig config = new SparkFlexConfig();
 
-	public SparkIO_SparkFlex(int deviceId, MotorType type) {
-		super(deviceId, type);
-		motorType = type;
+	public SparkIO_SparkFlex(int deviceId) {
+		super(deviceId, MotorType.kBrushless);
+		motorType = MotorType.kBrushless;
 	}
 
 	@Override
@@ -34,6 +44,60 @@ public class SparkIO_SparkFlex extends SparkFlex implements SparkIO {
 		inputs.busVoltage = this.getBusVoltage(); // Volts
 		inputs.outputCurrentAmps = this.getOutputCurrent(); // Amps
 		inputs.tempCelsius = this.getMotorTemperature(); // Celcius
+	}
+
+	@Override
+	public SparkIO_SparkFlex as_SparkIO() {
+		return this;
+	}
+
+	@Override
+	public TalonFXIO_Wrapper as_TalonFXIOWrapper() {
+		throw new UnsupportedOperationException("Cannot convert Spark to TalonFX");
+	}
+
+	@Override
+	public SparkIO_SparkFlex as_IOSparkFlex() {
+		return this;
+	}
+
+	@Override
+	public SparkIO_SparkMax as_IOSparkMax() {
+		throw new UnsupportedOperationException();
+	}
+
+	@SuppressWarnings("removal")
+	@Override
+	public ClosedLoopMotor applyPidfsva(PIDFfRecord pid) {
+		this.config.apply(new ClosedLoopConfig()
+			.pidf(pid.kP(), pid.kI(), pid.kD(), pid.kFf())
+			.apply(new FeedForwardConfig()
+				.sva(pid.kFfS(), pid.kFfV(), pid.kFfA())
+			)
+			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+		);
+		return this.applyConfiguration(this.config);
+	}
+
+	@Override
+	public SparkIO_SparkFlex applyConfiguration(SparkBaseConfig config) {
+		this.config.apply(config);
+		this.configure(
+			this.config.apply(new SignalsConfig()
+				.setpointPeriodMs((int) Units.Hertz.of(50).asPeriod().in(Units.Milliseconds))),
+			com.revrobotics.ResetMode.kResetSafeParameters,
+			com.revrobotics.PersistMode.kNoPersistParameters);
+		return this;
+	}
+
+	@Override
+	public Angle getPosition() {
+		return Units.Rotations.of(this.getEncoder().getPosition());
+	}
+
+	@Override
+	public AngularVelocity getVelocity() {
+		return Units.RPM.of(this.getEncoder().getVelocity());
 	}
 
 	@Override

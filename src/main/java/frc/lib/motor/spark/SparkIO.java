@@ -4,6 +4,8 @@ import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
+import com.revrobotics.spark.config.SparkBaseConfig;
+
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
@@ -41,6 +43,13 @@ public interface SparkIO extends ClosedLoopMotor {
 			outputCurrentAmps = table.get("StatorCurrentAmps", outputCurrentAmps);
 			tempCelsius = table.get("TempCelsius", tempCelsius);
 		}
+	}
+
+	public SparkIO_SparkFlex as_IOSparkFlex();
+	public SparkIO_SparkMax as_IOSparkMax();
+
+	default SparkIO applyConfiguration(SparkBaseConfig config) {
+		return this;
 	}
 
 	/** Updates the set of loggable inputs */
