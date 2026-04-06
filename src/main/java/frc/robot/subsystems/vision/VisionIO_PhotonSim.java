@@ -44,6 +44,7 @@ public class VisionIO_PhotonSim extends VisionIO_Photon {
 	 * @param poseSupplier
 	 *            Supplier for the robot pose to use in simulation.
 	 */
+	@SuppressWarnings("unused")
 	public VisionIO_PhotonSim(
 		CameraConfigurations cam, Supplier<Pose2d> poseSupplier) {
 		super(cam);
@@ -63,7 +64,8 @@ public class VisionIO_PhotonSim extends VisionIO_Photon {
 		visionSim.addCamera(cameraSim, robotToCamera);
 
 		if (Desktop.isDesktopSupported()
-			&& Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+			&& Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)
+			&& VisionConstants.DESKTOP_OPEN_CAMERA_SIM) {
 			try {
 				int port = 1182 + i;
 				Desktop.getDesktop().browse(new URI("http://localhost:" + port + "/"));

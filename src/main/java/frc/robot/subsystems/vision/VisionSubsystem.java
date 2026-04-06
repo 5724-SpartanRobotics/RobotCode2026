@@ -35,9 +35,11 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.Timer;
 import frc.lib.NopSubsystemBase;
+import frc.robot.info.Debug;
 import frc.robot.info.RobotMode;
 import frc.robot.info.constants.VisionConstants.CameraConfigurations;
 import frc.robot.subsystems.drive.DriveSubsystem;
@@ -65,6 +67,7 @@ public class VisionSubsystem extends NopSubsystemBase {
 	private final AtomicReference<List<Pose3d>> _allRobotPosesRejected = new AtomicReference<>(
 		new LinkedList<>());
 	private final AtomicReference<Double> lastBufferUnderflow = new AtomicReference<>(-1.0D);
+	private final AtomicReference<Double> lastBufferOverflow = new AtomicReference<>(-1.0D);
 
 	private VisionSubsystem(VisionConsumer consumer, VisionIO... io) {
 		this.consumer = consumer;
@@ -132,22 +135,26 @@ public class VisionSubsystem extends NopSubsystemBase {
 
 	@Override
 	public void initSendable(SendableBuilder builder) {
-		builder.addStringProperty("TagPoses", () -> _allTagPoses.get().stream()
-			.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(), null);
-		builder.addStringProperty("RobotPoses", () -> _allRobotPoses.get().stream()
-			.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(), null);
-		builder
-			.addStringProperty(
-				"AcceptedRobotPoses", () -> _allRobotPosesAccepted.get().stream()
-					.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(),
-				null);
-		builder
-			.addStringProperty(
-				"RejectedRobotPoses", () -> _allRobotPosesRejected.get().stream()
-					.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(),
-				null);
+		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Vision)) {
+			builder.addStringProperty("TagPoses", () -> _allTagPoses.get().stream()
+				.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(), null);
+			builder.addStringProperty("RobotPoses", () -> _allRobotPoses.get().stream()
+				.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(), null);
+			builder
+				.addStringProperty(
+					"AcceptedRobotPoses", () -> _allRobotPosesAccepted.get().stream()
+						.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(),
+					null);
+			builder
+				.addStringProperty(
+					"RejectedRobotPoses", () -> _allRobotPosesRejected.get().stream()
+						.map(p -> p.toString()).collect(Collectors.toList()).toArray().toString(),
+					null);
+		}
 		builder.addDoubleProperty("Last Buffer Underflow FPGA Time",
 			() -> lastBufferUnderflow.get(), null);
+		builder.addDoubleProperty("Last Buffer Overflow FPGA Time",
+			() -> lastBufferOverflow.get(), null);
 	}
 
 	@Override
@@ -165,6 +172,8 @@ public class VisionSubsystem extends NopSubsystemBase {
 
 		ShooterSubsystem.getInstance().hypotenuseToAllianceHub.set(DriveSubsystem.getInstance()
 			.getHypotToAllianceHub());
+
+		SmartDashboard.putData(this);
 	}
 
 	public void updateLoop() {
@@ -298,8 +307,15 @@ public class VisionSubsystem extends NopSubsystemBase {
 			} catch (BufferUnderflowException e) {
 				// For some reason this occasionally creates a buffer underflow so we just catch it
 				// and ignore it
+				DriverStation.reportWarning("VISION LOGGING ERROR: " + e.getMessage(),
+					e.getStackTrace());
 				lastBufferUnderflow.set(Timer.getFPGATimestamp());
+			} catch (BufferOverflowException e) {
+				DriverStation.reportWarning("VISION LOGGING ERROR: " + e.getMessage(),
+					e.getStackTrace());
+				lastBufferOverflow.set(Timer.getFPGATimestamp());
 			}
+
 			allTagPoses.addAll(tagPoses);
 			allRobotPoses.addAll(robotPoses);
 			allRobotPosesAccepted.addAll(robotPosesAccepted);
@@ -320,7 +336,9 @@ public class VisionSubsystem extends NopSubsystemBase {
 				"Vision/Summary/RobotPosesRejected",
 				allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
 		} catch (BufferUnderflowException e) {
+			lastBufferUnderflow.set(Timer.getFPGATimestamp());
 		} catch (BufferOverflowException e) {
+			lastBufferOverflow.set(Timer.getFPGATimestamp());
 		}
 
 		_allTagPoses.set(allTagPoses);
