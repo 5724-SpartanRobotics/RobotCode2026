@@ -1,5 +1,7 @@
 package frc.robot.info;
 
+import java.util.Optional;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
 
@@ -38,5 +40,9 @@ public final class Alliance {
 			case Blue -> Color.kRed;
 			default -> Color.kWhite;
 		};
+	}
+
+	public static Optional<edu.wpi.first.wpilibj.DriverStation.Alliance> getDsAlliance() {
+		return DriverStation.getAlliance();
 	}
 }

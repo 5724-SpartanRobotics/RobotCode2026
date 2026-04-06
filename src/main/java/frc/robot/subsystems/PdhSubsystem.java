@@ -8,10 +8,13 @@ import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.ClassFieldMapStringToInt;
 import frc.lib.NopSubsystemBase;
+import frc.robot.info.Debug;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.PdhChannelConstants;
 
@@ -21,6 +24,10 @@ public class PdhSubsystem extends NopSubsystemBase {
 	private PdhIO.PdhIOInputs inputs = new PdhIO.PdhIOInputs();
 
 	private PdhSubsystem() {
+		// For the unknown CAN command on this, after some asking google ai, it seems like the TERM
+		// switch next to the CAN termination has to be set to ON because otherwise the CAN bus may
+		// not be properly terminated, and a signal reflection can cause unknown message errors
+		// because of the noise.
 		m_pdh = new PowerDistribution(CanIdConstants.PDH, ModuleType.kRev);
 	}
 
@@ -60,6 +67,19 @@ public class PdhSubsystem extends NopSubsystemBase {
 			} catch (BufferOverflowException e) {
 			}
 		});
+
+		SmartDashboard.putData(this);
+	}
+
+	@Override
+	public void initSendable(SendableBuilder builder) {
+		// builder.setSmartDashboardType(this.getClass().getName());
+		super.initSendable(builder);
+		if (Debug.DebugLevel.isAny()) {
+			// builder.addDoubleProperty("Current Usage Amps", () -> m_pdh.getTotalCurrent(), null);
+			// // Already configured
+			builder.addDoubleProperty("Temperature Celcius", () -> m_pdh.getTemperature(), null);
+		}
 	}
 
 	public PowerDistribution getPDH() {

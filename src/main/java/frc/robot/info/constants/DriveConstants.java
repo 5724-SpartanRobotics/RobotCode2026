@@ -3,6 +3,7 @@ package frc.robot.info.constants;
 import java.io.File;
 
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.lib.PIDFfRecord;
@@ -16,4 +17,6 @@ public final class DriveConstants {
 	public static final PIDFfRecord ROTATE_TO_ANGLE_PID = new PIDFfRecord(
 		3.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0);
+
+	public static final Distance MAX_POSE_ERROR = Units.Feet.of(1.5);
 }

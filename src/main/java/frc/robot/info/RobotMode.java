@@ -12,4 +12,8 @@ public enum RobotMode {
 	public static boolean is(RobotMode other) {
 		return get() == other;
 	}
+
+	public static boolean isNot(RobotMode other) {
+		return !is(other);
+	}
 }

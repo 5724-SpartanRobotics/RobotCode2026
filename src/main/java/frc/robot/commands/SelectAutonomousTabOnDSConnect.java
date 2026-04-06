@@ -25,4 +25,10 @@ public class SelectAutonomousTabOnDSConnect extends Command {
 		// Finish once DS is attached
 		return DriverStation.isDSAttached();
 	}
+
+	@Override
+	public boolean runsWhenDisabled() {
+		super.runsWhenDisabled();
+		return true;
+	}
 }

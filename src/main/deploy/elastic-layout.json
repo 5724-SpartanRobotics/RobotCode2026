@@ -9,9 +9,9 @@
         "containers": [
           {
             "title": "Rotation",
-            "x": 1024.0,
+            "x": 1152.0,
             "y": 384.0,
-            "width": 384.0,
+            "width": 256.0,
             "height": 256.0,
             "type": "Radial Gauge",
             "properties": {
@@ -48,7 +48,7 @@
           },
           {
             "title": "Match Time",
-            "x": 512.0,
+            "x": 640.0,
             "y": 384.0,
             "width": 512.0,
             "height": 256.0,
@@ -144,7 +144,7 @@
             "title": "DS Attached",
             "x": 0.0,
             "y": 384.0,
-            "width": 512.0,
+            "width": 128.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
@@ -158,25 +158,8 @@
             }
           },
           {
-            "title": "Feeder Enabled",
-            "x": 0.0,
-            "y": 512.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Boolean Box",
-            "properties": {
-              "topic": "/SmartDashboard/ShooterSubsystem/Feeder Enabled",
-              "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
-            }
-          },
-          {
             "title": "Shooter Enabled",
-            "x": 256.0,
+            "x": 384.0,
             "y": 512.0,
             "width": 256.0,
             "height": 128.0,
@@ -202,6 +185,74 @@
               "topic": "/SmartDashboard/Auto choices",
               "period": 0.06,
               "sort_options": false
+            }
+          },
+          {
+            "title": "Feeder Enabled",
+            "x": 128.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/FeederSubsystem/Feeder Enabled",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Feeder Velocity >0",
+            "x": 384.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/FeederSubsystem/Feeder Velocity >0",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Hub Active",
+            "x": 0.0,
+            "y": 512.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/GameTimerSubsystem/Hub Active",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "At Setpoint",
+            "x": 128.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/ShooterSubsystem/At Setpoint",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
             }
           }
         ]
@@ -335,9 +386,9 @@
           },
           {
             "title": "Belt Reversed",
-            "x": 1536.0,
-            "y": 128.0,
-            "width": 384.0,
+            "x": 1664.0,
+            "y": 512.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
@@ -352,9 +403,9 @@
           },
           {
             "title": "Shooter Enabled",
-            "x": 1536.0,
-            "y": 0.0,
-            "width": 384.0,
+            "x": 1664.0,
+            "y": 384.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
@@ -368,39 +419,70 @@
             }
           },
           {
-            "title": "Shooter Setpoint RPM",
+            "title": "Feeder Enabled",
             "x": 1408.0,
-            "y": 384.0,
+            "y": 512.0,
             "width": 256.0,
-            "height": 256.0,
-            "type": "Graph",
+            "height": 128.0,
+            "type": "Boolean Box",
             "properties": {
-              "topic": "/SmartDashboard/ShooterSubsystem/Shooter Setpoint RPM",
-              "period": 0.033,
-              "data_type": "double",
-              "time_displayed": 5.0,
-              "min_value": 0.0,
-              "max_value": 7000.0,
-              "color": 4278238420,
-              "line_width": 2.0
+              "topic": "/SmartDashboard/FeederSubsystem/Feeder Enabled",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
             }
           },
           {
-            "title": "Shooter Velocity RPM",
-            "x": 1664.0,
+            "title": "At Setpoint",
+            "x": 1408.0,
             "y": 384.0,
             "width": 256.0,
-            "height": 256.0,
-            "type": "Graph",
+            "height": 128.0,
+            "type": "Boolean Box",
             "properties": {
-              "topic": "/SmartDashboard/ShooterSubsystem/Shooter Velocity RPM",
-              "period": 0.033,
+              "topic": "/SmartDashboard/ShooterSubsystem/At Setpoint",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Countdown Until Hub Active",
+            "x": 1536.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Match Time",
+            "properties": {
+              "topic": "/SmartDashboard/GameTimerSubsystem/Countdown Until Hub Active",
+              "period": 0.06,
               "data_type": "double",
-              "time_displayed": 5.0,
-              "min_value": 0.0,
-              "max_value": 7000.0,
-              "color": 4278238420,
-              "line_width": 2.0
+              "time_display_mode": "Minutes and Seconds",
+              "red_start_time": 20,
+              "yellow_start_time": 30
+            }
+          },
+          {
+            "title": "Hub Active",
+            "x": 1792.0,
+            "y": 0.0,
+            "width": 128.0,
+            "height": 256.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/GameTimerSubsystem/Hub Active",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
             }
           }
         ]
@@ -2133,6 +2215,155 @@
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Auto Debugging",
+      "grid_layout": {
+        "layouts": [],
+        "containers": [
+          {
+            "title": "Feeder Enabled",
+            "x": 256.0,
+            "y": 0.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/ShooterSubsystem/Feeder Enabled",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Feeder Setpoint RPM",
+            "x": 640.0,
+            "y": 0.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/ShooterSubsystem/Feeder Setpoint RPM",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Feeder Velocity RPM",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/ShooterSubsystem/Feeder Velocity RPM",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Shooter Enabled",
+            "x": 256.0,
+            "y": 128.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/ShooterSubsystem/Shooter Enabled",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Shooter Setpoint RPM",
+            "x": 640.0,
+            "y": 128.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/ShooterSubsystem/Shooter Setpoint RPM",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Shooter Velocity RPM",
+            "x": 768.0,
+            "y": 128.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/ShooterSubsystem/Shooter Velocity RPM",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Auto Coordinated Shooter Enabled",
+            "x": 256.0,
+            "y": 256.0,
+            "width": 640.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Coordinated Shooter Enabled",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Field",
+            "x": 896.0,
+            "y": 0.0,
+            "width": 1024.0,
+            "height": 512.0,
+            "type": "Field",
+            "properties": {
+              "topic": "/SmartDashboard/Field",
+              "period": 0.06,
+              "field_game": "Rebuilt",
+              "robot_width": 0.85,
+              "robot_length": 0.85,
+              "show_other_objects": true,
+              "show_trajectories": true,
+              "field_rotation": 0.0,
+              "robot_color": 4294198070,
+              "trajectory_color": 4294967295,
+              "show_robot_outside_widget": true
+            }
+          },
+          {
+            "title": "Auto choices",
+            "x": 256.0,
+            "y": 384.0,
+            "width": 640.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto choices",
+              "period": 0.06,
+              "sort_options": false
             }
           }
         ]

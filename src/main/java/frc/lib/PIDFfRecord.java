@@ -19,4 +19,7 @@ package frc.lib;
 public record PIDFfRecord(
 	double kP, double kI, double kD, double kFf,
 	double kFfS, double kFfV, double kFfA) {
+	public static PIDFfRecord zero() {
+		return new PIDFfRecord(0, 0, 0, 0, 0, 0, 0);
+	}
 }

@@ -23,6 +23,24 @@
         "reveal": "always",
         "panel": "dedicated"
       }
+    },
+    {
+      "label": "Clean Deploy Directory on Rio & Redeploy",
+      "type": "shell",
+      "command": "ssh",
+      "args": [
+        "admin@10.57.24.2",
+        "\"rm -rf /home/lvuser/deploy/*\""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
     }
   ]
 }

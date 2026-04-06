@@ -229,8 +229,7 @@ public class LedSubsystem extends NopSubsystemBase {
 
 		log();
 
-		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Led))
-			SmartDashboard.putData(this);
+		SmartDashboard.putData(this);
 	}
 
 	public void log() {
@@ -337,53 +336,55 @@ public class LedSubsystem extends NopSubsystemBase {
 	@Override
 	public void initSendable(SendableBuilder builder) {
 		builder.setSmartDashboardType(this.getClass().getName());
-		builder.addBooleanProperty(
-			"HasEverEnabled",
-			() -> _hasEverEnabled, null);
-		builder.addStringProperty(
-			"BaseState",
-			() -> _baseState.toString(), null);
-		builder.addIntegerProperty(
-			"NotificationCount",
-			() -> _notifications.size(), null);
-		builder.addStringProperty(
-			"TopNotificationColor",
-			() -> _notifications.isEmpty() ? "None" : _notifications.peek().color.toString(),
-			null);
-		builder.addDoubleProperty(
-			"DisabledTime",
-			() -> Timer.getFPGATimestamp() - _disabledStartTimeSec, null);
-		builder.addDoubleProperty(
-			"RainbowOffset",
-			() -> _rainbowOffset, null);
-		builder.addDoubleArrayProperty(
-			"CurrentColorRGB",
-			() -> new double[]{
-				_currentRenderedColor.red,
-				_currentRenderedColor.green,
-				_currentRenderedColor.blue
-			},
-			null);
-		builder.addStringProperty(
-			"CurrentColorHex",
-			() -> String.format(
-				"#%02X%02X%02X",
-				(int) (_currentRenderedColor.red * 255),
-				(int) (_currentRenderedColor.green * 255),
-				(int) (_currentRenderedColor.blue * 255)),
-			null);
-		builder.addDoubleArrayProperty(
-			"LEDStripRGB",
-			() -> {
-				double[] arr = new double[m_buffer.getLength() * 3];
-				for (int i = 0; i < m_buffer.getLength(); i++) {
-					Color c = getRenderedColorAt(i);
-					arr[i * 3] = c.red;
-					arr[i * 3 + 1] = c.green;
-					arr[i * 3 + 2] = c.blue;
-				}
-				return arr;
-			},
-			null);
+		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Led) || RobotMode.isNot(RobotMode.Real)) {
+			builder.addBooleanProperty(
+				"HasEverEnabled",
+				() -> _hasEverEnabled, null);
+			builder.addStringProperty(
+				"BaseState",
+				() -> _baseState.toString(), null);
+			builder.addIntegerProperty(
+				"NotificationCount",
+				() -> _notifications.size(), null);
+			builder.addStringProperty(
+				"TopNotificationColor",
+				() -> _notifications.isEmpty() ? "None" : _notifications.peek().color.toString(),
+				null);
+			builder.addDoubleProperty(
+				"DisabledTime",
+				() -> Timer.getFPGATimestamp() - _disabledStartTimeSec, null);
+			builder.addDoubleProperty(
+				"RainbowOffset",
+				() -> _rainbowOffset, null);
+			builder.addDoubleArrayProperty(
+				"CurrentColorRGB",
+				() -> new double[]{
+					_currentRenderedColor.red,
+					_currentRenderedColor.green,
+					_currentRenderedColor.blue
+				},
+				null);
+			builder.addStringProperty(
+				"CurrentColorHex",
+				() -> String.format(
+					"#%02X%02X%02X",
+					(int) (_currentRenderedColor.red * 255),
+					(int) (_currentRenderedColor.green * 255),
+					(int) (_currentRenderedColor.blue * 255)),
+				null);
+			builder.addDoubleArrayProperty(
+				"LEDStripRGB",
+				() -> {
+					double[] arr = new double[m_buffer.getLength() * 3];
+					for (int i = 0; i < m_buffer.getLength(); i++) {
+						Color c = getRenderedColorAt(i);
+						arr[i * 3] = c.red;
+						arr[i * 3 + 1] = c.green;
+						arr[i * 3 + 2] = c.blue;
+					}
+					return arr;
+				},
+				null);
+		}
 	}
 }
