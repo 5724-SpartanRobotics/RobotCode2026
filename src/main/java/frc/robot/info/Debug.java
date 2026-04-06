@@ -4,7 +4,7 @@ public class Debug {
 	protected static final DebugLevel DEBUG_TRACE_LEVEL = DebugLevel.All;
 
 	public static enum DebugLevel {
-		Off, All, Autonomous, Climb, Drive, Indexer, Intake, Led, Shooter, Vision;
+		Off, All, Autonomous, Drive, Indexer, Intake, Led, Shooter, Vision;
 
 		/**
 		 * Check to see if {@link DebugTraceLevel} is set to All.

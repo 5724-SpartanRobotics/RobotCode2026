@@ -3,6 +3,8 @@ package frc.robot.info.constants;
 import frc.lib.ClassFieldMapStringToInt;
 
 public final class PdhChannelConstants implements ClassFieldMapStringToInt {
+	// TODO: Update these values
+
 	public static final int ROBORIO = 0;
 	public static final int PDH = 1;
 	public static final int PIGEON2 = 2;
@@ -28,8 +30,6 @@ public final class PdhChannelConstants implements ClassFieldMapStringToInt {
 	public static final int INTAKE_UPPER_FIXED = 15;
 	public static final int ARM_LEFT_MASTER = 16;
 	public static final int ARM_RIGHT_SLAVE = 17;
-
-	public static final int CLIMBER = 18;
 
 	public static final int INDEXER = 19;
 	public static final int INDEXER_UPPER = 20;
