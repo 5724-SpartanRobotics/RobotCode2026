@@ -7,6 +7,7 @@ package frc.robot.subsystems.drive;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
@@ -20,6 +21,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -32,6 +34,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -47,6 +50,7 @@ import frc.robot.info.Debug;
 import frc.robot.info.Field;
 import frc.robot.info.constants.DriveConstants;
 import frc.robot.info.constants.RobotConstants;
+import frc.robot.info.constants.VisionConstants;
 import frc.robot.info.constants.VisionConstants.CameraConfigurations;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
@@ -140,8 +144,16 @@ public class DriveSubsystem extends NopSubsystemBase {
 		return Holder.INSTANCE;
 	}
 
+	public Angle getAllianceRelativeRotation() {
+		boolean red = Alliance.isRedAlliance();
+		return Units.Degrees.of(
+			Math.abs(
+				(red ? 180.0 : 0.0) - getPose().getRotation().getDegrees()) % 360.0);
+	}
+
 	public Command faceTargetCommand() {
-		return new InstantCommand(() -> {
+		final AtomicReference<Pose2d> staticTarget = new AtomicReference<>(new Pose2d());
+		return runOnce(() -> {
 			// 1) Read current robot pose and compute the offset pose ONCE
 			Pose2d currentPose = getPose(); // ensure odometry is up-to-date
 			Translation2d robotTranslation = currentPose.getTranslation();
@@ -157,11 +169,10 @@ public class DriveSubsystem extends NopSubsystemBase {
 			double y_new = hub.getY() - diffY * uy;
 			Rotation2d heading = new Rotation2d(Math.atan2(diffY, diffX)).plus(Rotation2d.k180deg);
 
-			Pose2d staticTarget = new Pose2d(new Translation2d(x_new, y_new), heading);
-
-			Command rotCmd = new RotateToAngleCommand(() -> staticTarget.getRotation(), true);
-			CommandScheduler.getInstance().schedule(rotCmd);
-		}, this);
+			staticTarget.set(new Pose2d(new Translation2d(x_new, y_new), heading));
+		})
+			.andThen(new RotateToAngleCommand(() -> staticTarget.get().getRotation(), true))
+			.repeatedly();
 	}
 
 	public Command driveToTargetCommand() {
@@ -271,8 +282,7 @@ public class DriveSubsystem extends NopSubsystemBase {
 
 		updateCameraPositions();
 
-		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Drive))
-			SmartDashboard.putData(this);
+		SmartDashboard.putData(this);
 	}
 
 	private void updateCameraPositions() {
@@ -303,11 +313,13 @@ public class DriveSubsystem extends NopSubsystemBase {
 	@Override
 	public void initSendable(SendableBuilder builder) {
 		builder.setSmartDashboardType(this.getClass().getName());
-		for (var m : m_swerveDrive.getModules()) {
-			builder.addDoubleProperty(
-				"Module " + m.moduleNumber + " Turn Encoder Degrees",
-				() -> m.getAngleMotor().getPosition(),
-				null);
+		if (Debug.DebugLevel.isOrAll(Debug.DebugLevel.Drive)) {
+			for (var m : m_swerveDrive.getModules()) {
+				builder.addDoubleProperty(
+					"Module " + m.moduleNumber + " Turn Encoder Degrees",
+					() -> m.getAngleMotor().getPosition(),
+					null);
+			}
 		}
 		builder.addDoubleProperty("Distance to Hub Meters", () -> distToAllianceHubMeters, null);
 	}
@@ -495,7 +507,14 @@ public class DriveSubsystem extends NopSubsystemBase {
 
 	@AutoLogOutput(key = "Odometry/Robot")
 	public Pose2d getPose() {
-		return getPose(true);
+		final double maxPoseErrorMeters = DriveConstants.MAX_POSE_ERROR.in(Units.Meters);
+		var pose = getPose(true);
+		return new Pose2d(
+			MathUtil.clamp(pose.getX(), 0 - maxPoseErrorMeters,
+				VisionConstants.LAYOUT.getFieldLength() + maxPoseErrorMeters),
+			MathUtil.clamp(pose.getY(), 0 - maxPoseErrorMeters,
+				VisionConstants.LAYOUT.getFieldWidth() + maxPoseErrorMeters),
+			pose.getRotation());
 	}
 
 	/**
