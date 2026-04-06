@@ -13,19 +13,19 @@
         {
           "type": "named",
           "data": {
-            "name": "Extend Arm"
+            "name": "Warmup Flywheel"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 5.0
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Retract Arm"
+            "name": "ZZZ CANCEL ALL"
           }
         }
       ]
