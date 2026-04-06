@@ -9,17 +9,11 @@ public interface ShooterIO {
 	public static class ShooterIOInputs implements LoggableInputs {
 		// State
 		public boolean enabledFlywheel = false;
-		public boolean enabledFeeder = false;
 		public boolean reversed = false;
 
 		// Distance + tuning
 		public double distanceMeters = 0.0;
 		public double flywheelSpeedMod = 0.0;
-
-		// Feeder
-		public double feederVelocityRPM = 0.0;
-		public double feederSetpointRPM = 0.0;
-		public boolean feederRunning = false;
 
 		// Calculated shooter
 		public double targetFlywheelRPM = 0.0;
@@ -27,15 +21,11 @@ public interface ShooterIO {
 		@Override
 		public void toLog(LogTable table) {
 			table.put("EnabledFlywheel", enabledFlywheel);
-			table.put("EnabledFeeder", enabledFeeder);
+			// table.put("EnabledFeeder", enabledFeeder);
 			table.put("Reversed", reversed);
 
 			table.put("DistanceMeters", distanceMeters);
 			table.put("FlywheelSpeedMod", flywheelSpeedMod);
-
-			table.put("FeederVelocityRPM", feederVelocityRPM);
-			table.put("FeederSetpointRPM", feederSetpointRPM);
-			table.put("FeederRunning", feederRunning);
 
 			table.put("TargetFlywheelRPM", targetFlywheelRPM);
 		}
@@ -43,15 +33,10 @@ public interface ShooterIO {
 		@Override
 		public void fromLog(LogTable table) {
 			enabledFlywheel = table.get("EnabledFlywheel", false);
-			enabledFeeder = table.get("EnabledFeeder", false);
 			reversed = table.get("Reversed", false);
 
 			distanceMeters = table.get("DistanceMeters", 0.0);
 			flywheelSpeedMod = table.get("FlywheelSpeedMod", 0.0);
-
-			feederVelocityRPM = table.get("FeederVelocityRPM", 0.0);
-			feederSetpointRPM = table.get("FeederSetpointRPM", 0.0);
-			feederRunning = table.get("FeederRunning", false);
 
 			targetFlywheelRPM = table.get("TargetFlywheelRPM", 0.0);
 		}

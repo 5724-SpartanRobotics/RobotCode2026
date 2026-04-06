@@ -1,5 +1,7 @@
 package frc.robot.info.constants;
 
+import java.util.Map;
+
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.DistanceUnit;
@@ -14,7 +16,6 @@ import edu.wpi.first.units.measure.Per;
 import edu.wpi.first.units.measure.Time;
 import frc.lib.PIDFfRecord;
 import frc.robot.info.Math;
-import frc.robot.info.Motors;
 
 public final class ShooterConstants {
 	private static final double SHOOTER_kP = 0.0005;
@@ -86,4 +87,13 @@ public final class ShooterConstants {
 
 	// --- Optional quantization (set to 0 to disable) ---
 	public static final AngularVelocity RPM_STEP_SIZE = Units.RPM.of(150);
+
+	public static final Map<Distance, AngularVelocity> SPEED_MAP = Map.of(
+		// Units.Meters.of(1.0), Units.RPM.of(3300),
+		Units.Meters.of(2.0), Units.RPM.of(3150),
+		Units.Meters.of(2.5), Units.RPM.of(3150),
+		Units.Meters.of(2.85), Units.RPM.of(3300),
+		// Units.Meters.of(3.0), Units.RPM.of(3450),
+		// Units.Meters.of(4.0), Units.RPM.of(3600),
+		Units.Meters.of(10), Units.RPM.of(6600));
 }
