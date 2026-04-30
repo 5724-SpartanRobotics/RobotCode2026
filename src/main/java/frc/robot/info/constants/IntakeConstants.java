@@ -17,9 +17,9 @@ public final class IntakeConstants {
 		public static final double GEAR_RATIO = 9 * 3; // 9:1 -> 3:1 = 27:1
 		public static final AngularVelocity SETPOINT_RAMP_RATE = Units.DegreesPerSecond.of(60);
 		public static final Angle MIN_ROTATION = Units.Degrees.of(0);
-		public static final Angle MAX_ROTATION = Units.Degrees.of(97);
+		public static final Angle MAX_ROTATION = Units.Degrees.of(120);
 		public static final Angle DEFAULT_ROTATION_SETPOINT = MAX_ROTATION
-			.minus(Units.Degrees.of(4.5));
+			.minus(Units.Degrees.of(10));
 
 		private static final double kFf = 0.0275;
 		public static final PIDFfRecord PIDF = new PIDFfRecord(

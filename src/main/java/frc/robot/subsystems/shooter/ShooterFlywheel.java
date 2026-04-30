@@ -52,6 +52,8 @@ public class ShooterFlywheel {
 
 	private double _p = kP.get();
 	private double _v = kV.get();
+	private boolean firstRunP = true;
+	private boolean firstRunV = true;
 
 	public ShooterFlywheel() {
 		// smcConfig = new SmartMotorControllerConfig(m_subsystem)
@@ -146,7 +148,7 @@ public class ShooterFlywheel {
 		// ShooterConstants.SOFT_LIMIT_VELOCITY)
 		// .withSpeedometerSimulation(ShooterConstants.SOFT_LIMIT_VELOCITY.times(3.0 / 2.0));
 		// m_flywheel = new FlyWheel(shooterConfig);
-		m_rateLimiter = new LoggedSlewRateLimiter("ShooterFlywheel", 3200); // rpm/s
+		m_rateLimiter = new LoggedSlewRateLimiter("ShooterFlywheel", 800); // rpm/s
 	}
 
 	private static final class Holder {
@@ -162,21 +164,27 @@ public class ShooterFlywheel {
 
 		final double newKp = kP.get();
 		final double newKv = kV.get();
-		if (_p != newKp) {
+		if (_p != newKp || firstRunP) {
 			_p = newKp;
 			m_motorLeftLeader.as_TalonFXIOWrapper().getWrapper().applySlot0Config(
 				new Slot0Configs().withKP(_p));
+			m_motorRightFollower.as_TalonFXIOWrapper().getWrapper().applySlot0Config(
+				new Slot0Configs().withKP(_p));
+			firstRunP = false;
 		}
-		if (_v != newKv) {
+		if (_v != newKv || firstRunV) {
 			_v = newKv;
 			m_motorLeftLeader.as_TalonFXIOWrapper().getWrapper().applySlot0Config(
 				new Slot0Configs().withKV(_v));
+			m_motorRightFollower.as_TalonFXIOWrapper().getWrapper().applySlot0Config(
+				new Slot0Configs().withKV(_v));
+			firstRunV = false;
 		}
 
 		if ((int) setpointVelocity.in(Units.RPM) > 0) {
 			var limitedVelocity = Units.RPM.of(
-				// m_rateLimiter.calculate(setpointVelocity.in(Units.RPM)));
-				m_rateLimiter.calculate(100)); // RPM
+				m_rateLimiter.calculate(setpointVelocity.in(Units.RPM)));
+				// m_rateLimiter.calculate(100)); // RPM
 			m_motorLeftLeader.setVelocity(limitedVelocity);
 			m_motorRightFollower.setVelocity(limitedVelocity);
 		} else {
@@ -210,6 +218,8 @@ public class ShooterFlywheel {
 			builder.addDoubleProperty("Shooter Setpoint RPM", () -> setpointVelocity.in(Units.RPM),
 				null);
 			builder.addDoubleProperty("Shooter Velocity Left RPM", () -> measuredVelocityLeft,
+				null);
+			builder.addDoubleProperty("Shooter Velocity RPM", () -> (measuredVelocityLeft + measuredVelocityRight) / 2.0,
 				null);
 			builder.addDoubleProperty("Shooter Velocity Right RPM", () -> measuredVelocityRight,
 				null);
@@ -247,5 +257,6 @@ public class ShooterFlywheel {
 		setpointVelocity = Units.RPM.of(0);
 		// m_motor.setVelocity(setpointVelocity, true, false);
 		m_motorLeftLeader.setVelocity(Units.RPM.zero());
+		m_motorRightFollower.setVelocity(Units.RPM.zero());
 	}
 }

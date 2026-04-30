@@ -25,6 +25,7 @@ import frc.lib.motor.spark.SparkIO_SparkFlex;
 import frc.robot.info.Debug;
 import frc.robot.info.Motors;
 import frc.robot.info.constants.CanIdConstants;
+import frc.robot.info.constants.CoordinatorConstants;
 import frc.robot.info.constants.ShooterConstants;
 
 public class FeederSubsystem extends NopSubsystemBase {
@@ -37,7 +38,7 @@ public class FeederSubsystem extends NopSubsystemBase {
 	private final AtomicBoolean m_reverse = new AtomicBoolean(false);
 
 	private static final LoggedNetworkNumber kSpeedRPM = new LoggedNetworkNumber(
-		"/Tuning/Feeder/RPM", 1000);
+		"/Tuning/Feeder/RPM", CoordinatorConstants.RUN_TO_SHOOTER_SETPOINT.in(Units.RPM));
 
 	private FeederIO.FeederIOInputs inputs = new FeederIO.FeederIOInputs();
 

@@ -100,19 +100,19 @@ public class RobotContainer {
 
 	public void createInstances() {
 		AlertSubsystem.getInstance();
-		if (RobotMode.is(RobotMode.Real)) {
+		if (RobotMode.isNot(RobotMode.Real)) {
 			PdhSubsystem.getInstance();
 		}
 
-		// LedSubsystem.getInstance();
-		// GameTimerSubsystem.getInstance();
-		// CoordinatorSubsystem.getInstance();
-		// DriveSubsystem.getInstance();
-		// FeederSubsystem.getInstance();
-		// IndexerSubsystem.getInstance();
-		// IntakeSubsystem.getInstance();
-		// ShooterSubsystem.getInstance();
-		// VisionSubsystem.getInstance();
+		LedSubsystem.getInstance();
+		GameTimerSubsystem.getInstance();
+		CoordinatorSubsystem.getInstance();
+		DriveSubsystem.getInstance();
+		FeederSubsystem.getInstance();
+		IndexerSubsystem.getInstance();
+		IntakeSubsystem.getInstance();
+		ShooterSubsystem.getInstance();
+		VisionSubsystem.getInstance();
 
 		DriveCommands.initialize(() -> m_driverController);
 	}
@@ -142,7 +142,7 @@ public class RobotContainer {
 			.whileTrue(ControllerActions.enableCoordinatedIntakeReverse())
 			.onFalse(ControllerActions.disableCoordinatedIntake());
 		m_driverController.button(DriverMap.DIST_FROM_HUB_2METERS).whileTrue(
-			DriveSubsystem.getInstance().driveToTargetCommand(2));
+			DriveSubsystem.getInstance().driveToTargetCommand(2.24));
 
 		// m_driverController.button(16).onTrue(IntakeSubsystem.getInstance().extendArmCommand());
 		// m_driverController.button(15).onTrue(IntakeSubsystem.getInstance().retractArmCommand());
@@ -183,8 +183,8 @@ public class RobotContainer {
 				}))
 			.onFalse(IntakeSubsystem.getInstance()
 				.runOnce(() -> IntakeSubsystem.getInstance().disableIntake()));
-		m_operatorController.y().toggleOnTrue(ShooterSubsystem.getInstance().toggle());
-		m_operatorController.b().toggleOnTrue(ShooterSubsystem.getInstance().toggleFeederReverse());
+		m_operatorController.y().toggleOnTrue(ControllerActions.toggleShooter());
+		m_operatorController.b().toggleOnTrue(ControllerActions.toggleShooterReverse());
 		m_operatorController.leftBumper()
 			.toggleOnTrue(CoordinatorSubsystem.getInstance().toggleToShooter());
 		m_operatorController.rightBumper()
@@ -247,6 +247,26 @@ public class RobotContainer {
 				IntakeSubsystem.getInstance().disableIntake();
 				IndexerSubsystem.getInstance().disable();
 			}, IntakeSubsystem.getInstance(), IndexerSubsystem.getInstance());
+		}
+
+		public static Command toggleShooter() {
+			return Commands.startEnd(() -> {
+				ShooterSubsystem.getInstance().enableForward();
+				FeederSubsystem.getInstance().enableForward();
+			}, () -> {
+				ShooterSubsystem.getInstance().disable();
+				FeederSubsystem.getInstance().disable();
+			}, ShooterSubsystem.getInstance(), FeederSubsystem.getInstance());
+		}
+
+		public static Command toggleShooterReverse() {
+			return Commands.startEnd(() -> {
+				ShooterSubsystem.getInstance().enableReverse();
+				FeederSubsystem.getInstance().enableReverse();
+			}, () -> {
+				ShooterSubsystem.getInstance().disable();
+				FeederSubsystem.getInstance().disable();
+			}, ShooterSubsystem.getInstance(), FeederSubsystem.getInstance());
 		}
 	}
 

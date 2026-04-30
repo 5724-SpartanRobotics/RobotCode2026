@@ -15,11 +15,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.ClassFieldMapStringToInt;
 import frc.lib.NopSubsystemBase;
 import frc.robot.info.Debug;
+import frc.robot.info.RobotMode;
 import frc.robot.info.constants.CanIdConstants;
 import frc.robot.info.constants.PdhChannelConstants;
 
 public class PdhSubsystem extends NopSubsystemBase {
-	private final PowerDistribution m_pdh;
+	private static final PowerDistribution m_pdh = new PowerDistribution(CanIdConstants.PDH, ModuleType.kRev);
 
 	private PdhIO.PdhIOInputs inputs = new PdhIO.PdhIOInputs();
 
@@ -28,11 +29,10 @@ public class PdhSubsystem extends NopSubsystemBase {
 		// switch next to the CAN termination has to be set to ON because otherwise the CAN bus may
 		// not be properly terminated, and a signal reflection can cause unknown message errors
 		// because of the noise.
-		m_pdh = new PowerDistribution(CanIdConstants.PDH, ModuleType.kRev);
 	}
 
 	private static final class Holder {
-		private static final PdhSubsystem INSTANCE = new PdhSubsystem();
+		private static final PdhSubsystem INSTANCE = RobotMode.is(RobotMode.Real) ? null : new PdhSubsystem();
 	}
 
 	public static synchronized PdhSubsystem getInstance() {

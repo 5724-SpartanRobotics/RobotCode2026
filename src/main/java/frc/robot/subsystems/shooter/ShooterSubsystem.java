@@ -129,7 +129,7 @@ public class ShooterSubsystem extends NopSubsystemBase {
 	@SuppressWarnings("unused")
 	private AngularVelocity calculateShooterSpeedFromRobotDistance_idealPhysics() {
 		Distance copy = hypotenuseToAllianceHub.get();
-		// copy = Units.Meters.of(1);
+		copy = Units.Meters.of(1);
 		double d = distanceFilter.calculate(copy.in(Units.Meters));
 		double g = frc.robot.info.Math.g.in(Units.MetersPerSecondPerSecond);
 		double v = Math.sqrt(

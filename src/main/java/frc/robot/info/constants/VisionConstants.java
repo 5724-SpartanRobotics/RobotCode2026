@@ -13,34 +13,34 @@ public class VisionConstants {
 		.loadField(AprilTagFields.k2026RebuiltAndymark);
 
 	public enum CameraConfigurations {
-		Front(
+		Front( // bad
 			"front",
 			// Camera translation relative to robot center (tune as needed)
 			new Transform3d(
 				new Translation3d(
-					Units.Inches.of(-2.0).in(Units.Meters),
-					Units.Inches.of(14).in(Units.Meters),
-					Units.Inches.of(20.5).in(Units.Meters)),
+					Units.Inches.of(-0.5).in(Units.Meters),
+					Units.Inches.of(14.25 - 3.0).in(Units.Meters),
+					Units.Inches.of(20).in(Units.Meters)),
 				new Rotation3d(0, 0, 0)),
 			0.9),
 
-		Back(
+		Back( // bad
 			"back",
 			new Transform3d(
 				new Translation3d(
-					Units.Inches.of(-11.0).in(Units.Meters),
-					Units.Inches.of(8.0 + 1.0 / 8.0).in(Units.Meters),
-					Units.Inches.of(13.0).in(Units.Meters)),
+					Units.Inches.of(-4.0).in(Units.Meters),
+					Units.Inches.of(14.25 - 3.0).in(Units.Meters),
+					Units.Inches.of(20).in(Units.Meters)),
 				new Rotation3d(0, 0, Math.PI)),
 			0.9),
 
-		Right(
+		Right( // good
 			"right",
 			new Transform3d(
 				new Translation3d(
-					Units.Inches.of(1.0 / 8.0).in(Units.Meters),
-					Units.Inches.of(-11.5).in(Units.Meters),
-					Units.Inches.of(19.0 + 1.0 / 8.0).in(Units.Meters)),
+					Units.Inches.of(6.25).in(Units.Meters),
+					Units.Inches.of(-14.25).in(Units.Meters),
+					Units.Inches.of(18.5).in(Units.Meters)),
 				new Rotation3d(0, 0, frc.robot.info.Math.THREE_HALVES_PI)),
 			0.775);
 

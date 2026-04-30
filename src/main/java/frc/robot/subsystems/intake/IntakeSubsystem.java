@@ -42,7 +42,7 @@ public class IntakeSubsystem extends NopSubsystemBase {
 						.withReverseLimitEnable(false)))
 				.withNeutralMode(NeutralModeValue.Brake)
 				.withSlot0Pidf(IntakeConstants.PIDF)
-				.withInverted(true));
+				.withInverted(false));
 	}
 
 	private static final class Holder {

@@ -39,7 +39,7 @@ public class CoordinatorIO_RealAndSim implements CoordinatorIO {
 					.forwardLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor)
 					.reverseLimitSwitchTriggerBehavior(Behavior.kKeepMovingMotor))
 				.idleMode(IdleMode.kCoast)
-				.inverted(false));
+				.inverted(true));
 
 		rateLimiter = new LoggedSlewRateLimiter("Coordinator",
 			Units.RotationsPerSecondPerSecond.of(1500).in(Units.RotationsPerSecondPerSecond));
